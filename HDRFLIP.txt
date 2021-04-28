@@ -1,0 +1,10 @@
+@inproceedings{Andersson2021a,
+  author    = {Pontus Andersson and
+               Jim Nilsson and
+               Peter Shirley and
+               Tomas Akenine{-}M{\"{o}}ller},
+  title     = "{Visualizing the Error in Rendered High Dynamic Range Images}",
+  booktitle   = {Eurographics Short Papers},
+  year      = {2021},
+  month = {May}
+}

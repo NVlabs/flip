@@ -1,0 +1,16 @@
+% The \FLIP command is defined using \usepackage{mathtools} \usepackage{xspace} \newcommand{\FLIP}{\protect\reflectbox{F}LIP\xspace}
+@article{Andersson2020,
+  author    = {Pontus Andersson and
+               Jim Nilsson and
+               Tomas Akenine{-}M{\"{o}}ller and
+               Magnus Oskarsson and
+               Kalle {\AA}str{\"{o}}m and
+               Mark D. Fairchild},
+  title     = "{{\FLIP:} {A} Difference Evaluator for Alternating Images}",
+  journal   = {Proceedings of the ACM on Computer Graphics and Interactive Techniques},
+  volume    = {3},
+  number    = {2},
+  pages     = {15:1--15:23},
+  year      = {2020},
+  doi={10.1145/3406183}
+}

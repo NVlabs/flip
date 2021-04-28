@@ -1,0 +1,9 @@
+@incollection{Andersson2021b,
+	author = {Pontus Andersson and Tomas Akenine-M\"oller and Jim Nilsson and},
+	editor = {Adam Marrs and Peter Shirley and Ingo Wald},
+	title = "{Visualizing and Communicating Errors in Rendered Images}",
+	booktitle = {Ray Tracing Gems II (to appear)},
+	year = {2021},
+	chapter = {19},
+}
+%	pages = {X--X},

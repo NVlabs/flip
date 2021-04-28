@@ -53,3 +53,12 @@ C++/CUDA code will be released in the week of May 5.
 
 # PyTorch (Loss Function)
 PyTorch code will be released in the week of May 5.
+
+# Citation
+If your work uses the ꟻLIP tool to find the errors between *low dynamic range* images,
+please cite the LDR-ꟻLIP paper: [Paper](https://research.nvidia.com/publication/2020-07_FLIP) | [BibTeX](LDRFLIP.txt)
+
+If it uses the ꟻLIP tool to find the errors between *high dynamic range* images,
+instead cite the HDR-ꟻLIP paper: [Paper](https://research.nvidia.com/publication/2021-05_HDR-FLIP) | [BibTeX](HDRFLIP.txt)
+
+Should your work use the ꟻLIP tool in a more general fashion, please cite the Ray Tracing Gems II article: Article (to be published in August 2021) | [BibTeX](FLIP.txt)

@@ -34,7 +34,7 @@ For press and other inquiries, please contact Hector Marinez at hmarinez@nvidia.
   conda install -c conda-forge openexr-python
   ```
 - Remember to activate the `flip` environment through `conda activate flip` before using the tool.
-- Usage: `python flip.py <reference.{exr|png}> <test.{exr|png}> [--options]`, where the list of options can be seen by `python flip.py -h`.
+- Usage: `python flip.py --reference reference.{exr|png} --test test.{exr|png} [--options]`, where the list of options can be seen by `python flip.py -h`.
 - Tested with Conda 4.10.0, Python 3.8.3, NumPy 1.19.0, OpenCV 4.0.1, and OpenEXR b1.3.2.
 - The ꟻLIP tool is provided in `flip.py`, which also contains several tool-specific utility functions.
   The API is provided in `flip-api.py` and image loading/saving/manipulation functions in `data.py`.

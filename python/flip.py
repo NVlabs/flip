@@ -326,8 +326,8 @@ if __name__ == '__main__':
 												  "For HDR-FLIP, the reference is used to automatically calculate start and/or stop exposure, if they are not entered."),
 									 formatter_class=argparse.RawTextHelpFormatter)
 	group = parser.add_mutually_exclusive_group()
-	parser.add_argument("reference", help="Relative or absolute path (including file name and extension) for reference image", metavar='REFERENCE', type=str)
-	parser.add_argument("test", help="Relative or absolute paths (including file names and extensions) for each test image", metavar='TEST1 [TEST2 TEST3 ...]' , type=str, nargs='+')
+	parser.add_argument("-r", "--reference", help="Relative or absolute path (including file name and extension) for reference image", metavar='REFERENCE', type=str, required=True)
+	parser.add_argument("-t", "--test", help="Relative or absolute paths (including file names and extensions) for one or more test images", metavar=('TEST1', 'TEST2 TEST3'), type=str, nargs='+', required=True)
 	group.add_argument("-ppd", "--pixels_per_degree", help=("Observer's number of pixels per degree of visual angle. Default corresponds to\n"
 															"viewing the images on a 0.7 meters wide 4K monitor at 0.7 meters from the display"),
 													  type=float)

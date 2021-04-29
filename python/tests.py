@@ -65,8 +65,8 @@ if __name__ == '__main__':
 	print("================")
 
 	# Run the image pairs in the images directory
-	subprocess.run("python flip.py ../images/reference.exr ../images/test.exr -v 0 --no_exposure_map --save_dir ../images/")
-	subprocess.run("python flip.py ../images/reference.png ../images/test.png -v 0 --save_dir ../images/")
+	subprocess.run("python flip.py --reference ../images/reference.exr --test ../images/test.exr -v 0 --no_exposure_map --save_dir ../images/")
+	subprocess.run("python flip.py --reference ../images/reference.png --test ../images/test.png -v 0 --save_dir ../images/")
 
 	# Compare output to reference output
 	test_results = []

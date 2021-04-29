@@ -43,7 +43,7 @@ conda install -c conda-forge openexr-python
 *Remember to activate the* `flip` *environment through* `conda activate flip` *before using the tool.*
 
 ```
-python flip.py <reference.{exr|png}> <test.{exr|png}> [--options]
+python flip.py --reference reference.{exr|png} --test test.{exr|png} [--options]
 ```
 
 See the [README](python/README.md) in the `python` folder and run `python flip.py -h` for further information and usage instructions.
@@ -56,9 +56,12 @@ PyTorch code will be released in the week of May 5.
 
 # Citation
 If your work uses the ꟻLIP tool to find the errors between *low dynamic range* images,
-please cite the LDR-ꟻLIP paper: [Paper](https://research.nvidia.com/publication/2020-07_FLIP) | [BibTeX](LDRFLIP.txt)
+please cite the LDR-ꟻLIP paper:<br>
+[Paper](https://research.nvidia.com/publication/2020-07_FLIP) | [BibTeX](LDRFLIP.txt)
 
 If it uses the ꟻLIP tool to find the errors between *high dynamic range* images,
-instead cite the HDR-ꟻLIP paper: [Paper](https://research.nvidia.com/publication/2021-05_HDR-FLIP) | [BibTeX](HDRFLIP.txt)
+instead cite the HDR-ꟻLIP paper:<br>
+[Paper](https://research.nvidia.com/publication/2021-05_HDR-FLIP) | [BibTeX](HDRFLIP.txt)
 
-Should your work use the ꟻLIP tool in a more general fashion, please cite the Ray Tracing Gems II article: Article (to be published in August 2021) | [BibTeX](FLIP.txt)
+Should your work use the ꟻLIP tool in a more general fashion, please cite the Ray Tracing Gems II article:<br>
+Article (to be published in August 2021) | [BibTeX](FLIP.txt)

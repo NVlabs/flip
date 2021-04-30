@@ -61,6 +61,26 @@ from data import *
 #####################################################################################################################################################################################################################
 #####################################################################################################################################################################################################################
 
+def weighted_percentile(error_map, percentile):
+	"""
+	Computes a weighted percentile of an error map, i.e., the error which is such that the sum of
+	the errors in the error map that are smaller than it and those that are larger than it
+	are `percentile` percent of total error sum and `100 - percentile` percent of the total error sum, respectively.
+	For example, if percentile = 50, the weighted percentile is the error satisfying that the errors in the
+	error map that are smaller than it is 50% of the total error sum, and similar for the errors that are larger than it.
+
+	:param error_map: matrix (with HxW layout) containing per-pixel FLIP values in the [0,1] range
+	:param percentile: integer in the [0, 100] range describing which percentile is sought
+	:return: float containing the weighted percentile
+	"""
+	error_sum = np.sum(error_map)
+	percentile_equilibrium = error_sum * percentile / 100
+	error_sorted = np.sort(error_map, axis=None)
+	weighted_percentile_index = np.cumsum(error_sorted).searchsorted(percentile_equilibrium)
+	weighted_percentile_error = 0.5 * (error_sorted[weighted_percentile_index + 1] + error_sorted[weighted_percentile_index])
+
+	return weighted_percentile_error
+
 def print_pooled_values(error_map, output_textfile, save_dir, test_file_name, verbosity):
 	"""
 	Prints pooled values of the FLIP error map
@@ -76,9 +96,9 @@ def print_pooled_values(error_map, output_textfile, save_dir, test_file_name, ve
 					  3: print pooled FLIP errors, warnings, and runtime and (for HDR-FLIP) start and stop exposure and intermediate exposures
 	"""
 	mean = "%.6f" % np.mean(error_map)
-	median = "%.6f" % np.percentile(error_map, 50)
-	quartile1 = "%.6f" % np.percentile(error_map, 25)
-	quartile3 = "%.6f" % np.percentile(error_map, 75)
+	weighted_median = "%.6f" % weighted_percentile(error_map, 50)
+	weighted_quartile1 = "%.6f" % weighted_percentile(error_map, 25)
+	weighted_quartile3 = "%.6f" % weighted_percentile(error_map, 75)
 	minimum = "%.6f" % np.amin(error_map)
 	maximum = "%.6f" % np.amax(error_map)
 
@@ -86,30 +106,30 @@ def print_pooled_values(error_map, output_textfile, save_dir, test_file_name, ve
 		txt_file_path = save_dir + '/' + test_file_name + '.txt'
 		with open(txt_file_path, 'w') as f:
 			f.write("Mean: " + mean + "\n")
-			f.write("Median: " + median + "\n")
-			f.write("1st quartile: " + quartile1 + "\n")
-			f.write("3rd quartile: " + quartile3 + "\n")
+			f.write("Weighted median: " + weighted_median + "\n")
+			f.write("1st weighted quartile: " + weighted_quartile1 + "\n")
+			f.write("3rd weighted quartile: " + weighted_quartile3 + "\n")
 			f.write("Min: " + minimum + "\n")
 			f.write("Max: " + maximum + "\n")
 	else:
 		if verbosity > 0:
 			print("Mean: " + mean)
 			if verbosity > 1:
-				print("Median: " + median)
-				print("1st quartile: " + quartile1)
-				print("3rd quartile: " + quartile3)
+				print("Weighted median: " + weighted_median)
+				print("1st weighted quartile: " + weighted_quartile1)
+				print("3rd weighted quartile: " + weighted_quartile3)
 				print("Min: " + minimum)
 				print("Max: " + maximum)
 
-def weighted_flip_histogram(flip_error_map, save_dir, log_scale, pixels_per_degree, y_max):
+def weighted_flip_histogram(flip_error_map, save_dir, log_scale, y_max, exclude_pooled_values):
 	"""
 	Compute weighted FLIP histogram
 
 	:param flip_error_map: matrix (with HxW layout) containing per-pixel FLIP values in the [0,1] range
 	:param save_dir: string describing relative or absolute path to directory where results should be stored
 	:param log_scale: bool describing if histogram's y-axis should be in log-scale
-	:param pixels_per_degree: float indicating the observer's number of pixels per degree of visual angle
 	:param y_max: float indicating largest value on the histogram's y-axis
+	:param exclude_pooled_values: bool indicating whether pooled FLIP values should be excluded in the weighted histogram
 	"""
 	dimensions = (25, 15)  #  histogram image size, centimeters
 
@@ -145,58 +165,57 @@ def weighted_flip_histogram(flip_error_map, save_dir, log_scale, pixels_per_degr
 		y_axis_max = 1.05 * max(weighted_hist)
 
 	meanValue = np.mean(flip_error_map)
-	medianValue = np.percentile(flip_error_map, 50)
-	firstQuartileValue = np.percentile(flip_error_map, 25)
-	thirdQuartileValue = np.percentile(flip_error_map, 75)
+	weightedMedianValue = weighted_percentile(flip_error_map, 50)
+	firstWeightedQuartileValue = weighted_percentile(flip_error_map, 25)
+	thirdWeightedQuartileValue = weighted_percentile(flip_error_map, 75)
 	maxValue = np.amax(flip_error_map)
 	minValue = np.amin(flip_error_map)
 
 	plt.hist(bins[:-1], bins=bins, weights = weighted_hist, ec=lineColor, color=fillColor)
 
-	plt.text(0.99, 1.0 - 1 * lineHeight, 'PPD: ' + str(f'{pixels_per_degree:.1f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes, color='black')
-
-	plt.text(0.99, 1.0 - 2 * lineHeight, 'Mean: ' + str(f'{meanValue:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes, color=meanLineColor)
-
-	plt.text(0.99, 1.0 - 3 * lineHeight, 'Median: ' + str(f'{medianValue:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes, color=medianLineColor)
-
-	plt.text(0.99, 1.0 - 4 * lineHeight, '1st quartile: ' + str(f'{firstQuartileValue:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes, color=quartileLineColor)
-
-	plt.text(0.99, 1.0 - 5 * lineHeight, '3rd quartile: ' + str(f'{thirdQuartileValue:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes, color=quartileLineColor)
-
-	plt.text(0.99, 1.0 - 6 * lineHeight, 'Min: ' + str(f'{minValue:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes)
-
-	plt.text(0.99, 1.0 - 7 * lineHeight, 'Max: ' + str(f'{maxValue:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes)
-
 	axes.set_xlim(0.0, 1.0)
 	axes.set_ylim(0.0, y_axis_max)
 
-	axes.axvline(x = meanValue, color = meanLineColor, linewidth = 1.5)
+	if exclude_pooled_values == False:
+		plt.text(0.99, 1.0 - 1 * lineHeight, 'Mean: ' + str(f'{meanValue:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes, color=meanLineColor)
 
-	axes.axvline(x = medianValue, color = medianLineColor, linewidth = 1.5)
+		plt.text(0.99, 1.0 - 2 * lineHeight, 'Weighted median: ' + str(f'{weightedMedianValue:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes, color=medianLineColor)
 
-	axes.axvline(x = firstQuartileValue, color = quartileLineColor, linewidth = 1.5)
+		plt.text(0.99, 1.0 - 3 * lineHeight, '1st weighted quartile: ' + str(f'{firstWeightedQuartileValue:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes, color=quartileLineColor)
 
-	axes.axvline(x = thirdQuartileValue, color = quartileLineColor, linewidth = 1.5)
+		plt.text(0.99, 1.0 - 4 * lineHeight, '3rd weighted quartile: ' + str(f'{thirdWeightedQuartileValue:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes, color=quartileLineColor)
 
-	axes.axvline(x = minValue, color='black', linestyle = ':', linewidth = 1.5)
+		plt.text(0.99, 1.0 - 5 * lineHeight, 'Min: ' + str(f'{minValue:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes)
 
-	axes.axvline(x = maxValue, color='black', linestyle = ':', linewidth = 1.5)
+		plt.text(0.99, 1.0 - 6 * lineHeight, 'Max: ' + str(f'{maxValue:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes)
+
+		axes.axvline(x = meanValue, color = meanLineColor, linewidth = 1.5)
+
+		axes.axvline(x = weightedMedianValue, color = medianLineColor, linewidth = 1.5)
+
+		axes.axvline(x = firstWeightedQuartileValue, color = quartileLineColor, linewidth = 1.5)
+
+		axes.axvline(x = thirdWeightedQuartileValue, color = quartileLineColor, linewidth = 1.5)
+
+		axes.axvline(x = minValue, color='black', linestyle = ':', linewidth = 1.5)
+
+		axes.axvline(x = maxValue, color='black', linestyle = ':', linewidth = 1.5)
 
 	if log_scale == True:
-		plt.savefig(save_dir + '/log_weighted_flip_histogram.pdf')
+		plt.savefig(save_dir + '/log_weighted_histogram.pdf')
 	else:
-		plt.savefig(save_dir + '/weighted_flip_histogram.pdf')
+		plt.savefig(save_dir + '/weighted_histogram.pdf')
 
-def overlapping_weighted_flip_histogram(flip_error_map_array, save_dir, log_scale, pixels_per_degree, y_max, test_images):
+def overlapping_weighted_flip_histogram(flip_error_map_array, save_dir, log_scale, y_max, test_images, exclude_pooled_values):
 	"""
 	Compute overlapping weighted FLIP histogram of two error maps
 
 	:param flip_error_map_array: matrix array (with HxWx2 layout) containing per-pixel FLIP values in the [0,1] range for two test images
 	:param save_dir: string describing relative path to directory where results should be stored
 	:param log_scale: bool describing if histogram's y-axis should be in log-scale
-	:param pixels_per_degree: float indicating observer's number of pixels per degree of visual angle
 	:param y_max: float indicating largest value on the histogram's y-axis
 	:param test_images: string array describing names of the two test images
+	:param exclude_pooled_values: bool indicating whether pooled FLIP values should be excluded in the weighted histogram
 	"""
 	dimensions = (25, 15)  #  histogram image size, centimeters
 
@@ -241,25 +260,23 @@ def overlapping_weighted_flip_histogram(flip_error_map_array, save_dir, log_scal
 	plt.hist(bins[:-1], bins=bins, weights = weighted_hist, ec=lineColor, alpha=0.5, color=fillColorBelow)
 	plt.hist(bins[:-1], bins=bins, weights = weighted_hist2, ec=lineColor2, alpha=0.5, color=fillColorAbove)
 
-	axes.axvline(x = meanValue, color = meanLineColor, linewidth = 1.5)
-	axes.axvline(x = meanValue2, color = meanLineColor2, linewidth = 1.5)
-
 	if log_scale == True:
 		axes.set(title = 'Weighted \uA7FBLIP Histogram', xlabel = '\uA7FBLIP error', ylabel = 'log(weighted \uA7FBLIP sum per megapixel)')
 	else:
 		axes.set(title = 'Weighted \uA7FBLIP Histogram', xlabel = '\uA7FBLIP error', ylabel = 'Weighted \uA7FBLIP sum per megapixel')
 
-	plt.text(0.99, 1.0 - 1 * lineHeight, 'PPD: ' + str(f'{pixels_per_degree:.1f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes, color='black')
-
 	name_test_image = test_images[0][test_images[0].rfind('/') + 1: test_images[0].rfind('.')]
 	name_test_image2 = test_images[1][test_images[1].rfind('/') + 1: test_images[1].rfind('.')]
-	plt.text(0.99, 1.0 - 2 * lineHeight, 'Mean (' + name_test_image + '): ' + str(f'{meanValue:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes, color=meanLineColor)
-	plt.text(0.99, 1.0 - 3 * lineHeight, 'Mean (' + name_test_image2 + '): ' + str(f'{meanValue2:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes, color=meanLineColor2)
+	if exclude_pooled_values == False:
+		axes.axvline(x = meanValue, color = meanLineColor, linewidth = 1.5)
+		axes.axvline(x = meanValue2, color = meanLineColor2, linewidth = 1.5)
+		plt.text(0.99, 1.0 - 1 * lineHeight, 'Mean (' + name_test_image + '): ' + str(f'{meanValue:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes, color=meanLineColor)
+		plt.text(0.99, 1.0 - 2 * lineHeight, 'Mean (' + name_test_image2 + '): ' + str(f'{meanValue2:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes, color=meanLineColor2)
 
 	if log_scale == True:
-		plt.savefig(save_dir + '/log_weighted_flip_histogram.pdf')
+		plt.savefig(save_dir + '/log_overlapping_weighted_histogram.pdf')
 	else:
-		plt.savefig(save_dir + '/weighted_flip_histogram.pdf')
+		plt.savefig(save_dir + '/overlapping_weighted_histogram.pdf')
 
 def set_pixels_per_degree(args):
 	"""
@@ -347,6 +364,7 @@ if __name__ == '__main__':
 	parser.add_argument("--histogram", help="Store weighted histogram of the FLIP error map(s). Outputs overlapping histograms if exactly two test images are used", action="store_true")
 	parser.add_argument("--y_max", help="Set upper limit of weighted histogram's y-axis", type=int)
 	parser.add_argument("--log", help="Take logarithm of weighted histogram", action="store_true")
+	parser.add_argument("--exclude_pooled_values", help="Do not include pooled FLIP values in the weighted histogram", action="store_true")
 	parser.add_argument("--output_ldr_images", help="Save all exposure compensated and tone mapped images (png) used for HDR-FLIP", action="store_true")
 	parser.add_argument("--output_ldrflip", help="Save all LDR-FLIP images used for HDR-FLIP", action="store_true")
 	parser.add_argument("--output_textfile", help="Output text file (with same name as test image) with mean, median, 1st and 3rd quartile as well as minimum and maximum error", action="store_true")
@@ -460,8 +478,8 @@ if __name__ == '__main__':
 
 		# Save weighted histogram per test image
 		if args.histogram == True and number_test_images != 2:
-			weighted_flip_histogram(flip, save_dir, args.log, pixels_per_degree, args.y_max)
+			weighted_flip_histogram(flip, save_dir, args.log, args.y_max, args.exclude_pooled_values)
 
 	# Overlapping histograms if we have exactly two test images
 	if args.histogram == True and number_test_images == 2:
-		overlapping_weighted_flip_histogram(flip_array, args.save_dir, args.log, pixels_per_degree, args.y_max, args.test)
+		overlapping_weighted_flip_histogram(flip_array, args.save_dir, args.log, args.y_max, args.test, args.exclude_pooled_values)

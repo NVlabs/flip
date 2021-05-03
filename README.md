@@ -17,7 +17,7 @@ This repository holds implementations of the [LDR-ꟻLIP](https://research.nvidi
 and [HDR-ꟻLIP](https://research.nvidia.com/publication/2021-05_HDR-FLIP) image error metrics.
 It also holds code for the ꟻLIP tool, to be presented in [Ray Tracing Gems II](https://developer.nvidia.com/blog/ray-tracing-gems-ii-available-august-4th/).
 
-[A list of papers](papersUsingFLIP.md) that use ꟻLIP.
+[A list of papers](papersUsingFLIP.md) that use/cite ꟻLIP.
 
 # License
 
@@ -52,7 +52,21 @@ See the [README](python/README.md) in the `python` folder and run `python flip.p
 C++/CUDA code will be released in the week of May 5.
 
 # PyTorch (Loss Function)
-PyTorch code will be released in the week of May 5.
+**Setup** (with Anaconda3):
+```
+conda create -n flip_dl python numpy matplotlib
+conda activate flip_dl
+conda install pytorch torchvision torchaudio cudatoolkit=11.1 -c pytorch -c conda-forge
+conda install -c conda-forge openexr-python
+```
+
+**Usage:**
+
+*Remember to activate the* `flip_dl` *environment through* `conda activate flip_dl` *before using the loss function.*
+
+LDR- and HDR-ꟻLIP are implemented as loss modules in `flip_loss.py`. An example where the loss function is used to train a simple autoencoder is provided in `train.py`.
+
+See the [README](pytorch/README.md) in the `pytorch` folder for further information and usage instructions.
 
 # Citation
 If your work uses the ꟻLIP tool to find the errors between *low dynamic range* images,

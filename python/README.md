@@ -39,13 +39,44 @@ For press and other inquiries, please contact Hector Marinez at hmarinez@nvidia.
 - The ꟻLIP tool is provided in `flip.py`, which also contains several tool-specific utility functions.
   The API is provided in `flip-api.py` and image loading/saving/manipulation functions in `data.py`.
   `tests.py` contains simple tests used to test whether code updates alter results.
-- The naming convention used for HDR-ꟻLIP-related results is either
-  1. `typeOfImage_X_to_Y`, where `typeOfImage` says
-  what type of image it is (e.g., `hdrflip` or `exposure_map`),
-  `X` is the start exposure and `Y` is the stop
-  exposure (a p in front of `X` or `Y`
-  implies plus and an m implies minus), or
-  2. `typeOfImage.xxx.X_to_Y.exposure`, where `typeOfImage`,
-  `X`, and `Y` are as in 1, `xxx` is an enumeration
-  of the `N = ceil(max(2, (Y - X)))` exposures used to compute HDR-FLIP,
-  and `exposure` indicates the exposure compensation factor used.
+- The naming convention used for the ꟻLIP tool's output is as follows (where `ppd` is the assumed number of pixels per degree,
+  `tm` is the tone mapper assumed by HDR-ꟻLIP, `cstart` and `cstop` are the shortest and longest exposures, respectively, assumed by HDR-ꟻLIP,
+  with `p` indicating a positive value and `m` indicating a negative value,
+  `N` is the number of exposures used in the HDR-ꟻLIP calculation, `nnn` is a counter used to sort the intermediate results,
+  and `exp` is the exposure used for the intermediate LDR image / ꟻLIP map):
+
+  **Default:**
+
+  *Low dynamic range images:*<br>
+
+    LDR-ꟻLIP: `flip.<reference>.<test>.<ppd>.ldr.png`<br>
+    Weighted histogram: `weighted_histogram.reference>.<test>.<ppd>.ldr.pdf`<br>
+    Text file: `pooled_values.<reference>.<test>.<ppd>.ldr.txt`<br>
+
+  *High dynamic range images:*<br>
+
+    HDR-ꟻLIP: `flip.<reference>.<test>.<ppd>.hdr.<tm>.<cstart>_to_<cstop>.<N>.png`<br>
+    Exposure map: `exposure_map.<reference>.<test>.<ppd>.hdr.<tm>.<cstart>_to_<cstop>.<N>.png`<br>
+    Intermediate LDR-ꟻLIP maps: `flip.<reference>.<test>.<ppd>.ldr.<tm>.<nnn>.<exp>.png`<br>
+    Intermediate LDR images: `<reference|test>.<tm>.<nnn>.<exp>.png`<br>
+    Weighted histogram: `weighted_histogram.<reference>.<test>.<ppd>.hdr.<tm>.<cstart>_to_<cstop>.<N>.pdf`<br>
+    Overlapping weighted histogram: `overlapping_weighted_histogram.<reference>.<test1>.<test2>.<ppd>.hdr.<tm>.<cstart>_to_<cstop>.<N>.pdf`<br>
+    Text file: `pooled_values.<reference>.<test>.<ppd>.hdr.<tm>.<cstart>_to_<cstop>.<N>.txt`<br>
+
+  **With** `--basename <name>` **(note: not applicable if more than one test image is evaluated):**
+
+  *Low dynamic range images:*<br>
+    
+    LDR-ꟻLIP: `<name>.png`<br>
+    Weighted histogram: `<name>.pdf`<br>
+    Text file: `<name>.txt`<br>
+
+  *High dynamic range images:*<br>
+    
+    HDR-ꟻLIP: `<name>.png`<br>
+    Exposure map: `<name>.exposure_map.png`<br>
+    Intermediate LDR-ꟻLIP maps: `<name>.<nnn>.png`<br>
+    Intermediate LDR images: `<name>.reference|test.<nnn>.png`<br>
+    Weighted histogram: `<name>.pdf`<br>
+    Overlapping weighted histogram: N/A<br>
+    Text file: `<name>.txt`<br>

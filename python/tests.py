@@ -47,7 +47,7 @@
 
 import subprocess
 import filecmp
-import shutil
+import os
 
 if __name__ == '__main__':
 	"""
@@ -65,19 +65,20 @@ if __name__ == '__main__':
 	print("================")
 
 	# Run the image pairs in the images directory
-	subprocess.run("python flip.py --reference ../images/reference.exr --test ../images/test.exr -v 0 --no_exposure_map --save_dir ../images/")
-	subprocess.run("python flip.py --reference ../images/reference.png --test ../images/test.png -v 0 --save_dir ../images/")
+	subprocess.run("python flip.py --reference ../images/reference.exr --test ../images/test.exr -v 0 --no_exposure_map --directory ../images")
+	subprocess.run("python flip.py --reference ../images/reference.png --test ../images/test.png -v 0 --directory ../images")
 
 	# Compare output to reference output
 	test_results = []
-	test_results.append(filecmp.cmp('../images/reference_hdrflip_python.png', '../images/test/hdrflip_m12.5423_to_p0.9427.png'))
-	test_results.append(filecmp.cmp('../images/reference_ldrflip_python.png', '../images/test/ldrflip.png'))
+	test_results.append(filecmp.cmp('../images/reference_hdrflip_python.png', '../images/flip.reference.test.67.hdr.aces.m12.5423_to_p0.9427.14.png'))
+	test_results.append(filecmp.cmp('../images/reference_ldrflip_python.png', '../images/flip.reference.test.67.ldr.png'))
 
 	for idx, passed in enumerate(test_results):
 		print(("PASSED " if passed else "FAILED ") + "test " + str(idx) + " - " + test_descriptions[idx])
 
-	# Remove directory created during tests
-	shutil.rmtree('../images/test')
+	# Remove output created during tests
+	os.remove('../images/flip.reference.test.67.hdr.aces.m12.5423_to_p0.9427.14.png')
+	os.remove('../images/flip.reference.test.67.ldr.png')
 
 	print("================")
 	print("Tests complete!")

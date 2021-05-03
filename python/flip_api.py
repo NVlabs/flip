@@ -47,7 +47,6 @@
 
 import numpy as np
 import cv2 as cv
-import time
 import os
 import sys
 
@@ -68,6 +67,7 @@ def tone_map(img, exposure, tone_mapper="aces"):
 	:param img: float tensor (with CxHxW layout) containing nonnegative values
 	:param exposure: float describing the exposure compensation factor
 	:param tone_mapper: (optional) string describing the tone mapper to apply
+	:return: float tensor (with CxHxW layout) containing exposure compensated and tone mapped image
 	"""
 	# Clip to 0. Negative values shouldn't be used
 	img = np.maximum(img, 0.0)
@@ -603,7 +603,7 @@ def compute_exposure_map(hdrflip, all_errors, num_exposures):
 
 	return exposure_map
 
-def compute_hdrflip(reference, test, save_dir, pixels_per_degree=(0.7 * 3840 / 0.7) * np.pi / 180, tone_mapper="aces", start_exp=None, stop_exp=None, num_exposures=None, output_ldr_images=False, output_ldrflip=False, verbosity=2):
+def compute_hdrflip(reference, test, directory, reference_filename, test_filename, basename, default_basename, pixels_per_degree=(0.7 * 3840 / 0.7) * np.pi / 180, tone_mapper="aces", start_exposure=0.0, stop_exposure=0.0, num_exposures=1, intermediate_ldr_images=False, intermediate_ldrflip=False, no_magma=False):
 	"""
 	Computes the FLIP error map between two HDR images,
 	assuming the images are observed at a certain number of
@@ -611,51 +611,22 @@ def compute_hdrflip(reference, test, save_dir, pixels_per_degree=(0.7 * 3840 / 0
 
 	:param reference: reference image (with CxHxW layout on float32 format with nonnegative values)
 	:param test: test image (with CxHxW layout on float32 format with nonnegative values)
-	:param save_dir: relative path to directory where results should be stored
+	:param directory: relative path to directory where results should be saved
+	:param reference_filename: string describing basename of reference image
+	:param test_filename: string describing basename of test image
+	:param basename: string describing basename of output png files
+	:param default_basename: bool indicating that the default basename is used
 	:param pixels_per_degree: (optional) float describing the number of pixels per degree of visual angle of the observer,
 							  default corresponds to viewing the images on a 0.7 meters wide 4K monitor at 0.7 meters from the display
 	:param tone_mapper: (optional) string describing what tone mapper HDR-FLIP should assume
 	:param start_exposure: (optional) float indicating the shortest exposure HDR-FLIP should use
 	:param stop_exposure: (optional) float indicating the longest exposure HDR-FLIP should use
-	:param output_ldr_images: (optional) bool indicating if intermediate LDR images used in HDR-FLIP should be stored or not
-	:param output_ldrflip: (optional) bool indicating if intermediate LDR-FLIP maps used in HDR-FLIP should be stored or not
-	:param verbosity: (optional) integer describing level of verbosity.
-					  0: no printed output,
-					  1: print mean FLIP error,
-					  2: print pooled FLIP errors and (for HDR-FLIP) start and stop exposure,
-					  3: print pooled FLIP errors, warnings, and runtime and (for HDR-FLIP) start and stop exposure and intermediate exposures
-
-	:return: matrix (with HxW layout on float32 format) containing the per-pixel FLIP errors (in the range [0, 1]) between HDR reference and test image,
-			 exposure map in viridis colors (with HxWxC layout), and floats describing start and stop exposure, respectively
+	:param intermediate_ldr_images: (optional) bool indicating if intermediate LDR images used in HDR-FLIP should be saved or not
+	:param intermediate_ldrflip: (optional) bool indicating if intermediate LDR-FLIP maps used in HDR-FLIP should be saved or not
+	:param no_magma: (optional) bool indicating if FLIP error maps should be saved in grayscale or not
+	:return: matrix (with HxW layout on float32 format) containing the per-pixel FLIP errors (in the range [0, 1]) between HDR reference and test image
+			 and exposure map in viridis colors (with HxWxC layout)
 	"""
-	# Set start and stop exposures based on input arguments
-	if start_exp == None or stop_exp == None:
-		start_exposure, stop_exposure = compute_exposure_params(reference, t_max=0.85, t_min=0.85, tone_mapper=tone_mapper)
-		if start_exp is not None:
-			if verbosity > 1: print("Automatically computed stop exposure: " + ("-" if stop_exposure < 0 else "+") + "%.4f" % abs(stop_exposure))
-			start_exposure = start_exp
-		elif stop_exp is not None:
-			if verbosity > 1: print("Automatically computed start exposure: " + ("-" if start_exposure < 0 else "+") + "%.4f" % abs(start_exposure))
-			stop_exposure = stop_exp
-		else:
-			if verbosity > 1: print("Automatically computed start exposure: " + ("-" if start_exposure < 0 else "+") + "%.4f" % abs(start_exposure))
-			if verbosity > 1: print("Automatically computed stop exposure:  " + ("-" if stop_exposure < 0 else "+") + "%.4f" % abs(stop_exposure))
-	else:
-		start_exposure = start_exp
-		stop_exposure = stop_exp
-	assert start_exposure <= stop_exposure
-	stop_exposure_sign = "m" if stop_exposure < 0 else "p"
-	start_exposure_sign = "m" if start_exposure < 0 else "p"
-
-	# Set number of exposures
-	if start_exposure == stop_exposure:
-		num_exposures = 1
-	elif num_exposures is None:
-		num_exposures = int(max(2, np.ceil(stop_exposure - start_exposure)))
-		if verbosity == 3: print("Number of exposures used for HDR-FLIP: " + str(num_exposures))
-	else:
-		num_exposures = num_exposures
-
 	# Find step size
 	step_size = (stop_exposure - start_exposure) / max(num_exposures - 1, 1)
 
@@ -663,6 +634,11 @@ def compute_hdrflip(reference, test, save_dir, pixels_per_degree=(0.7 * 3840 / 0
 	dim = reference.shape
 	all_errors = np.zeros((dim[1], dim[2], num_exposures)).astype(np.float32)
 
+	# Store sign of start and stop exposures
+	stop_exposure_sign = "m" if stop_exposure < 0 else "p"
+	start_exposure_sign = "m" if start_exposure < 0 else "p"
+
+	# Loop over exposures in the given exposure range
 	for i in range(0, num_exposures):
 		exposure = start_exposure + i * step_size
 		exposure_sign = "m" if exposure < 0 else "p"
@@ -674,25 +650,35 @@ def compute_hdrflip(reference, test, save_dir, pixels_per_degree=(0.7 * 3840 / 0
 		test_srgb = color_space_transform(test_tone_mapped, "linrgb2srgb")
 
 		# Compute LDR-FLIP
-		t = time.time()
 		deltaE = compute_ldrflip(reference_srgb, test_srgb, pixels_per_degree).squeeze(0)
-		if verbosity == 3: print(("Exposure: " + ('+' if exposure_sign == "p" else "-") + "%.4f" + " | Elapsed time: %.4f") % (abs(exposure), time.time() - t))
 
 		# Store result in tensor
 		all_errors[:, :, i] = deltaE
 
-		# Save images
-		if output_ldr_images:
-			ldr_reference_save_path = (save_dir + "/reference." + str(i).zfill(3) + "." + start_exposure_sign + "%.4f_to_" + stop_exposure_sign + "%.4f." + exposure_sign + "%.4f.png") % (abs(start_exposure), abs(stop_exposure), abs(exposure))
-			ldr_test_save_path = (save_dir + "/test." + str(i).zfill(3) + "." + start_exposure_sign + "%.4f_to_" + stop_exposure_sign + "%.4f." + exposure_sign + "%.4f.png") % (abs(start_exposure), abs(stop_exposure), abs(exposure))
-			save_image(ldr_reference_save_path, CHWtoHWC(reference_srgb))
-			save_image(ldr_test_save_path, CHWtoHWC(test_srgb))
-		if output_ldrflip:
-			ldrflip_file_name = (save_dir + "/ldrflip." + str(i).zfill(3) + "." + start_exposure_sign + "%.4f_to_" + stop_exposure_sign + "%.4f." + exposure_sign + "%.4f.png") % (abs(start_exposure), abs(stop_exposure), abs(exposure))
-			save_image(ldrflip_file_name, CHWtoHWC(index2color(np.floor(255.0 * deltaE), get_magma_map())))
+		# Save intermediate images and LDR-FLIP maps
+		if intermediate_ldr_images:
+			if default_basename:
+				base = "%s.%s.%s%.4f.png" % (tone_mapper, str(i).zfill(3), exposure_sign, abs(exposure))
+				ldr_reference_path = "%s/%s.%s" % (directory, reference_filename, base)
+				ldr_test_path = "%s/%s.%s" % (directory, test_filename, base)
+			else:
+				ldr_reference_path = "%s/%s.reference.%s.png" % (directory, basename, str(i).zfill(3))
+				ldr_test_path = "%s/%s.test.%s.png" % (directory, basename, str(i).zfill(3))
+			save_image(ldr_reference_path, CHWtoHWC(reference_srgb))
+			save_image(ldr_test_path, CHWtoHWC(test_srgb))
+		if intermediate_ldrflip:
+			if default_basename:
+				ldrflip_path = "%s/flip.%s.%s.%d.ldr.%s.%s.%s%.4f.png" % (directory, reference_filename, test_filename, pixels_per_degree, tone_mapper, str(i).zfill(3), exposure_sign, abs(exposure))
+			else:
+				ldrflip_path = "%s/%s.%s.png" % (directory, basename, str(i).zfill(3))
+			if no_magma == True:
+				error_map = deltaE
+			else:
+				error_map = CHWtoHWC(index2color(np.floor(255.0 * deltaE), get_magma_map()))
+			save_image(ldrflip_path, error_map)
 
 	# Final error map and exposure map
 	hdrflip = np.max(all_errors, axis=2)
 	exposure_map = compute_exposure_map(hdrflip, all_errors, num_exposures)
 
-	return hdrflip, exposure_map, start_exposure, stop_exposure
+	return hdrflip, exposure_map

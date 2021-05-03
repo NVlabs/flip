@@ -13,3 +13,5 @@ Please let us know if you know of more papers that use FLIP.
 1. Muhammad Huzaifa, Rishi Desai, Samuel Grayson, Xutao Jiang, Ying Jing, Jae Lee, Fang Lu, Yihan Pang, Joseph Ravichandran, Finn Sinclair, Boyuan Tian, Hengzhi Yuan, Jeffrey Zhang, Sarita V. Adve, ["Exploring Extended Reality with ILLIXR: A New Playground for Architecture Research"](https://arxiv.org/abs/2004.04643), *arXiv*:2004.04643, 2021.
 
 1. Jon Hasselgren, Jacob Munkberg, Jaakko Lehtinen, Miika Aittala, and Samuli Laine, ["Appearance-Driven Automatic 3D Model Simplification"](https://arxiv.org/abs/2104.03989),	*arXiv*:2104.03989, 2021.
+
+1. Joerg H. Mueller, Thomas Neff, Philip Voglreiter, Markus Steinberger, and Dieter Schmalstieg, ["Temporally Adaptive Shading Reuse for Real-Time Rendering and Virtual Reality"](https://dl.acm.org/doi/10.1145/3446790), *ACM Transactions on Graphics*, April 2021, Article No.: 11, 2021.

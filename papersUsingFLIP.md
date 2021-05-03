@@ -1,6 +1,6 @@
 ### List of papers that are using ꟻLIP ###
 
-Please let us know if you know of more papers that use FLIP.
+Please let us know if you know of more papers that use/cite FLIP.
 
 1. Jae-Ho Nah, ["QuickETC2: Fast ETC2 texture compression using Luma differences"](https://dl.acm.org/doi/abs/10.1145/3414685.3417787), *ACM Transactions on Graphics (SIGGRAPH Asia)*, November 2020 Article No. 270
 

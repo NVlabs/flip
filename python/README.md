@@ -88,7 +88,8 @@ First change directory to where you have installed `flip.py` and the rest of the
   python flip.py -r ../images/reference.exr -t ../images/test.exr
   ```
 The result should be:
-  ```  Invoking HDR-FLIP
+  ```  
+Invoking HDR-FLIP
         Pixels per degree: 67
         Assumed tone mapper: ACES
         Start exposure: -12.5423

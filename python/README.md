@@ -80,3 +80,28 @@ For press and other inquiries, please contact Hector Marinez at hmarinez@nvidia.
     Weighted histogram: `<name>.pdf`<br>
     Overlapping weighted histogram: N/A<br>
     Text file: `<name>.txt`<br>
+    
+ **Example usage:**
+First change directory to where you have installed `flip.py` and the rest of the Python files. Then start an Ananconda prompt and try:
+  ```
+  conda activate flip
+  python flip.py -r ../images/reference.exr -t ../images/test.exr
+  ```
+The result should be:
+  ```  Invoking HDR-FLIP
+        Pixels per degree: 67
+        Assumed tone mapper: ACES
+        Start exposure: -12.5423
+        Stop exposure: 0.9427
+        Number of exposures: 14
+
+FLIP between reference image <reference.exr> and test image <test.exr>:
+        Mean: 0.283547
+        Weighted median: 0.339469
+        1st weighted quartile: 0.251148
+        3rd weighted quartile: 0.434763
+        Min: 0.003120
+        Max: 0.962022
+  ```
+In addition, in the `output`-directory, you will find the files: `flip.reference.test.67.hdr.aces.m12.5423_to_p0.9427.14.png` and `exposure_map.reference.test.67.hdr.aces.m12.5423_to_p0.9427.14.png`, and we urge you to inspect those, which will reveal where the
+errors in the test image are located.

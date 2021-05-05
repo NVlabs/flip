@@ -427,6 +427,12 @@ if __name__ == '__main__':
 	parser.add_argument("--no_magma", help="Save FLIP error maps in grayscale instead of magma", action="store_true")
 	parser.add_argument("--no_exposure_map", help="Do not save the HDR-FLIP exposure map", action="store_true")
 	parser.add_argument("--no_error_map", help="Do not save the FLIP error map", action="store_true")
+
+	# Print help string if flip.py is run without arguments
+	if len(sys.argv) == 1:
+		parser.print_help()
+		sys.exit(1)
+
 	args = parser.parse_args()
 
 	# Check if there is risk of overwriting output because of same basename

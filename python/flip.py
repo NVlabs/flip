@@ -444,6 +444,10 @@ if __name__ == '__main__':
 	if not os.path.isdir(args.directory) and (not args.no_error_map or not args.no_exposure_map or args.intermediate_ldr_images or args.intermediate_ldrflip or args.textfile or args.histogram):
 		os.makedirs(args.directory)
 
+	# Replace \ with / in reference and test paths
+	args.reference = "".join(args.reference).replace("\\", "/")
+	args.test = ["".join(test_name).replace("\\", "/") for test_name in args.test]
+
 	# Find out if we have HDR or LDR input and load reference
 	image_format = args.reference.split('.')[-1]
 	reference_filename = args.reference[args.reference.rfind('/') + 1: args.reference.rfind('.')]

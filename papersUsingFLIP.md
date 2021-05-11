@@ -17,5 +17,7 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Jozef Hladky, Hans-Peter Seidel, and Markus Steinberger, ["SnakeBinning: Efficient Temporally Coherent Triangle Packing for Shading Streaming"](https://www.markussteinberger.net/papers/SnakeBinning.pdf), *Eurographics*, 2021.
 
+1. Joerg H. Mueller, Thomas Neff, Philip Voglreiter, Markus Steinberger, and Dieter Schmalstieg, ["Temporally Adaptive Shading Reuse for Real-Time Rendering and Virtual Reality"](https://dl.acm.org/doi/10.1145/3446790), *ACM Transactions on Graphics*, April 2021, Article No.: 11, 2021. *Note: they use FLIP in their video, but not in the paper.*
+
 **Citing ꟻLIP (but not using):**
-1. Joerg H. Mueller, Thomas Neff, Philip Voglreiter, Markus Steinberger, and Dieter Schmalstieg, ["Temporally Adaptive Shading Reuse for Real-Time Rendering and Virtual Reality"](https://dl.acm.org/doi/10.1145/3446790), *ACM Transactions on Graphics*, April 2021, Article No.: 11, 2021.
+1. TBD.

@@ -1,7 +1,8 @@
-### List of papers that are using ꟻLIP ###
+### List of papers that are using/citing ꟻLIP ###
 
-Please let us know if you know of more papers that use/cite FLIP.
+Please let us know if you know of more papers that use/cite ꟻLIP.
 
+**Using ꟻLIP:**
 1. Jae-Ho Nah, ["QuickETC2: Fast ETC2 texture compression using Luma differences"](https://dl.acm.org/doi/abs/10.1145/3414685.3417787), *ACM Transactions on Graphics (SIGGRAPH Asia)*, November 2020 Article No. 270
 
 1. Finn, Sinclair, ["Spatio-temporal reprojection for virtual and augmented reality applications"](ideals.illinois.edu/handle/2142/109178), *Bachelor thesis*, 2020.
@@ -14,4 +15,9 @@ Please let us know if you know of more papers that use/cite FLIP.
 
 1. Jon Hasselgren, Jacob Munkberg, Jaakko Lehtinen, Miika Aittala, and Samuli Laine, ["Appearance-Driven Automatic 3D Model Simplification"](https://arxiv.org/abs/2104.03989),	*arXiv*:2104.03989, 2021.
 
-1. Joerg H. Mueller, Thomas Neff, Philip Voglreiter, Markus Steinberger, and Dieter Schmalstieg, ["Temporally Adaptive Shading Reuse for Real-Time Rendering and Virtual Reality"](https://dl.acm.org/doi/10.1145/3446790), *ACM Transactions on Graphics*, April 2021, Article No.: 11, 2021.
+1. Jozef Hladky, Hans-Peter Seidel, and Markus Steinberger, ["SnakeBinning: Efficient Temporally Coherent Triangle Packing for Shading Streaming"](https://www.markussteinberger.net/papers/SnakeBinning.pdf), *Eurographics*, 2021.
+
+1. Joerg H. Mueller, Thomas Neff, Philip Voglreiter, Markus Steinberger, and Dieter Schmalstieg, ["Temporally Adaptive Shading Reuse for Real-Time Rendering and Virtual Reality"](https://dl.acm.org/doi/10.1145/3446790), *ACM Transactions on Graphics*, April 2021, Article No.: 11, 2021. *Note: they use FLIP in their video, but not in the paper.*
+
+**Citing ꟻLIP (but not using):**
+1. TBD.

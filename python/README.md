@@ -106,4 +106,5 @@ FLIP between reference image <reference.exr> and test image <test.exr>:
         Max: 0.962022
         Elapsed time: <t> seconds
   ```
-where `<t>` is the time it took to evaluate HDR-ꟻLIP. In addition, in the `output`-directory, you will find the files: `flip.reference.test.67.hdr.aces.m12.5423_to_p0.9427.14.png` and `exposure_map.reference.test.67.hdr.aces.m12.5423_to_p0.9427.14.png`, and we urge you to inspect those, which will reveal where the errors in the test image are located.
+where `<t>` is the time it took to evaluate HDR-ꟻLIP. In addition, you will now find the files `flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png` and `exposure_map.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png`
+in the directory containing the `flip.py` script, and we urge you to inspect those, which will reveal where the errors in the test image are located.

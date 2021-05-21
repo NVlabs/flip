@@ -668,7 +668,7 @@ def compute_hdrflip(reference, test, directory, reference_filename, test_filenam
 			save_image(ldr_test_path, CHWtoHWC(test_srgb))
 		if save_ldrflip:
 			if default_basename:
-				ldrflip_path = "%s/flip.%s.%s.%d.ldr.%s.%s.%s%.4f.png" % (directory, reference_filename, test_filename, pixels_per_degree, tone_mapper, str(i).zfill(3), exposure_sign, abs(exposure))
+				ldrflip_path = "%s/flip.%s.%s.%dppd.ldr.%s.%s.%s%.4f.png" % (directory, reference_filename, test_filename, pixels_per_degree, tone_mapper, str(i).zfill(3), exposure_sign, abs(exposure))
 			else:
 				ldrflip_path = "%s/%s.%s.png" % (directory, basename, str(i).zfill(3))
 			if no_magma == True:

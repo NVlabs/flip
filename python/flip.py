@@ -415,7 +415,7 @@ if __name__ == '__main__':
 													"2: print pooled FLIP errors, PPD, and evaluation time and (for HDR-FLIP) start and stop exposure and number of exposures\n"
 													"3: print pooled FLIP errors, PPD, warnings, and evaluation time and (for HDR-FLIP) start and stop exposure and number of exposures\n"),
 											 choices=[0,1,2,3], type=int, default=2)
-	parser.add_argument("-d", "--directory", help="Relative or absolute path to save directory (default: %(default)s)", metavar='path/to/save_directory', type=str, default='./output')
+	parser.add_argument("-d", "--directory", help="Relative or absolute path to save directory", metavar='path/to/save_directory', type=str, default='./')
 	parser.add_argument("-b", "--basename", help="Basename used for output files", type=str)
 	parser.add_argument("-txt", "--textfile", help="Save text file with pooled FLIP values (mean, weighted median and weighted 1st and 3rd quartiles as well as minimum and maximum error)", action="store_true")
 	parser.add_argument("-hist", "--histogram", help="Save weighted histogram of the FLIP error map(s). Outputs overlapping histograms if exactly two test images are evaluated", action="store_true")

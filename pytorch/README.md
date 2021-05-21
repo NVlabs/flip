@@ -14,7 +14,7 @@ and
 This [repository](https://github.com/NVlabs/flip) holds implementations of the [LDR-ꟻLIP](https://research.nvidia.com/publication/2020-07_FLIP)
 and [HDR-ꟻLIP](https://research.nvidia.com/publication/2021-05_HDR-FLIP) image error metrics as loss modules in PyTorch.
 
-### License ###
+# License
 
 Copyright © 2020-2021, NVIDIA Corporation. All rights reserved.
 
@@ -24,7 +24,7 @@ For business inquiries, please contact researchinquiries@nvidia.com.
 
 For press and other inquiries, please contact Hector Marinez at hmarinez@nvidia.com.
 
-### PyTorch (Loss Function) ###
+# PyTorch (Loss Function)
 
 - **Setup** (with Anaconda3):
   ```

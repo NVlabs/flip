@@ -121,7 +121,7 @@ def print_pooled_values(error_map, hdr, textfile, directory, basename, default_b
 	:param verbosity: (optional) integer describing level of verbosity.
 					  0: no printed output,
 					  1: print mean FLIP error,
-					  2: print pooled FLIP errors and PPD and (for HDR-FLIP) start and stop exposure and number of exposures
+					  "2: print pooled FLIP errors, PPD, and evaluation time and (for HDR-FLIP) start and stop exposure and number of exposures"
 					  3: print pooled FLIP errors, PPD, warnings, and evaluation time and (for HDR-FLIP) start and stop exposure and number of exposures
 	"""
 	mean = "%.6f" % np.mean(error_map)
@@ -357,7 +357,7 @@ def check_nans(reference, test, verbosity):
 	:param verbosity: (optional) integer describing level of verbosity.
 					  0: no printed output,
 					  1: print mean FLIP error,
-					  2: print pooled FLIP errors and PPD and (for HDR-FLIP) start and stop exposure and number of exposures
+					  "2: print pooled FLIP errors, PPD, and evaluation time and (for HDR-FLIP) start and stop exposure and number of exposures"
 					  3: print pooled FLIP errors, PPD, warnings, and evaluation time and (for HDR-FLIP) start and stop exposure and number of exposures
 	:return: two float tensors
 	"""
@@ -402,9 +402,9 @@ if __name__ == '__main__':
 	group.add_argument("-ppd", "--pixels_per_degree", help=("Observer's number of pixels per degree of visual angle. Default corresponds to\n"
 															"viewing the images at 0.7 meters from a 0.7 meters wide 4K display"),
 													  type=float)
-	group.add_argument("--viewing_conditions", help=("Distance to monitor (in meters), width of monitor (in meters), width of monitor (in pixels).\n"
-													 "Default corresponds to viewing the at 0.7 meters from a 0.7 meters wide 4K display"),
-											   metavar=('MONITOR_DISTANCE', 'MONITOR_WIDTH_METERS', 'MONITOR_WIDTH_PIXELS'), type=float, default=[0.7, 0.7, 3840], nargs=3)
+	group.add_argument("-vc", "--viewing_conditions", help=("Distance to monitor (in meters), width of monitor (in meters), width of monitor (in pixels).\n"
+															"Default corresponds to viewing the at 0.7 meters from a 0.7 meters wide 4K display"),
+													  metavar=('MONITOR_DISTANCE', 'MONITOR_WIDTH_METERS', 'MONITOR_WIDTH_PIXELS'), type=float, default=[0.7, 0.7, 3840], nargs=3)
 	parser.add_argument("-tm", "--tone_mapper", help="Tone mapper used for HDR-FLIP. Supported tone mappers are ACES, Hable, and Reinhard (default: %(default)s)", metavar='ACES|HABLE|REINHARD', default="ACES")
 	parser.add_argument("-n", "--num_exposures", help="Number of exposures between (and including) start and stop exposure used to compute HDR-FLIP", type=check_larger_than_one)
 	parser.add_argument("-cstart", "--start_exposure", help="Start exposure used to compute HDR-FLIP", metavar='C_START', type=float)
@@ -412,21 +412,21 @@ if __name__ == '__main__':
 	parser.add_argument("-v", "--verbosity", help=("Level of verbosity (default: %(default)s).\n"
 													"0: no printed output,\n"
 													"1: print mean FLIP error,\n"
-													"2: print pooled FLIP errors and PPD and (for HDR-FLIP) start and stop exposure and number of exposures\n"
+													"2: print pooled FLIP errors, PPD, and evaluation time and (for HDR-FLIP) start and stop exposure and number of exposures\n"
 													"3: print pooled FLIP errors, PPD, warnings, and evaluation time and (for HDR-FLIP) start and stop exposure and number of exposures\n"),
 											 choices=[0,1,2,3], type=int, default=2)
 	parser.add_argument("-d", "--directory", help="Relative or absolute path to save directory (default: %(default)s)", metavar='path/to/save_directory', type=str, default='./output')
 	parser.add_argument("-b", "--basename", help="Basename used for output files", type=str)
 	parser.add_argument("-txt", "--textfile", help="Save text file with pooled FLIP values (mean, weighted median and weighted 1st and 3rd quartiles as well as minimum and maximum error)", action="store_true")
-	parser.add_argument("--histogram", help="Save weighted histogram of the FLIP error map(s). Outputs overlapping histograms if exactly two test images are evaluated", action="store_true")
+	parser.add_argument("-hist", "--histogram", help="Save weighted histogram of the FLIP error map(s). Outputs overlapping histograms if exactly two test images are evaluated", action="store_true")
 	parser.add_argument("--y_max", help="Set upper limit of weighted histogram's y-axis", type=int)
-	parser.add_argument("--log", help="Take logarithm of weighted histogram", action="store_true")
-	parser.add_argument("--exclude_pooled_values", help="Do not include pooled FLIP values in the weighted histogram", action="store_true")
-	parser.add_argument("--intermediate_ldr_images", help="Save all exposure compensated and tone mapped LDR images (png) used for HDR-FLIP", action="store_true")
-	parser.add_argument("--intermediate_ldrflip", help="Save all LDR-FLIP maps used for HDR-FLIP", action="store_true")
-	parser.add_argument("--no_magma", help="Save FLIP error maps in grayscale instead of magma", action="store_true")
-	parser.add_argument("--no_exposure_map", help="Do not save the HDR-FLIP exposure map", action="store_true")
-	parser.add_argument("--no_error_map", help="Do not save the FLIP error map", action="store_true")
+	parser.add_argument("-lg", "--log", help="Take logarithm of weighted histogram", action="store_true")
+	parser.add_argument("-epv", "--exclude_pooled_values", help="Do not include pooled FLIP values in the weighted histogram", action="store_true")
+	parser.add_argument("-sli", "--save_ldr_images", help="Save all exposure compensated and tone mapped LDR images (png) used for HDR-FLIP", action="store_true")
+	parser.add_argument("-slf", "--save_ldrflip", help="Save all LDR-FLIP maps used for HDR-FLIP", action="store_true")
+	parser.add_argument("-nm", "--no_magma", help="Save FLIP error maps in grayscale instead of magma", action="store_true")
+	parser.add_argument("-nexm", "--no_exposure_map", help="Do not save the HDR-FLIP exposure map", action="store_true")
+	parser.add_argument("-nerm", "--no_error_map", help="Do not save the FLIP error map", action="store_true")
 
 	# Print help string if flip.py is run without arguments
 	if len(sys.argv) == 1:
@@ -441,7 +441,7 @@ if __name__ == '__main__':
 		sys.exit("Error: Basename is the same for all test images. Results will overwrite each other. Change to multiple runs with different --directory for each test image.")
 
 	# Create output directory if it doesn't exist and images should be saved
-	if not os.path.isdir(args.directory) and (not args.no_error_map or not args.no_exposure_map or args.intermediate_ldr_images or args.intermediate_ldrflip or args.textfile or args.histogram):
+	if not os.path.isdir(args.directory) and (not args.no_error_map or not args.no_exposure_map or args.save_ldr_images or args.save_ldrflip or args.textfile or args.histogram):
 		os.makedirs(args.directory)
 
 	# Replace \ with / in reference and test paths
@@ -491,10 +491,10 @@ if __name__ == '__main__':
 			basename = args.basename
 			default_basename = False
 		elif hdr == True:
-			basename = "%s.%s.%d.hdr.%s.%s%.4f_to_%s%.4f.%d" % (reference_filename, test_filename, pixels_per_degree, tone_mapper, start_exposure_sign, abs(start_exposure), stop_exposure_sign, abs(stop_exposure), num_exposures)
+			basename = "%s.%s.%dppd.hdr.%s.%s%.4f_to_%s%.4f.%d" % (reference_filename, test_filename, pixels_per_degree, tone_mapper, start_exposure_sign, abs(start_exposure), stop_exposure_sign, abs(stop_exposure), num_exposures)
 			default_basename = True
 		else:
-			basename = ("%s.%s.%d.ldr") % (reference_filename, test_filename, pixels_per_degree)
+			basename = ("%s.%s.%dppd.ldr") % (reference_filename, test_filename, pixels_per_degree)
 			default_basename = True
 
 		# Compute HDR or LDR FLIP depending on type of input
@@ -525,8 +525,8 @@ if __name__ == '__main__':
 												 start_exposure=start_exposure,
 												 stop_exposure=stop_exposure,
 												 num_exposures=num_exposures,
-												 intermediate_ldr_images=args.intermediate_ldr_images,
-												 intermediate_ldrflip=args.intermediate_ldrflip,
+												 save_ldr_images=args.save_ldr_images,
+												 save_ldrflip=args.save_ldrflip,
 												 no_magma=args.no_magma)
 			t = time.time()
 
@@ -567,7 +567,7 @@ if __name__ == '__main__':
 		print_pooled_values(flip, hdr, args.textfile, args.directory, basename, default_basename, args.verbosity)
 
 		# Print time spent computing FLIP
-		if args.verbosity == 3: print(("\tEvaluation time: %.4f seconds") % (t - t0))
+		if args.verbosity > 1: print(("\tEvaluation time: %.4f seconds") % (t - t0))
 		if (args.verbosity > 0 and idx < (num_test_images - 1)): print("")
 
 		# Save FLIP map

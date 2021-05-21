@@ -603,7 +603,7 @@ def compute_exposure_map(hdrflip, all_errors, num_exposures):
 
 	return exposure_map
 
-def compute_hdrflip(reference, test, directory, reference_filename, test_filename, basename, default_basename, pixels_per_degree=(0.7 * 3840 / 0.7) * np.pi / 180, tone_mapper="aces", start_exposure=0.0, stop_exposure=0.0, num_exposures=1, intermediate_ldr_images=False, intermediate_ldrflip=False, no_magma=False):
+def compute_hdrflip(reference, test, directory, reference_filename, test_filename, basename, default_basename, pixels_per_degree=(0.7 * 3840 / 0.7) * np.pi / 180, tone_mapper="aces", start_exposure=0.0, stop_exposure=0.0, num_exposures=1, save_ldr_images=False, save_ldrflip=False, no_magma=False):
 	"""
 	Computes the FLIP error map between two HDR images,
 	assuming the images are observed at a certain number of
@@ -621,8 +621,8 @@ def compute_hdrflip(reference, test, directory, reference_filename, test_filenam
 	:param tone_mapper: (optional) string describing what tone mapper HDR-FLIP should assume
 	:param start_exposure: (optional) float indicating the shortest exposure HDR-FLIP should use
 	:param stop_exposure: (optional) float indicating the longest exposure HDR-FLIP should use
-	:param intermediate_ldr_images: (optional) bool indicating if intermediate LDR images used in HDR-FLIP should be saved or not
-	:param intermediate_ldrflip: (optional) bool indicating if intermediate LDR-FLIP maps used in HDR-FLIP should be saved or not
+	:param save_ldr_images: (optional) bool indicating if intermediate LDR images used in HDR-FLIP should be saved or not
+	:param save_ldrflip: (optional) bool indicating if intermediate LDR-FLIP maps used in HDR-FLIP should be saved or not
 	:param no_magma: (optional) bool indicating if FLIP error maps should be saved in grayscale or not
 	:return: matrix (with HxW layout on float32 format) containing the per-pixel FLIP errors (in the range [0, 1]) between HDR reference and test image
 			 and exposure map in viridis colors (with HxWxC layout)
@@ -656,7 +656,7 @@ def compute_hdrflip(reference, test, directory, reference_filename, test_filenam
 		all_errors[:, :, i] = deltaE
 
 		# Save intermediate images and LDR-FLIP maps
-		if intermediate_ldr_images:
+		if save_ldr_images:
 			if default_basename:
 				base = "%s.%s.%s%.4f.png" % (tone_mapper, str(i).zfill(3), exposure_sign, abs(exposure))
 				ldr_reference_path = "%s/%s.%s" % (directory, reference_filename, base)
@@ -666,7 +666,7 @@ def compute_hdrflip(reference, test, directory, reference_filename, test_filenam
 				ldr_test_path = "%s/%s.test.%s.png" % (directory, basename, str(i).zfill(3))
 			save_image(ldr_reference_path, CHWtoHWC(reference_srgb))
 			save_image(ldr_test_path, CHWtoHWC(test_srgb))
-		if intermediate_ldrflip:
+		if save_ldrflip:
 			if default_basename:
 				ldrflip_path = "%s/flip.%s.%s.%d.ldr.%s.%s.%s%.4f.png" % (directory, reference_filename, test_filename, pixels_per_degree, tone_mapper, str(i).zfill(3), exposure_sign, abs(exposure))
 			else:

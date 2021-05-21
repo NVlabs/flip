@@ -15,7 +15,7 @@ This [repository](https://github.com/NVlabs/flip) holds implementations of the [
 and [HDR-ꟻLIP](https://research.nvidia.com/publication/2021-05_HDR-FLIP) image error metrics in Python.
 It also holds code for the ꟻLIP tool, to be presented in [Ray Tracing Gems II](https://developer.nvidia.com/blog/ray-tracing-gems-ii-available-august-4th/).
 
-### License ###
+# License
 
 Copyright © 2020-2021, NVIDIA Corporation. All rights reserved.
 
@@ -25,7 +25,7 @@ For business inquiries, please contact researchinquiries@nvidia.com.
 
 For press and other inquiries, please contact Hector Marinez at hmarinez@nvidia.com.
 
-### Python (API and Tool) ###
+# Python (API and Tool)
 - **Setup** (with Anaconda3):
   ```
   conda create -n flip python numpy matplotlib
@@ -49,19 +49,20 @@ For press and other inquiries, please contact Hector Marinez at hmarinez@nvidia.
 
   *Low dynamic range images:*<br>
 
-    LDR-ꟻLIP: `flip.<reference>.<test>.<ppd>.ldr.png`<br>
-    Weighted histogram: `weighted_histogram.reference>.<test>.<ppd>.ldr.pdf`<br>
-    Text file: `pooled_values.<reference>.<test>.<ppd>.ldr.txt`<br>
+    LDR-ꟻLIP: `flip.<reference>.<test>.<ppd>ppd.ldr.png`<br>
+    Weighted histogram: `weighted_histogram.reference>.<test>.<ppd>ppd.ldr.pdf`<br>
+    Overlapping weighted histogram: `overlapping_weighted_histogram.<reference>.<test1>.<test2>.<ppd>ppd.ldr.pdf`<br>
+    Text file: `pooled_values.<reference>.<test>.<ppd>ppd.ldr.txt`<br>
 
   *High dynamic range images:*<br>
 
-    HDR-ꟻLIP: `flip.<reference>.<test>.<ppd>.hdr.<tm>.<cstart>_to_<cstop>.<N>.png`<br>
-    Exposure map: `exposure_map.<reference>.<test>.<ppd>.hdr.<tm>.<cstart>_to_<cstop>.<N>.png`<br>
-    Intermediate LDR-ꟻLIP maps: `flip.<reference>.<test>.<ppd>.ldr.<tm>.<nnn>.<exp>.png`<br>
+    HDR-ꟻLIP: `flip.<reference>.<test>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.png`<br>
+    Exposure map: `exposure_map.<reference>.<test>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.png`<br>
+    Intermediate LDR-ꟻLIP maps: `flip.<reference>.<test>.<ppd>ppd.ldr.<tm>.<nnn>.<exp>.png`<br>
     Intermediate LDR images: `<reference|test>.<tm>.<nnn>.<exp>.png`<br>
-    Weighted histogram: `weighted_histogram.<reference>.<test>.<ppd>.hdr.<tm>.<cstart>_to_<cstop>.<N>.pdf`<br>
-    Overlapping weighted histogram: `overlapping_weighted_histogram.<reference>.<test1>.<test2>.<ppd>.hdr.<tm>.<cstart>_to_<cstop>.<N>.pdf`<br>
-    Text file: `pooled_values.<reference>.<test>.<ppd>.hdr.<tm>.<cstart>_to_<cstop>.<N>.txt`<br>
+    Weighted histogram: `weighted_histogram.<reference>.<test>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.pdf`<br>
+    Overlapping weighted histogram: `overlapping_weighted_histogram.<reference>.<test1>.<test2>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.pdf`<br>
+    Text file: `pooled_values.<reference>.<test>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.txt`<br>
 
   **With** `--basename <name>` **(note: not applicable if more than one test image is evaluated):**
 
@@ -80,15 +81,16 @@ For press and other inquiries, please contact Hector Marinez at hmarinez@nvidia.
     Weighted histogram: `<name>.pdf`<br>
     Overlapping weighted histogram: N/A<br>
     Text file: `<name>.txt`<br>
-    
- **Example usage:**
-First change directory to where you have installed `flip.py` and the rest of the Python files. Then start an Ananconda prompt and try:
+
+**Example usage:**
+First navigate to the directory containing the `flip.py` script and the rest of the Python files. Then start an Ananconda prompt and try:
   ```
   conda activate flip
   python flip.py -r ../images/reference.exr -t ../images/test.exr
   ```
 The result should be:
-  ```  Invoking HDR-FLIP
+  ```
+Invoking HDR-FLIP
         Pixels per degree: 67
         Assumed tone mapper: ACES
         Start exposure: -12.5423
@@ -102,6 +104,6 @@ FLIP between reference image <reference.exr> and test image <test.exr>:
         3rd weighted quartile: 0.434763
         Min: 0.003120
         Max: 0.962022
+        Elapsed time: <t> seconds
   ```
-In addition, in the `output`-directory, you will find the files: `flip.reference.test.67.hdr.aces.m12.5423_to_p0.9427.14.png` and `exposure_map.reference.test.67.hdr.aces.m12.5423_to_p0.9427.14.png`, and we urge you to inspect those, which will reveal where the
-errors in the test image are located.
+where `<t>` is the time it took to evaluate HDR-ꟻLIP. In addition, in the `output`-directory, you will find the files: `flip.reference.test.67.hdr.aces.m12.5423_to_p0.9427.14.png` and `exposure_map.reference.test.67.hdr.aces.m12.5423_to_p0.9427.14.png`, and we urge you to inspect those, which will reveal where the errors in the test image are located.

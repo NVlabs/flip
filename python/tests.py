@@ -70,15 +70,15 @@ if __name__ == '__main__':
 
 	# Compare output to reference output
 	test_results = []
-	test_results.append(filecmp.cmp('../images/reference_hdrflip_python.png', '../images/flip.reference.test.67.hdr.aces.m12.5423_to_p0.9427.14.png'))
-	test_results.append(filecmp.cmp('../images/reference_ldrflip_python.png', '../images/flip.reference.test.67.ldr.png'))
+	test_results.append(filecmp.cmp('../images/reference_hdrflip_python.png', '../images/flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png'))
+	test_results.append(filecmp.cmp('../images/reference_ldrflip_python.png', '../images/flip.reference.test.67ppd.ldr.png'))
 
 	for idx, passed in enumerate(test_results):
-		print(("PASSED " if passed else "FAILED ") + "test " + str(idx) + " - " + test_descriptions[idx])
+		print("%s test %d - %s" % (("PASSED" if passed else "FAILED"), idx, test_descriptions[idx]))
 
 	# Remove output created during tests
-	os.remove('../images/flip.reference.test.67.hdr.aces.m12.5423_to_p0.9427.14.png')
-	os.remove('../images/flip.reference.test.67.ldr.png')
+	os.remove('../images/flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png')
+	os.remove('../images/flip.reference.test.67ppd.ldr.png')
 
 	print("================")
 	print("Tests complete!")

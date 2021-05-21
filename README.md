@@ -48,8 +48,19 @@ python flip.py --reference reference.{exr|png} --test test.{exr|png} [--options]
 
 See the [README](python/README.md) in the `python` folder and run `python flip.py -h` for further information and usage instructions.
 
-# C++/CUDA (API and Tool)
-C++/CUDA code will be released in the week of May 5.
+# C++ and CUDA (API and Tool)
+**Setup:**
+
+The `FLIP.sln` solution contains one CUDA backend project and one pure C++ backend project.
+
+Compiling the CUDA project requires a CUDA compatible GPU. Instruction on how to install CUDA can be found [here](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html).
+
+**Usage:**
+```
+flip[-cuda].exe --reference reference.{exr|png} --test test.{exr|png} [options]
+```
+
+See the [README](cpp/README.md) in the `cpp` folder and run `flip[-cuda].exe -h` for further information and usage instructions.
 
 # PyTorch (Loss Function)
 **Setup** (with Anaconda3):

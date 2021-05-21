@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="mapMagma.cuh" />
+    <ClInclude Include="mapViridis.cuh" />
+    <ClInclude Include="color.cuh" />
+    <ClInclude Include="cudaImage.cuh" />
+    <ClInclude Include="cudaKernels.cuh" />
+    <ClInclude Include="cudaTensor.cuh" />
+    <ClInclude Include="FLIP.h" />
+    <ClInclude Include="..\common\commandline.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\filename.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\pooling.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\stb_image.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\stb_image_write.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\tinyexr.h">
+      <Filter>common</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="common">
+      <UniqueIdentifier>{b9cac534-5597-4e15-9524-ec0ec3756d12}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\common\FLIP.cpp">
+      <Filter>common</Filter>
+    </CudaCompile>
+  </ItemGroup>
+</Project>

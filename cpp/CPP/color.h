@@ -65,7 +65,6 @@ namespace FLIP
             struct { float r, g, b; };
             struct { float x, y, z; };
             struct { float h, s, v; };
-            //float3 float3float3;
         };
 
     public:

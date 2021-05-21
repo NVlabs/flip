@@ -589,7 +589,6 @@ namespace FLIP
             int idxR = -1;
             int idxG = -1;
             int idxB = -1;
-            //int idxA = -1;
             int numRecognizedChannels = 0;
             for (int c = 0; c < exrHeader.num_channels; c++)
             {
@@ -612,7 +611,6 @@ namespace FLIP
                 }
                 else if (channelName == "a")
                 {
-                    //idxA = c;
                     ++numRecognizedChannels;
                 }
                 else
@@ -626,7 +624,6 @@ namespace FLIP
                 idxR = 0;
                 idxG = 1;
                 idxB = 2;
-                //idxA = 3;
             }
 
             auto rawImgChn = reinterpret_cast<float**>(exrImage.images);

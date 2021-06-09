@@ -20,4 +20,4 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 1. Joerg H. Mueller, Thomas Neff, Philip Voglreiter, Markus Steinberger, and Dieter Schmalstieg, ["Temporally Adaptive Shading Reuse for Real-Time Rendering and Virtual Reality"](https://dl.acm.org/doi/10.1145/3446790), *ACM Transactions on Graphics*, April 2021, Article No.: 11, 2021. *Note: they use FLIP in their video, but not in the paper.*
 
 **Citing ꟻLIP (but not using):**
-1. TBD.
+1. Michael N. Mishourovsky, "Visually Lossless Colour Compression Technology", in *Smart Algorithms for Multimedia and Imaging*, edited by Michael N. Rychagov, Ekaterina V. Tolstaya, and Mikhail Y. Sirotenko, 2021.

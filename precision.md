@@ -10,7 +10,7 @@ These include:
     * As an example, if a 2D filter implementation's outer loop is on `x` and the inner loop is on `y`, that will in the majority
       of cases give a different floating-point result compared to have the outer loop be `y` and the inner `x`.
 4. GPUs attempt to try to use fused multiply-and-add (FMA) operations, i.e., `a*b+c`, as much as possible. These are faster, but the entire
-   operation is also computed at higher precision. Since the CPU implementation may not used FMA, this is another source of difference
+   operation is also computed at higher precision. Since the CPU implementation may not use FMA, this is another source of difference
    between implementations.
 5. Depending on compiler flags, `sqrt()` may be computed using lower precision on GPUs.
 

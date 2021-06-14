@@ -199,7 +199,7 @@ namespace FLIP
 
         static inline color3 sqrt(color3 v)
         {
-            return color3(std::sqrtf(v.x), std::sqrtf(v.y), std::sqrtf(v.z));
+            return color3(std::sqrt(v.x), std::sqrt(v.y), std::sqrt(v.z));
         }
 
         static inline color3 clamp(color3 v, float _min = 0.0f, float _max = 1.0f)
@@ -359,8 +359,8 @@ namespace FLIP
 
         static inline float HyAB(color3& refPixel, color3& testPixel)
         {
-            float cityBlockDistanceL = std::fabsf(refPixel.x - testPixel.x);
-            float euclideanDistanceAB = std::sqrtf((refPixel.y - testPixel.y) * (refPixel.y - testPixel.y) + (refPixel.z - testPixel.z) * (refPixel.z - testPixel.z));
+            float cityBlockDistanceL = std::fabs(refPixel.x - testPixel.x);
+            float euclideanDistanceAB = std::sqrt((refPixel.y - testPixel.y) * (refPixel.y - testPixel.y) + (refPixel.z - testPixel.z) * (refPixel.z - testPixel.z));
             return cityBlockDistanceL + euclideanDistanceAB;
         }
 

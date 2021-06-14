@@ -283,17 +283,17 @@ namespace FLIP
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
 
-        const float normalizationFactor = 1.0f / std::sqrtf(2.0f);
+        const float normalizationFactor = 1.0f / std::sqrt(2.0f);
 
         color3 er = pEdgeReference[i];
         color3 et = pEdgeTest[i];
         color3 pr = pPointReference[i];
         color3 pt = pPointTest[i];
 
-        const float edgeValueRef = std::sqrtf(er.x * er.x + er.y * er.y);
-        const float edgeValueTest = std::sqrtf(et.x * et.x + et.y * et.y);
-        const float pointValueRef = std::sqrtf(pr.x * pr.x + pr.y * pr.y);
-        const float pointValueTest = std::sqrtf(pt.x * pt.x + pt.y * pt.y);
+        const float edgeValueRef = std::sqrt(er.x * er.x + er.y * er.y);
+        const float edgeValueTest = std::sqrt(et.x * et.x + et.y * et.y);
+        const float pointValueRef = std::sqrt(pr.x * pr.x + pr.y * pr.y);
+        const float pointValueTest = std::sqrt(pt.x * pt.x + pt.y * pt.y);
 
         const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
         const float pointDifference = std::abs(pointValueRef - pointValueTest);
@@ -438,17 +438,17 @@ namespace FLIP
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
 
-        const float normalizationFactor = 1.0f / std::sqrtf(2.0f);
+        const float normalizationFactor = 1.0f / std::sqrt(2.0f);
 
         color3 er = pEdgeReference[i];
         color3 et = pEdgeTest[i];
         color3 pr = pPointReference[i];
         color3 pt = pPointTest[i];
 
-        const float edgeValueRef = std::sqrtf(er.x * er.x + er.y * er.y);
-        const float edgeValueTest = std::sqrtf(et.x * et.x + et.y * et.y);
-        const float pointValueRef = std::sqrtf(pr.x * pr.x + pr.y * pr.y);
-        const float pointValueTest = std::sqrtf(pt.x * pt.x + pt.y * pt.y);
+        const float edgeValueRef = std::sqrt(er.x * er.x + er.y * er.y);
+        const float edgeValueTest = std::sqrt(et.x * et.x + et.y * et.y);
+        const float pointValueRef = std::sqrt(pr.x * pr.x + pr.y * pr.y);
+        const float pointValueTest = std::sqrt(pt.x * pt.x + pt.y * pt.y);
 
         const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
         const float pointDifference = std::abs(pointValueRef - pointValueTest);

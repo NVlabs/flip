@@ -65,7 +65,7 @@ struct
 //  Pixels per degree (PPD)
 inline float calculatePPD(const float dist, const float resolutionX, const float monitorWidth)
 {
-    return dist * (resolutionX / monitorWidth) * (float(FLIP::M_PI) / 180.0f);
+    return dist * (resolutionX / monitorWidth) * (float(FLIP::PI) / 180.0f);
 }
 
 inline std::string f2s(float value, size_t decimals = 4)
@@ -258,7 +258,7 @@ int main(int argc, char** argv)
                 ss << std::string(exposure < 0.0f ? "m" : "p") << std::to_string(std::abs(exposure));
                 std::string expString = ss.str();
 
-                rImage.copy(referenceImage);    
+                rImage.copy(referenceImage);
                 tImage.copy(testImage);
 
                 rImage.expose(exposure);

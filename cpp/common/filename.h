@@ -324,7 +324,11 @@ namespace FLIP
             std::stringstream ss;
             if (this->mDirectory != "")
             {
+#if _WIN32
                 ss << this->mDirectory << "\\";
+#else
+                ss << this->mDirectory << "/";
+#endif
             }
             ss << this->mName;
             if (this->mIsNumbered)
@@ -355,7 +359,11 @@ namespace FLIP
             std::stringstream ss;
             if (this->mDirectory != "")
             {
+#if _WIN32
                 ss << this->mDirectory << "\\";
+#else
+                ss << this->mDirectory << "/";
+#endif
             }
             ss << this->mName;
             if (this->mIsNumbered)

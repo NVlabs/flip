@@ -132,23 +132,23 @@ namespace FLIP
 
         static float GaussSum(const float x2, const float a1, const float b1, const float a2, const float b2)
         {
-            const float pi = float(M_PI);
-            const float pi_sq = float(M_PI * M_PI);
-            return a1 * std::sqrtf(pi / b1) * std::expf(-pi_sq * x2 / b1) + a2 * std::sqrtf(pi / b2) * std::expf(-pi_sq * x2 / b2);
+            const float pi = float(PI);
+            const float pi_sq = float(PI * PI);
+            return a1 * std::sqrt(pi / b1) * std::exp(-pi_sq * x2 / b1) + a2 * std::sqrt(pi / b2) * std::exp(-pi_sq * x2 / b2);
         }
 
         static float Gaussian(const float x, const float y, const float sigma)
         {
-            return std::expf(-(x * x + y * y) / (2.0f * sigma * sigma));
+            return std::exp(-(x * x + y * y) / (2.0f * sigma * sigma));
         }
 
         static int calculateSpatialFilterRadius(const float ppd)
         {
             const float deltaX = 1.0f / ppd;
-            const float pi_sq = float(M_PI * M_PI);
+            const float pi_sq = float(PI * PI);
 
             float maxScaleParameter = std::max(std::max(std::max(GaussianConstants.b1.x, GaussianConstants.b1.y), std::max(GaussianConstants.b1.z, GaussianConstants.b2.x)), std::max(GaussianConstants.b2.y, GaussianConstants.b2.z));
-            int radius = int(std::ceil(3.0f * std::sqrtf(maxScaleParameter / (2.0f * pi_sq)) * ppd)); // Set radius based on largest scale parameter
+            int radius = int(std::ceil(3.0f * std::sqrt(maxScaleParameter / (2.0f * pi_sq)) * ppd)); // Set radius based on largest scale parameter
 
             return radius;
         }
@@ -364,17 +364,17 @@ namespace FLIP
             {
                 for (int x = 0; x < this->getWidth(); x++)
                 {
-                    const float normalizationFactor = 1.0f / std::sqrtf(2.0f);
+                    const float normalizationFactor = 1.0f / std::sqrt(2.0f);
 
                     color3 er = edgeReference.get(x, y);
                     color3 et = edgeTest.get(x, y);
                     color3 pr = pointReference.get(x, y);
                     color3 pt = pointTest.get(x, y);
 
-                    const float edgeValueRef = std::sqrtf(er.x * er.x + er.y * er.y);
-                    const float edgeValueTest = std::sqrtf(et.x * et.x + et.y * et.y);
-                    const float pointValueRef = std::sqrtf(pr.x * pr.x + pr.y * pr.y);
-                    const float pointValueTest = std::sqrtf(pt.x * pt.x + pt.y * pt.y);
+                    const float edgeValueRef = std::sqrt(er.x * er.x + er.y * er.y);
+                    const float edgeValueTest = std::sqrt(et.x * et.x + et.y * et.y);
+                    const float pointValueRef = std::sqrt(pr.x * pr.x + pr.y * pr.y);
+                    const float pointValueTest = std::sqrt(pt.x * pt.x + pt.y * pt.y);
 
                     const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
                     const float pointDifference = std::abs(pointValueRef - pointValueTest);
@@ -406,7 +406,7 @@ namespace FLIP
 
         void expose(float level)
         {
-            float m = std::powf(2.0f, level);
+            float m = std::pow(2.0f, level);
             for (int y = 0; y < this->getHeight(); y++)
             {
                 for (int x = 0; x < this->getWidth(); x++)

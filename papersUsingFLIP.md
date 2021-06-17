@@ -21,3 +21,5 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 **Citing ꟻLIP (but not using):**
 1. Michael N. Mishourovsky, "Visually Lossless Colour Compression Technology", in *Smart Algorithms for Multimedia and Imaging*, edited by Michael N. Rychagov, Ekaterina V. Tolstaya, and Mikhail Y. Sirotenko, 2021.
+
+1. Ha Manh Luu, Theo van Walsum, Daniel Franklin, Phuong Cam Pham, Luu Dang Vu, Adriaan Moelker, Marius Staring, Xiem VanHoang, Wiro Niessen, Nguyen Linh Trung, ["Efficiently Compressing 3D Medical Images for Teleinter2 ventions via CNNs and Anisotropic Diffusion"](https://elastix.lumc.nl/marius/downloads/2021_j_MP.pdf), *Medical Physics*, 2021.

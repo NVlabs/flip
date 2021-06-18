@@ -39,3 +39,6 @@ _ReSharper*/
 *.aux
 *.bbl
 *.blg
+
+#  VSCode ignores
+*.vscode

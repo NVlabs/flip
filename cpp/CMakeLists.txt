@@ -1,0 +1,50 @@
+###########################################################################
+# Copyright(c) 2020 - 2021, NVIDIA CORPORATION.All rights reserved.
+#
+# Redistributionand use in sourceand binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met :
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditionsand the following disclaimer.
+#  * Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditionsand the following disclaimer in the
+#    documentationand /or other materials provided with the distribution.
+#  * Neither the name of NVIDIA CORPORATION nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED.IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES(INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+###########################################################################
+
+cmake_minimum_required(VERSION 3.9)
+
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(CMAKE_BUILD_TYPE_INIT "Release")
+
+project(flip LANGUAGES CXX)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+include(GNUInstallDirs)
+
+option(FLIP_ENABLE_CUDA "Include CUDA version of flip" OFF)
+
+add_subdirectory(CPP)
+if (FLIP_ENABLE_CUDA)
+  add_subdirectory(CUDA)
+endif()

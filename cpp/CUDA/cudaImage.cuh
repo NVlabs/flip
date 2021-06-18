@@ -105,7 +105,7 @@ namespace FLIP
             this->copy(image);
         }
 
-        image(tensor& tensor, const int offset, const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
+        image(tensor<T>& tensor, const int offset, const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
         {
             this->mBlockDim = blockDim;
             this->init(tensor.getDimensions());
@@ -137,93 +137,33 @@ namespace FLIP
 
         //////////////////////////////////////////////////////////////////////////////////
 
-        void FLIP(image<color3>& reference, image<color3>& test, float ppd)
-        {
-            int width = reference.getWidth();
-            int height = reference.getHeight();
-
-            //  temporary images (on device)
-            image<color3> referenceImage(reference), testImage(test);
-            image<color3> preprocessedReference(width, height), preprocessedTest(width, height);
-            image<color3> colorDifference(width, height);
-            image<color3> pointReference(width, height), pointTest(width, height);
-            image<color3> edgeReference(width, height), edgeTest(width, height);
-            image<color3> featureDifference(width, height);
-
-            //  move from sRGB to YCxCz
-            referenceImage.sRGB2YCxCz();
-            testImage.sRGB2YCxCz();
-
-            //  spatial filtering
-            int spatialFilterRadius = calculateSpatialFilterRadius(ppd);
-            int spatialFilterWidth = 2 * spatialFilterRadius + 1;
-            image<color3> spatialFilter(spatialFilterWidth, spatialFilterWidth);
-            setSpatialFilter(spatialFilter, ppd, spatialFilterRadius);
-            preprocessedReference.convolve(referenceImage, spatialFilter);
-            preprocessedTest.convolve(testImage, spatialFilter);
-
-            //  move from YCxCz to CIELab
-            preprocessedReference.YCxCz2CIELab();
-            preprocessedTest.YCxCz2CIELab();
-
-            //  Hunt adjustment
-            preprocessedReference.huntAdjustment();
-            preprocessedTest.huntAdjustment();
-
-            //  color difference
-            colorDifference.computeColorDifference(preprocessedReference, preprocessedTest);
-
-            //  feature (point/edge) filtering
-            const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
-            const int featureFilterRadius = int(std::ceil(3.0f * stdDev));
-            int featureFilterWidth = 2 * featureFilterRadius + 1;
-            image<color3> pointFilter(featureFilterWidth, featureFilterWidth);
-            image<color3> edgeFilter(featureFilterWidth, featureFilterWidth);
-            setFeatureFilter(pointFilter, ppd, true);
-            setFeatureFilter(edgeFilter, ppd, false);
-
-            //  grayscale images needed for feature detection
-            image<color3> grayReference(width, height), grayTest(width, height);
-            grayReference.CIELab2Gray(referenceImage);
-            grayTest.CIELab2Gray(testImage);
-
-            //  feature filtering
-            pointReference.convolve(grayReference, pointFilter);
-            pointTest.convolve(grayTest, pointFilter);
-            edgeReference.convolve(grayReference, edgeFilter);
-            edgeTest.convolve(grayTest, edgeFilter);
-
-            //  feature difference
-            featureDifference.computeFeatureDifference(pointReference, pointTest, edgeReference, edgeTest);
-
-            this->finalError(colorDifference, featureDifference);
-        }
+        void FLIP(image<color3>& reference, image<color3>& test, float ppd);
 
         void finalError(image<color3>& colorDifference, image<color3>& featureDifference)
         {
             FLIP::kernelFinalError << <this->mGridDim, this->mBlockDim >> > (this->getDeviceData(), colorDifference.getDeviceData(), featureDifference.getDeviceData(), this->mDim);
-            checkStatus("kernelFinalError");
+            image<T>::checkStatus("kernelFinalError");
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
 
         void computeColorDifference(image& reference, image& test)
         {
             FLIP::kernelColorDifference << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, reference.mvpDeviceData, test.mvpDeviceData, this->mDim);
-            checkStatus("kernelColorDifference");
+            image<T>::checkStatus("kernelColorDifference");
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
 
         void huntAdjustment(void)
         {
             FLIP::kernelHuntAdjustment << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
-            checkStatus("kernelHuntAdjustment");
+            image<T>::checkStatus("kernelHuntAdjustment");
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
 
         void computeFeatureDifference(image& pointReference, image& pointTest, image& edgeReference, image& edgeTest)
         {
             FLIP::kernelFeatureDifference << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, pointReference.mvpDeviceData, pointTest.mvpDeviceData, edgeReference.mvpDeviceData, edgeTest.mvpDeviceData, this->mDim);
-            checkStatus("kernelFeatureDifference");
+            image<T>::checkStatus("kernelFeatureDifference");
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
 
@@ -232,7 +172,7 @@ namespace FLIP
             errorMap.synchronizeDevice();
             exposureMap.synchronizeDevice();
             FLIP::kernelSetMaxExposure << <this->mGridDim, this->mBlockDim >> > (this->getDeviceData(), errorMap.getDeviceData(), exposureMap.getDeviceData(), this->mDim, exposure);
-            checkStatus("kernelSetMaxExposure");
+            image<T>::checkStatus("kernelSetMaxExposure");
             exposureMap.setState(CudaTensorState::DEVICE_ONLY);
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
@@ -249,7 +189,7 @@ namespace FLIP
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
 
-        void copy(tensor& srcTensor, const int z)
+        void copy(tensor<T>& srcTensor, const int z)
         {
             srcTensor.synchronizeDevice();
             cudaError_t cudaStatus = cudaMemcpy(this->getDeviceData(), srcTensor.getDeviceData(z), this->mArea * sizeof(T), cudaMemcpyDeviceToDevice);
@@ -263,9 +203,9 @@ namespace FLIP
 
         void expose(float level)
         {
-            float m = std::powf(2.0f, level);
+            float m = std::pow(2.0f, level);
             FLIP::kernelMultiplyAndAdd << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim, m, 0.0f);
-            checkStatus("kernelExpose");
+            image<T>::checkStatus("kernelExpose");
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
 
@@ -441,24 +381,24 @@ namespace FLIP
     static int calculateSpatialFilterRadius(const float ppd)
     {
         const float deltaX = 1.0f / ppd;
-        const float pi_sq = float(M_PI * M_PI);
+        const float pi_sq = float(PI * PI);
 
         float maxScaleParameter = std::max(std::max(std::max(GaussianConstants.b1.x, GaussianConstants.b1.y), std::max(GaussianConstants.b1.z, GaussianConstants.b2.x)), std::max(GaussianConstants.b2.y, GaussianConstants.b2.z));
-        int radius = int(std::ceil(3.0f * std::sqrtf(maxScaleParameter / (2.0f * pi_sq)) * ppd)); // Set radius based on largest scale parameter
+        int radius = int(std::ceil(3.0f * std::sqrt(maxScaleParameter / (2.0f * pi_sq)) * ppd)); // Set radius based on largest scale parameter
 
         return radius;
     }
 
     static float GaussSum(const float x2, const float a1, const float b1, const float a2, const float b2)
     {
-        const float pi = float(M_PI);
-        const float pi_sq = float(M_PI * M_PI);
-        return a1 * std::sqrtf(pi / b1) * std::expf(-pi_sq * x2 / b1) + a2 * std::sqrtf(pi / b2) * std::expf(-pi_sq * x2 / b2);
+        const float pi = float(PI);
+        const float pi_sq = float(PI * PI);
+        return a1 * std::sqrt(pi / b1) * std::exp(-pi_sq * x2 / b1) + a2 * std::sqrt(pi / b2) * std::exp(-pi_sq * x2 / b2);
     }
 
     static float Gaussian(const float x, const float y, const float sigma)
     {
-        return std::expf(-(x * x + y * y) / (2.0f * sigma * sigma));
+        return std::exp(-(x * x + y * y) / (2.0f * sigma * sigma));
     }
 
     static void setSpatialFilter(image<color3>& filter, float ppd, int filterRadius)
@@ -541,6 +481,71 @@ namespace FLIP
                 filter.set(x, y, color3(p.x / (p.x > 0.0f ? positiveWeightsSumX : negativeWeightsSumX), p.y / (p.y > 0.0f ? positiveWeightsSumY : negativeWeightsSumY), 0.0f));
             }
         }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    template<typename T>
+    inline void image<T>::FLIP(image<color3>& reference, image<color3>& test, float ppd)
+    {
+        int width = reference.getWidth();
+        int height = reference.getHeight();
+
+        //  temporary images (on device)
+        image<color3> referenceImage(reference), testImage(test);
+        image<color3> preprocessedReference(width, height), preprocessedTest(width, height);
+        image<color3> colorDifference(width, height);
+        image<color3> pointReference(width, height), pointTest(width, height);
+        image<color3> edgeReference(width, height), edgeTest(width, height);
+        image<color3> featureDifference(width, height);
+
+        //  move from sRGB to YCxCz
+        referenceImage.sRGB2YCxCz();
+        testImage.sRGB2YCxCz();
+
+        //  spatial filtering
+        int spatialFilterRadius = calculateSpatialFilterRadius(ppd);
+        int spatialFilterWidth = 2 * spatialFilterRadius + 1;
+        image<color3> spatialFilter(spatialFilterWidth, spatialFilterWidth);
+        setSpatialFilter(spatialFilter, ppd, spatialFilterRadius);
+        preprocessedReference.convolve(referenceImage, spatialFilter);
+        preprocessedTest.convolve(testImage, spatialFilter);
+
+        //  move from YCxCz to CIELab
+        preprocessedReference.YCxCz2CIELab();
+        preprocessedTest.YCxCz2CIELab();
+
+        //  Hunt adjustment
+        preprocessedReference.huntAdjustment();
+        preprocessedTest.huntAdjustment();
+
+        //  color difference
+        colorDifference.computeColorDifference(preprocessedReference, preprocessedTest);
+
+        //  feature (point/edge) filtering
+        const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
+        const int featureFilterRadius = int(std::ceil(3.0f * stdDev));
+        int featureFilterWidth = 2 * featureFilterRadius + 1;
+        image<color3> pointFilter(featureFilterWidth, featureFilterWidth);
+        image<color3> edgeFilter(featureFilterWidth, featureFilterWidth);
+        setFeatureFilter(pointFilter, ppd, true);
+        setFeatureFilter(edgeFilter, ppd, false);
+
+        //  grayscale images needed for feature detection
+        image<color3> grayReference(width, height), grayTest(width, height);
+        grayReference.CIELab2Gray(referenceImage);
+        grayTest.CIELab2Gray(testImage);
+
+        //  feature filtering
+        pointReference.convolve(grayReference, pointFilter);
+        pointTest.convolve(grayTest, pointFilter);
+        edgeReference.convolve(grayReference, edgeFilter);
+        edgeTest.convolve(grayTest, edgeFilter);
+
+        //  feature difference
+        featureDifference.computeFeatureDifference(pointReference, pointTest, edgeReference, edgeTest);
+
+        this->finalError(colorDifference, featureDifference);
     }
 
 }

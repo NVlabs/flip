@@ -86,7 +86,7 @@ namespace FLIP
 
 namespace FLIP
 {
-    const float M_PI = 3.14159265358979f;
+    const float PI = 3.14159265358979f;
 
     const dim3 DEFAULT_KERNEL_BLOCK_DIM = { 32, 32, 1 };  //  1.2s
 

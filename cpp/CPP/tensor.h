@@ -93,7 +93,7 @@ namespace FLIP
         struct { int x, y, z; };
     };
 
-    const float M_PI = 3.14159265358979f;
+    const float PI = 3.14159265358979f;
 
     template<typename T = color3>
     class tensor

@@ -21,6 +21,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Chris Wyman and Alexey Panteleev, ["Rearchitecting Spatiotemporal Resampling for Production"](https://research.nvidia.com/publication/2021-07_Rearchitecting-Spatiotemporal-Resampling), *High Performance Graphics*, 2021.
 
+1. Jonathan Granskog, Till Schnabel, Fabrice Rousselle, and Jan Novak, ["Neural Scene Graph Rendering"](https://research.nvidia.com/publication/2021-06_Neural-Scene-Graph), *ACM Transactions on Graphics (SIGGRAPH)*, 2021. (used in supplemental)
+
 **Citing ꟻLIP (but not using):**
 1. Michael N. Mishourovsky, "Visually Lossless Colour Compression Technology", in *Smart Algorithms for Multimedia and Imaging*, edited by Michael N. Rychagov, Ekaterina V. Tolstaya, and Mikhail Y. Sirotenko, 2021.
 

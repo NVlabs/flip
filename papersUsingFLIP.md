@@ -5,6 +5,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 **Using ꟻLIP:**
 1. Jae-Ho Nah, ["QuickETC2: Fast ETC2 texture compression using Luma differences"](https://dl.acm.org/doi/abs/10.1145/3414685.3417787), *ACM Transactions on Graphics (SIGGRAPH Asia)*, November 2020 Article No. 270
 
+1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
+
 1. Finn, Sinclair, ["Spatio-temporal reprojection for virtual and augmented reality applications"](ideals.illinois.edu/handle/2142/109178), *Bachelor thesis*, 2020.
 
 1. Márcio C. F. Macedo and Antônio L. Apolinário Jr., ["Live user-guided depth map estimation for single images"](https://link.springer.com/article/10.1007/s11554-020-01055-x), *Journal of Real-Time Image Processing*, 2021.

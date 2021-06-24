@@ -29,6 +29,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Thomas Muller, Fabrice Rousselle, Jan Novak, Alex Keller, ["Real-time Neural Radiance Caching for Path Tracing"](https://research.nvidia.com/publication/2021-06_Real-time-Neural-Radiance), *ACM Transactions on Graphics (SIGGRAPH)*, 2021.
 
+1. Hendrik Baatz, Jonathan Granskog, Marios Papas, Fabrice Rousselle, and Jan Novák, ["NeRF-Tex: Neural Radiance Field Textures"](https://research.nvidia.com/publication/2021-06_NeRF-Tex%3A-Neural-Reflectance), Eurographics Symposium on Rendering, 2021.
+
 **Citing ꟻLIP (but not using):**
 1. Michael N. Mishourovsky, "Visually Lossless Colour Compression Technology", in *Smart Algorithms for Multimedia and Imaging*, edited by Michael N. Rychagov, Ekaterina V. Tolstaya, and Mikhail Y. Sirotenko, 2021.
 

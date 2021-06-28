@@ -31,6 +31,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Hendrik Baatz, Jonathan Granskog, Marios Papas, Fabrice Rousselle, and Jan Novák, ["NeRF-Tex: Neural Radiance Field Textures"](https://research.nvidia.com/publication/2021-06_NeRF-Tex%3A-Neural-Reflectance), Eurographics Symposium on Rendering, 2021.
 
+1. Philippe Weier, Marc Droske, Johannes Hanika, Andrea Weidlich, and Jiří Vorba, ["Optimised Path Space Regularisation"](https://weiphil.github.io/portfolio/static/media/OPSR_EGSR2021.8a740716.pdf), Eurographics Symposium on Rendering, 2021.
+
 **Citing ꟻLIP (but not using):**
 1. Michael N. Mishourovsky, "Visually Lossless Colour Compression Technology", in *Smart Algorithms for Multimedia and Imaging*, edited by Michael N. Rychagov, Ekaterina V. Tolstaya, and Mikhail Y. Sirotenko, 2021.
 

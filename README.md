@@ -17,9 +17,11 @@ This repository holds implementations of the [LDR-ꟻLIP](https://research.nvidi
 and [HDR-ꟻLIP](https://research.nvidia.com/publication/2021-05_HDR-FLIP) image error metrics.
 It also holds code for the ꟻLIP tool, to be presented in [Ray Tracing Gems II](https://developer.nvidia.com/blog/ray-tracing-gems-ii-available-august-4th/).
 
-[A list of papers](papersUsingFLIP.md) that use/cite ꟻLIP.
+The changes made for the different versions of ꟻLIP are summarized in the [version list](misc/versionList.md).
 
-[A note](precision.md) about the precision of ꟻLIP.
+[A list of papers](misc/papersUsingFLIP.md) that use/cite ꟻLIP.
+
+[A note](misc/precision.md) about the precision of ꟻLIP.
 
 # License
 
@@ -101,14 +103,14 @@ See the [README](pytorch/README.md) in the `pytorch` folder for further informat
 # Citation
 If your work uses the ꟻLIP tool to find the errors between *low dynamic range* images,
 please cite the LDR-ꟻLIP paper:<br>
-[Paper](https://research.nvidia.com/publication/2020-07_FLIP) | [BibTeX](LDRFLIP.txt)
+[Paper](https://research.nvidia.com/publication/2020-07_FLIP) | [BibTeX](misc/LDRFLIP.txt)
 
 If it uses the ꟻLIP tool to find the errors between *high dynamic range* images,
 instead cite the HDR-ꟻLIP paper:<br>
-[Paper](https://research.nvidia.com/publication/2021-05_HDR-FLIP) | [BibTeX](HDRFLIP.txt)
+[Paper](https://research.nvidia.com/publication/2021-05_HDR-FLIP) | [BibTeX](misc/HDRFLIP.txt)
 
 Should your work use the ꟻLIP tool in a more general fashion, please cite the Ray Tracing Gems II article:<br>
-Article (to be published in August 2021) | [BibTeX](FLIP.txt)
+Article (to be published in August 2021) | [BibTeX](misc/FLIP.txt)
 
 # Acknowledgements
 We appreciate the following peoples' contributions to this repository:

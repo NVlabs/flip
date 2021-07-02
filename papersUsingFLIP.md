@@ -1,4 +1,4 @@
-### List of papers that are using/citing ꟻLIP ###
+# List of papers that are using/citing ꟻLIP
 
 Please let us know if you know of more papers that use/cite ꟻLIP.
 
@@ -38,4 +38,4 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Ha Manh Luu, Theo van Walsum, Daniel Franklin, Phuong Cam Pham, Luu Dang Vu, Adriaan Moelker, Marius Staring, Xiem VanHoang, Wiro Niessen, Nguyen Linh Trung, ["Efficiently Compressing 3D Medical Images for Teleinterventions via CNNs and Anisotropic Diffusion"](https://elastix.lumc.nl/marius/downloads/2021_j_MP.pdf), *Medical Physics*, 2021.
 
-1.  Yining Karl Li, ["Porting Takua Renderer to 64-bit ARM- Part 1"](https://blog.yiningkarlli.com/2021/05/porting-takua-to-arm-pt1.html), blog, May 2021.
+1. Yining Karl Li, ["Porting Takua Renderer to 64-bit ARM- Part 1"](https://blog.yiningkarlli.com/2021/05/porting-takua-to-arm-pt1.html), blog, May 2021.

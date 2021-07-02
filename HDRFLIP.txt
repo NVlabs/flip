@@ -6,5 +6,6 @@
   title     = "{Visualizing the Error in Rendered High Dynamic Range Images}",
   booktitle   = {Eurographics Short Papers},
   year      = {2021},
-  month = {May}
+  month = {May},
+  DOI = {10.2312/egs.20211015}
 }

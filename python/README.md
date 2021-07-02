@@ -17,9 +17,14 @@ It also holds code for the ꟻLIP tool, to be presented in [Ray Tracing Gems II]
 
 # License
 
-Copyright © 2020-2021, NVIDIA Corporation. All rights reserved.
+Copyright © 2020-2021, NVIDIA Corporation & Affiliates. All rights reserved.
 
-This work is made available under the [NVIDIA Source Code License](../LICENSE.txt).
+This work is made available under a [BSD 3-Clause License](../LICENSE.md).
+
+The repository distributes code for `tinyexr`, which is subject to a [BSD 3-Clause License](../LICENSE-third-party.md#bsd-3-clause-license),<br>
+and `stb_image`, which is subject to an [MIT License](../LICENSE-third-party.md#mit-license).
+
+For individual contributions to the project, please confer the [Individual Contributor License Agreement](../CLA.md).
 
 For business inquiries, please contact researchinquiries@nvidia.com.
 

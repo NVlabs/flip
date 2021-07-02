@@ -1,30 +1,34 @@
-/**************************************************************************
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#  * Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the distribution.
-#  * Neither the name of NVIDIA CORPORATION nor the names of its
-#    contributors may be used to endorse or promote products derived
-#    from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
-# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-# PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
-# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-**************************************************************************/
+/*
+ * Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 
 // Visualizing and Communicating Errors in Rendered Images
 // Ray Tracing Gems II, 2021,
@@ -55,7 +59,8 @@ namespace FLIP
 #define Max(x, y) ((x) > (y) ? (x) : (y))
 #define Min(x, y) ((x) > (y) ? (y) : (x))
 
-#define DEFAULT_ILLUMINANT { 0.950428545377181f, 1.0f, 1.088900370798128f }
+#define DEFAULT_ILLUMINANT { 0.950428545f, 1.000000000f, 1.088900371f }
+#define INV_DEFAULT_ILLUMINANT { 1.052156925f, 1.000000000f, 0.918357670f }
 
     class color3
     {
@@ -274,15 +279,15 @@ namespace FLIP
         static inline color3 XYZ2LinearRGB(color3 XYZ)
         {
             // Return values in linear RGB, assuming D65 standard illuminant
-            const float a11 = 3.241003232976358f;
-            const float a12 = -1.537398969488785f;
-            const float a13 = -0.498615881996363f;
-            const float a21 = -0.969224252202516f;
-            const float a22 = 1.875929983695176f;
-            const float a23 = 0.041554226340085f;
-            const float a31 = 0.055639419851975f;
-            const float a32 = -0.204011206123910f;
-            const float a33 = 1.057148977187533f;
+            const float a11 = 3.241003275f;
+            const float a12 = -1.537398934f;
+            const float a13 = -0.498615861f;
+            const float a21 = -0.969224334f;
+            const float a22 = 1.875930071f;
+            const float a23 = 0.041554224f;
+            const float a31 = 0.055639423f;
+            const float a32 = -0.204011202f;
+            const float a33 = 1.057148933f;
 
             color3 RGB;
             RGB.x = a11 * XYZ.x + a12 * XYZ.y + a13 * XYZ.z;
@@ -292,16 +297,19 @@ namespace FLIP
             return RGB;
         }
 
-        static inline color3 XYZ2CIELab(color3 XYZ, const color3 referenceIlluminant = DEFAULT_ILLUMINANT)
+        static inline color3 XYZ2CIELab(color3 XYZ, const color3 invReferenceIlluminant = INV_DEFAULT_ILLUMINANT)
         {
+            const float delta = 6.0f / 29.0f;
+            const float deltaSquare = delta * delta;
+            const float deltaCube = delta * deltaSquare;
+            const float factor = 1.0f / (3.0f * deltaSquare);
+            const float term = 4.0f / 29.0f;
+
             // the default illuminant is D65
-            XYZ = abs(XYZ);
-            XYZ.x = XYZ.x / referenceIlluminant.x;
-            XYZ.y = XYZ.y / referenceIlluminant.y;
-            XYZ.z = XYZ.z / referenceIlluminant.z;
-            XYZ.x = (XYZ.x > 0.008856 ? powf(XYZ.x, 1.0f / 3.0f) : 7.787f * XYZ.x + 16.0f / 116.0f);
-            XYZ.y = (XYZ.y > 0.008856 ? powf(XYZ.y, 1.0f / 3.0f) : 7.787f * XYZ.y + 16.0f / 116.0f);
-            XYZ.z = (XYZ.z > 0.008856 ? powf(XYZ.z, 1.0f / 3.0f) : 7.787f * XYZ.z + 16.0f / 116.0f);
+            XYZ = XYZ * invReferenceIlluminant;
+            XYZ.x = (XYZ.x > deltaCube ? powf(XYZ.x, 1.0f / 3.0f) : factor * XYZ.x + term);
+            XYZ.y = (XYZ.y > deltaCube ? powf(XYZ.y, 1.0f / 3.0f) : factor * XYZ.y + term);
+            XYZ.z = (XYZ.z > deltaCube ? powf(XYZ.z, 1.0f / 3.0f) : factor * XYZ.z + term);
             float L = 116.0f * XYZ.y - 16.0f;
             float a = 500.0f * (XYZ.x - XYZ.y);
             float b = 200.0f * (XYZ.y - XYZ.z);
@@ -315,17 +323,21 @@ namespace FLIP
             float Y = (Lab.x + 16.0f) / 116.0f;
             float X = Lab.y / 500.0f + Y;
             float Z = Y - Lab.z / 200.0f;
-            X = (X > 0.206897 ? X * X * X : (X - 16.0f / 116.0f) / 7.787f);
-            Y = (Y > 0.206897 ? Y * Y * Y : (Y - 16.0f / 116.0f) / 7.787f);
-            Z = (Z > 0.206897 ? Z * Z * Z : (Z - 16.0f / 116.0f) / 7.787f);
+
+            const float delta = 6.0f / 29.0f;
+            const float factor = 3.0f * delta * delta;
+            const float term = 4.0f / 29.0f;
+            X = (X > delta ? X * X * X : (X - term) * factor);
+            Y = (Y > delta ? Y * Y * Y : (Y - term) * factor);
+            Z = (Z > delta ? Z * Z * Z : (Z - term) * factor);
 
             return color3(X, Y, Z) * referenceIlluminant;
         }
 
-        static inline color3 XYZ2YCxCz(color3 XYZ, const color3 referenceIlluminant = DEFAULT_ILLUMINANT)
+        static inline color3 XYZ2YCxCz(color3 XYZ, const color3 invReferenceIlluminant = INV_DEFAULT_ILLUMINANT)
         {
             // the default illuminant is D65
-            XYZ = XYZ / referenceIlluminant;
+            XYZ = XYZ * invReferenceIlluminant;
             float Y = 116.0f * XYZ.y - 16.0f;
             float Cx = 500.0f * (XYZ.x - XYZ.y);
             float Cz = 200.0f * (XYZ.y - XYZ.z);

@@ -1,31 +1,35 @@
 """ FLIP metric functions """
-#########################################################################
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+#################################################################################
+# Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#  * Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the distribution.
-#  * Neither the name of NVIDIA CORPORATION nor the names of its
-#    contributors may be used to endorse or promote products derived
-#    from this software without specific prior written permission.
+# modification, are permitted provided that the following conditions are met:
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
-# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-# PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
-# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# 1. Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#########################################################################
+#
+# SPDX-FileCopyrightText: Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES
+# SPDX-License-Identifier: BSD-3-Clause
+#################################################################################
 
 # Visualizing and Communicating Errors in Rendered Images
 # Ray Tracing Gems II, 2021,
@@ -573,6 +577,10 @@ def color_space_transform(input_color, fromSpace2toSpace):
 	"""
 	dim = input_color.size()
 
+	# Assume D65 standard illuminant
+	reference_illuminant = torch.tensor([[[0.950428545]], [[1.000000000]], [[1.088900371]]]).cuda()
+	inv_reference_illuminant = torch.tensor([[[1.052156925]], [[1.000000000]], [[0.918357670]]]).cuda()
+
 	if fromSpace2toSpace == "srgb2linrgb":
 		limit = 0.04045
 		transformed_color = torch.where(
@@ -592,28 +600,39 @@ def color_space_transform(input_color, fromSpace2toSpace):
 	elif fromSpace2toSpace in ["linrgb2xyz", "xyz2linrgb"]:
 		# Source: https://www.image-engineering.de/library/technotes/958-how-to-convert-between-srgb-and-ciexyz
 		# Assumes D65 standard illuminant
-		a11 = 10135552 / 24577794
-		a12 = 8788810 / 24577794
-		a13 = 4435075 / 24577794
-		a21 = 2613072 / 12288897
-		a22 = 8788810 / 12288897
-		a23 = 887015 / 12288897
-		a31 = 1425312 / 73733382
-		a32 = 8788810 / 73733382
-		a33 = 70074185 / 73733382
+		if fromSpace2toSpace == "linrgb2xyz":
+			a11 = 10135552 / 24577794
+			a12 = 8788810  / 24577794
+			a13 = 4435075  / 24577794
+			a21 = 2613072  / 12288897
+			a22 = 8788810  / 12288897
+			a23 = 887015   / 12288897
+			a31 = 1425312  / 73733382
+			a32 = 8788810  / 73733382
+			a33 = 70074185 / 73733382
+		else:
+			# Constants found by taking the inverse of the matrix
+			# defined by the constants for linrgb2xyz
+			a11 = 3.241003275
+			a12 = -1.537398934
+			a13 = -0.498615861
+			a21 = -0.969224334
+			a22 = 1.875930071
+			a23 = 0.041554224
+			a31 = 0.055639423
+			a32 = -0.204011202
+			a33 = 1.057148933
 		A = torch.Tensor([[a11, a12, a13],
 						  [a21, a22, a23],
 						  [a31, a32, a33]])
 
 		input_color = input_color.view(dim[0], dim[1], dim[2]*dim[3]).cuda()  # NC(HW)
-		if fromSpace2toSpace == "xyz2linrgb":
-			A = torch.inverse(A)
+
 		transformed_color = torch.matmul(A.cuda(), input_color)
 		transformed_color = transformed_color.view(dim[0], dim[1], dim[2], dim[3])
 
 	elif fromSpace2toSpace == "xyz2ycxcz":
-		reference_illuminant = color_space_transform(torch.ones(dim), 'linrgb2xyz')
-		input_color = torch.div(input_color, reference_illuminant)
+		input_color = torch.mul(input_color, inv_reference_illuminant)
 		y = 116 * input_color[:, 1:2, :, :] - 16
 		cx = 500 * (input_color[:, 0:1, :, :] - input_color[:, 1:2, :, :])
 		cz = 200 * (input_color[:, 1:2, :, :] - input_color[:, 2:3, :, :])
@@ -628,18 +647,18 @@ def color_space_transform(input_color, fromSpace2toSpace):
 		z = y - cz
 		transformed_color = torch.cat((x, y, z), 1)
 
-		reference_illuminant = color_space_transform(torch.ones(dim), 'linrgb2xyz')
 		transformed_color = torch.mul(transformed_color, reference_illuminant)
 
 	elif fromSpace2toSpace == "xyz2lab":
-		reference_illuminant = color_space_transform(torch.ones(dim), 'linrgb2xyz')
-		input_color = torch.div(input_color, reference_illuminant)
+		input_color = torch.mul(input_color, inv_reference_illuminant)
 		delta = 6 / 29
-		limit = 0.00885
+		delta_square = delta * delta
+		delta_cube = delta * delta_square
+		factor = 1 / (3 * delta_square)
 
-		clamped_term = torch.pow(torch.clamp(input_color, min=limit), 1.0 / 3.0).to(dtype=input_color.dtype)
-		div = ((input_color / (3 * delta * delta)) + (4 / 29)).to(dtype=input_color.dtype)
-		input_color = torch.where(input_color > limit, clamped_term, div)  # clamp to stabilize training
+		clamped_term = torch.pow(torch.clamp(input_color, min=delta_cube), 1.0 / 3.0).to(dtype=input_color.dtype)
+		div = (factor * input_color + (4 / 29)).to(dtype=input_color.dtype)
+		input_color = torch.where(input_color > delta_cube, clamped_term, div)  # clamp to stabilize training
 
 		L = 116 * input_color[:, 1:2, :, :] - 16
 		a = 500 * (input_color[:, 0:1, :, :] - input_color[:, 1:2, :, :])
@@ -657,9 +676,10 @@ def color_space_transform(input_color, fromSpace2toSpace):
 
 		xyz = torch.cat((x, y, z), 1)
 		delta = 6 / 29
-		xyz = torch.where(xyz > delta, torch.pow(xyz, 3), 3 * delta ** 2 * (xyz - 4 / 29))
+		delta_square = delta * delta
+		factor = 3 * delta_square
+		xyz = torch.where(xyz > delta, torch.pow(xyz, 3), factor * (xyz - 4 / 29))
 
-		reference_illuminant = color_space_transform(torch.ones(dim), 'linrgb2xyz')
 		transformed_color = torch.mul(xyz, reference_illuminant)
 
 	elif fromSpace2toSpace == "srgb2xyz":

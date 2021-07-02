@@ -17,9 +17,14 @@ It also holds code for the ꟻLIP tool, to be presented in [Ray Tracing Gems II]
 
 # License
 
-Copyright © 2020-2021, NVIDIA Corporation. All rights reserved.
+Copyright © 2020-2021, NVIDIA Corporation & Affiliates. All rights reserved.
 
-This work is made available under the [NVIDIA Source Code License](../LICENSE.txt).
+This work is made available under a [BSD 3-Clause License](../LICENSE.md).
+
+The repository distributes code for `tinyexr`, which is subject to a [BSD 3-Clause License](../LICENSE-third-party.md#bsd-3-clause-license),<br>
+and `stb_image`, which is subject to an [MIT License](../LICENSE-third-party.md#mit-license).
+
+For individual contributions to the project, please confer the [Individual Contributor License Agreement](../CLA.md).
 
 For business inquiries, please contact researchinquiries@nvidia.com.
 
@@ -28,8 +33,18 @@ For press and other inquiries, please contact Hector Marinez at hmarinez@nvidia.
 # C++ and CUDA (API and Tool)
 - The FLIP.sln solution contains one CUDA backend project and one pure C++ backend project.
 - Compiling the CUDA project requires a CUDA compatible GPU. Instruction on how to install CUDA can be found [here](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html).
+- Alternatively, a CMake build can be done by creating a build directory and invoking CMake on the source `cpp` dir:
+
+  ```
+  mkdir build
+  cd build
+  cmake ../cpp
+  cmake --build .
+  ```
+
+  CUDA support is enabled via the `FLIP_ENABLE_CUDA`, which can be passed to CMake on the command line with `-DFLIP_ENABLE_CUDA=ON` or set interactively with `ccmake` or `cmake-gui`.
 - Usage: `flip[-cuda].exe --reference reference.{exr|png} --test test.{exr|png} [options]`, where the list of options can be seen by `flip[-cuda].exe -h`.
-- Tested on Windows 10 version 20H2 with CUDA 11.2. Compiled with Visual Studio 2019. If you use another version of CUDA, you will need to change the `CUDA 11.2` strings in the `CUDA.vcxproj` file accordingly.
+- Tested on Windows 10 version 20H2 with CUDA 11.3. Compiled with Visual Studio 2019. If you use another version of CUDA, you will need to change the `CUDA 11.3` strings in the `CUDA.vcxproj` file accordingly.
 - Weighted histograms are output as Python scripts. Running the script will create a PDF version of the histogram.
 - The naming convention used for the ꟻLIP tool's output is as follows (where `ppd` is the assumed number of pixels per degree,
   `tm` is the tone mapper assumed by HDR-ꟻLIP, `cstart` and `cstop` are the shortest and longest exposures, respectively, assumed by HDR-ꟻLIP,

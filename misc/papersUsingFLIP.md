@@ -33,6 +33,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Philippe Weier, Marc Droske, Johannes Hanika, Andrea Weidlich, and Jiří Vorba, ["Optimised Path Space Regularisation"](https://weiphil.github.io/portfolio/static/media/OPSR_EGSR2021.8a740716.pdf), Eurographics Symposium on Rendering, 2021.
 
+1. Herman Hansson Söderlund, ["Hardware-Accelerated Ray Tracing of Implicit Surfaces"](http://www.diva-portal.org/smash/get/diva2:1571860/FULLTEXT02.pdf), Master's thesis, BTH, May 2021.
+
 **Citing ꟻLIP (but not using):**
 1. Michael N. Mishourovsky, "Visually Lossless Colour Compression Technology", in *Smart Algorithms for Multimedia and Imaging*, edited by Michael N. Rychagov, Ekaterina V. Tolstaya, and Mikhail Y. Sirotenko, 2021.
 

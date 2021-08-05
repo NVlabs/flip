@@ -29,11 +29,17 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Thomas Muller, Fabrice Rousselle, Jan Novak, Alex Keller, ["Real-time Neural Radiance Caching for Path Tracing"](https://research.nvidia.com/publication/2021-06_Real-time-Neural-Radiance), *ACM Transactions on Graphics (SIGGRAPH)*, 2021.
 
-1. Hendrik Baatz, Jonathan Granskog, Marios Papas, Fabrice Rousselle, and Jan Novák, ["NeRF-Tex: Neural Radiance Field Textures"](https://research.nvidia.com/publication/2021-06_NeRF-Tex%3A-Neural-Reflectance), Eurographics Symposium on Rendering, 2021.
+1. Hendrik Baatz, Jonathan Granskog, Marios Papas, Fabrice Rousselle, and Jan Novák, ["NeRF-Tex: Neural Radiance Field Textures"](https://research.nvidia.com/publication/2021-06_NeRF-Tex%3A-Neural-Reflectance), *Eurographics Symposium on Rendering*, 2021.
 
-1. Philippe Weier, Marc Droske, Johannes Hanika, Andrea Weidlich, and Jiří Vorba, ["Optimised Path Space Regularisation"](https://weiphil.github.io/portfolio/static/media/OPSR_EGSR2021.8a740716.pdf), Eurographics Symposium on Rendering, 2021.
+1. Philippe Weier, Marc Droske, Johannes Hanika, Andrea Weidlich, and Jiří Vorba, ["Optimised Path Space Regularisation"](https://weiphil.github.io/portfolio/static/media/OPSR_EGSR2021.8a740716.pdf), *Eurographics Symposium on Rendering*, 2021.
 
 1. Herman Hansson Söderlund, ["Hardware-Accelerated Ray Tracing of Implicit Surfaces"](http://www.diva-portal.org/smash/get/diva2:1571860/FULLTEXT02.pdf), Master's thesis, BTH, May 2021.
+
+1. Alan Wolfe, ["Using Blue Noise for Ray Traced Soft Shadows"](https://link.springer.com/content/pdf/10.1007%2F978-1-4842-7185-8.pdf), chapter 24, in *Ray Tracing Gems 2*, edited by Marrs, Shirley, and Wald, 2021.
+
+1. Nate Morrical and Stefan Zellman, ["Inverse Transform Sampling using Ray Tracing Hardware"](https://link.springer.com/content/pdf/10.1007%2F978-1-4842-7185-8.pdf), chapter 39, in *Ray Tracing Gems 2*, edited by Marrs, Shirley, and Wald, 2021.
+
+1. Nikolai Hoffman and Alex Evans, ["Efficient Unbiased Volume Path Tracing on the GPU"](https://link.springer.com/content/pdf/10.1007%2F978-1-4842-7185-8.pdf), chapter 43, in *Ray Tracing Gems 2*, edited by Marrs, Shirley, and Wald, 2021.
 
 **Citing ꟻLIP (but not using):**
 1. Michael N. Mishourovsky, "Visually Lossless Colour Compression Technology", in *Smart Algorithms for Multimedia and Imaging*, edited by Michael N. Rychagov, Ekaterina V. Tolstaya, and Mikhail Y. Sirotenko, 2021.

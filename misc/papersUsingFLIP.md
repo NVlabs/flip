@@ -41,6 +41,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Nikolai Hoffman and Alex Evans, ["Efficient Unbiased Volume Path Tracing on the GPU"](https://link.springer.com/content/pdf/10.1007%2F978-1-4842-7185-8.pdf), chapter 43, in *Ray Tracing Gems 2*, edited by Marrs, Shirley, and Wald, 2021.
 
+1. Magdalena Martinek, Philip Thiemann, and Marc Stamminger, ["Spatio-temporal filtered motion DAGs for path-tracing"](https://www.sciencedirect.com/science/article/abs/pii/S0097849321001394), Computers & Graphics, Volume 99, pp. 224-233, October 2021.
+
 **Citing ꟻLIP (but not using):**
 1. Michael N. Mishourovsky, "Visually Lossless Colour Compression Technology", in *Smart Algorithms for Multimedia and Imaging*, edited by Michael N. Rychagov, Ekaterina V. Tolstaya, and Mikhail Y. Sirotenko, 2021.
 

@@ -15,7 +15,7 @@ and
 
 This repository holds implementations of the [LDR-ꟻLIP](https://research.nvidia.com/publication/2020-07_FLIP)
 and [HDR-ꟻLIP](https://research.nvidia.com/publication/2021-05_HDR-FLIP) image error metrics.
-It also holds code for the ꟻLIP tool, to be presented in [Ray Tracing Gems II](https://developer.nvidia.com/blog/ray-tracing-gems-ii-available-august-4th/).
+It also holds code for the ꟻLIP tool, presented in [Ray Tracing Gems II](https://www.realtimerendering.com/raytracinggems/rtg2/index.html).
 
 The changes made for the different versions of ꟻLIP are summarized in the [version list](misc/versionList.md).
 
@@ -110,7 +110,7 @@ instead cite the HDR-ꟻLIP paper:<br>
 [Paper](https://research.nvidia.com/publication/2021-05_HDR-FLIP) | [BibTeX](misc/HDRFLIP.txt)
 
 Should your work use the ꟻLIP tool in a more general fashion, please cite the Ray Tracing Gems II article:<br>
-Article (to be published in August 2021) | [BibTeX](misc/FLIP.txt)
+[Chapter](https://link.springer.com/chapter/10.1007%2F978-1-4842-7185-8_19) | [BibTeX](misc/FLIP.txt)
 
 # Acknowledgements
 We appreciate the following peoples' contributions to this repository:

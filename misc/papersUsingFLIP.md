@@ -35,6 +35,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Herman Hansson Söderlund, ["Hardware-Accelerated Ray Tracing of Implicit Surfaces"](http://www.diva-portal.org/smash/get/diva2:1571860/FULLTEXT02.pdf), Master's thesis, BTH, May 2021.
 
+1. X. Zhang, M. Manzi, T. Vogels, H. Dahlberg, M. Gross, and M. Papas, ["Deep Compositional Denoising for High-quality Monte Carlo Rendering"](https://cgl.ethz.ch/publications/papers/paperZhan21a.php), *Eurographics Symposium on Rendering*, 2021.
+
 1. Alan Wolfe, ["Using Blue Noise for Ray Traced Soft Shadows"](https://link.springer.com/content/pdf/10.1007%2F978-1-4842-7185-8.pdf), chapter 24, in *Ray Tracing Gems 2*, edited by Marrs, Shirley, and Wald, 2021.
 
 1. Nate Morrical and Stefan Zellman, ["Inverse Transform Sampling using Ray Tracing Hardware"](https://link.springer.com/content/pdf/10.1007%2F978-1-4842-7185-8.pdf), chapter 39, in *Ray Tracing Gems 2*, edited by Marrs, Shirley, and Wald, 2021.

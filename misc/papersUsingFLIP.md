@@ -5,8 +5,6 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 **Using ꟻLIP:**
 1. Jae-Ho Nah, ["QuickETC2: Fast ETC2 texture compression using Luma differences"](https://dl.acm.org/doi/abs/10.1145/3414685.3417787), *ACM Transactions on Graphics (SIGGRAPH Asia)*, November 2020 Article No. 270
 
-1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
-
 1. Johanna Engman and Hanna Nilsson, ["A Novel Perceptual Metric in Machine Learning"](https://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=9022150&fileOId=9022160), Master's thesis, Lund University, 2020.
 
 1. Finn, Sinclair, ["Spatio-temporal reprojection for virtual and augmented reality applications"](ideals.illinois.edu/handle/2142/109178), *Bachelor thesis*, 2020.
@@ -46,6 +44,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 1. Magdalena Martinek, Philip Thiemann, and Marc Stamminger, ["Spatio-temporal filtered motion DAGs for path-tracing"](https://www.sciencedirect.com/science/article/abs/pii/S0097849321001394), Computers & Graphics, Volume 99, pp. 224-233, October 2021.
 
 **Citing ꟻLIP (but not using):**
+1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
+
 1. Michael N. Mishourovsky, "Visually Lossless Colour Compression Technology", in *Smart Algorithms for Multimedia and Imaging*, edited by Michael N. Rychagov, Ekaterina V. Tolstaya, and Mikhail Y. Sirotenko, 2021.
 
 1. Ha Manh Luu, Theo van Walsum, Daniel Franklin, Phuong Cam Pham, Luu Dang Vu, Adriaan Moelker, Marius Staring, Xiem VanHoang, Wiro Niessen, Nguyen Linh Trung, ["Efficiently Compressing 3D Medical Images for Teleinterventions via CNNs and Anisotropic Diffusion"](https://elastix.lumc.nl/marius/downloads/2021_j_MP.pdf), *Medical Physics*, 2021.

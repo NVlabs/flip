@@ -114,4 +114,4 @@ Should your work use the ꟻLIP tool in a more general fashion, please cite the 
 
 # Acknowledgements
 We appreciate the following peoples' contributions to this repository:
-Jonathan Granskog, Jacob Munkberg, Jon Hasselgren, and Jefferson Amstutz.
+Jonathan Granskog, Jacob Munkberg, Jon Hasselgren, Jefferson Amstutz, and Alan Wolfe.

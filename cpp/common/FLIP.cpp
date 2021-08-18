@@ -103,6 +103,7 @@ int main(int argc, char** argv)
         { "start-exposure", "cstart", 1, false, "C-START", "Start exposure used to compute HDR-FLIP" },
         { "stop-exposure", "cstop", 1, false, "C-STOP", "Stop exposure used to comput HDR-FLIP" },
         { "basename", "b", 1, false, "BASENAME", "Basename for outfiles, e.g., error and exposure maps" },
+        { "csv", "c", 1, false, "CSV_FILENAME", "Write results to a csv file. Input is the desired file name (including .csv extension).\nResults are appended if the file already exists" },
         { "histogram", "hist", 0, false, "", "Save weighted histogram of the FLIP error map(s)" },
         { "y-max", "", 1, true, "", "Set upper limit of weighted histogram's y-axis" },
         { "log", "lg", 0, false, "", "Use logarithmic scale on y-axis in histogram" },
@@ -112,7 +113,6 @@ int main(int argc, char** argv)
         { "no-magma", "nm", 0, false, "", "Save FLIP error maps in grayscale instead of magma" },
         { "no-exposure-map", "nexm", 0, false, "", "Do not save the HDR-FLIP exposure map" },
         { "no-error-map", "nerm", 0, false, "", "Do not save the FLIP error map" },
-        { "csv", "c", 1, false, "", "Writes results to a csv file. Appends results if the file already exists" },
     } };
     commandline commandLine(argc, argv, allowedCommandLineOptions);
 

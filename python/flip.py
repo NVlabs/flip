@@ -113,7 +113,7 @@ def print_initialization_information(pixels_per_degree, hdr, tone_mapper=None, s
 		print("\tNumber of exposures: %d" % num_exposures)
 	print("")
 
-def print_pooled_values(error_map, hdr, textfile, directory, basename, default_basename, verbosity):
+def print_pooled_values(error_map, hdr, textfile, csvfile, directory, basename, default_basename, reference_filename, test_filename, evaluation_time, verbosity):
 	"""
 	Prints pooled values of the FLIP error map
 
@@ -134,6 +134,7 @@ def print_pooled_values(error_map, hdr, textfile, directory, basename, default_b
 	weighted_quartile3 = "%.6f" % weighted_percentile(error_map, 75)
 	minimum = "%.6f" % np.amin(error_map)
 	maximum = "%.6f" % np.amax(error_map)
+	evaluation_time = "%.4f" % evaluation_time
 
 	if textfile == True:
 		textfile_path = ("%s/%s%s.txt") % (directory, "pooled_values." if default_basename else "", basename)
@@ -144,6 +145,22 @@ def print_pooled_values(error_map, hdr, textfile, directory, basename, default_b
 			f.write("3rd weighted quartile: %s\n" % weighted_quartile3)
 			f.write("Min: %s\n" % minimum)
 			f.write("Max: %s\n" % maximum)
+
+	if csvfile is not None:
+		csv_path = ("%s/%s") % (directory, csvfile)
+		with open(csv_path, 'a') as f:
+			if os.path.getsize(csv_path) == 0:
+				f.write("\"Reference\",\"Test\",\"Mean\",\"Weighted median\",\"1st weighted quartile\",\"3rd weighted quartile\",\"Min\",\"Max\",\"Evaluation time\"\n")
+			s  = "\"%s\"," % reference_filename
+			s += "\"%s\"," % test_filename
+			s += "\"%s\"," % mean
+			s += "\"%s\"," % weighted_median
+			s += "\"%s\"," % weighted_quartile1
+			s += "\"%s\"," % weighted_quartile3
+			s += "\"%s\"," % minimum
+			s += "\"%s\"," % maximum
+			s += "\"%s\"\n" % evaluation_time
+			f.write(s)
 
 	if verbosity > 0:
 		print("\tMean: %s" % mean)
@@ -422,6 +439,7 @@ if __name__ == '__main__':
 	parser.add_argument("-d", "--directory", help="Relative or absolute path to save directory", metavar='path/to/save_directory', type=str, default='./')
 	parser.add_argument("-b", "--basename", help="Basename used for output files", type=str)
 	parser.add_argument("-txt", "--textfile", help="Save text file with pooled FLIP values (mean, weighted median and weighted 1st and 3rd quartiles as well as minimum and maximum error)", action="store_true")
+	parser.add_argument("-c", "--csv", metavar='CSV_FILENAME', help="Write results to a csv file. Input is the desired file name (including .csv extension).\nResults are appended if the file already exists", type=str)
 	parser.add_argument("-hist", "--histogram", help="Save weighted histogram of the FLIP error map(s). Outputs overlapping histograms if exactly two test images are evaluated", action="store_true")
 	parser.add_argument("--y_max", help="Set upper limit of weighted histogram's y-axis", type=int)
 	parser.add_argument("-lg", "--log", help="Take logarithm of weighted histogram", action="store_true")
@@ -444,8 +462,8 @@ if __name__ == '__main__':
 	if args.basename is not None and num_test_images > 1:
 		sys.exit("Error: Basename is the same for all test images. Results will overwrite each other. Change to multiple runs with different --directory for each test image.")
 
-	# Create output directory if it doesn't exist and images should be saved
-	if not os.path.isdir(args.directory) and (not args.no_error_map or not args.no_exposure_map or args.save_ldr_images or args.save_ldrflip or args.textfile or args.histogram):
+	# Create output directory if it doesn't exist and images or other files should be saved
+	if not os.path.isdir(args.directory) and (not args.no_error_map or not args.no_exposure_map or args.save_ldr_images or args.save_ldrflip or args.textfile or args.csv or args.histogram):
 		os.makedirs(args.directory)
 
 	# Replace \ with / in reference and test paths
@@ -487,8 +505,8 @@ if __name__ == '__main__':
 	# Compute FLIP
 	dim = reference.shape
 	flip_array = np.zeros((dim[1], dim[2], num_test_images)).astype(np.float32)
-	for idx, test in enumerate(args.test):
-		test_filename = test[test.rfind('/') + 1: test.rfind('.')]
+	for idx, test_path in enumerate(args.test):
+		test_filename = test_path[test_path.rfind('/') + 1: test_path.rfind('.')]
 
 		# Set basename of output files
 		if args.basename is not None:
@@ -503,7 +521,7 @@ if __name__ == '__main__':
 
 		# Compute HDR or LDR FLIP depending on type of input
 		if hdr == True:
-			test = HWCtoCHW(read_exr(test))
+			test = HWCtoCHW(read_exr(test_path))
 			assert reference.shape == test.shape
 			if (reference < 0).any() or (test < 0).any():
 				reference = np.max(reference, 0.0)
@@ -543,7 +561,7 @@ if __name__ == '__main__':
 				save_image(exposure_map_path, exposure_map)
 
 		else:
-			test = load_image_array(test)
+			test = load_image_array(test_path)
 			assert reference.shape == test.shape
 			if (reference < 0).any() or (reference > 1).any() or (test < 0).any() or (test > 1).any():
 				reference = np.clip(reference, 0.0, 1.0)
@@ -568,10 +586,11 @@ if __name__ == '__main__':
 			print("FLIP between reference image <%s.%s> and test image <%s.%s>:" % (reference_filename, image_format, test_filename, image_format))
 
 		# Output pooled values
-		print_pooled_values(flip, hdr, args.textfile, args.directory, basename, default_basename, args.verbosity)
+		evaluation_time = t - t0
+		print_pooled_values(flip, hdr, args.textfile, args.csv, args.directory, basename, default_basename, args.reference, test_path, evaluation_time, args.verbosity)
 
 		# Print time spent computing FLIP
-		if args.verbosity > 1: print(("\tEvaluation time: %.4f seconds") % (t - t0))
+		if args.verbosity > 1: print(("\tEvaluation time: %.4f seconds") % evaluation_time)
 		if (args.verbosity > 0 and idx < (num_test_images - 1)): print("")
 
 		# Save FLIP map

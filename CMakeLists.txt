@@ -48,7 +48,7 @@ include(GNUInstallDirs)
 
 option(FLIP_ENABLE_CUDA "Include CUDA version of flip" OFF)
 
-add_subdirectory(CPP)
+add_subdirectory(cpp/CPP)
 if (FLIP_ENABLE_CUDA)
-  add_subdirectory(CUDA)
+  add_subdirectory(cpp/CUDA)
 endif()

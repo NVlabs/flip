@@ -50,6 +50,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <fstream>
 #include <algorithm>
 #include <chrono>
 #define NOMINMAX
@@ -111,6 +112,7 @@ int main(int argc, char** argv)
         { "no-magma", "nm", 0, false, "", "Save FLIP error maps in grayscale instead of magma" },
         { "no-exposure-map", "nexm", 0, false, "", "Do not save the HDR-FLIP exposure map" },
         { "no-error-map", "nerm", 0, false, "", "Do not save the FLIP error map" },
+        { "csv", "c", 1, false, "", "Writes results to a csv file. Appends results if the file already exists" },
     } };
     commandline commandLine(argc, argv, allowedCommandLineOptions);
 
@@ -364,6 +366,37 @@ int main(int argc, char** argv)
             bool optionExcludeValues = commandLine.optionSet("exclude-pooled-values");
             float yMax = (commandLine.optionSet("y-max") ? float(atof(commandLine.getOptionValue("y-max").c_str())) : 0.0f);
             pooledValues.save(histogramFileName.toString(), errorMapFLIP.getWidth(), errorMapFLIP.getHeight(), optionLog, referenceFileName.toString(), testFileName.toString(), !optionExcludeValues, yMax);
+        }
+
+        if (commandLine.optionSet("csv"))
+        {
+            FLIP::filename csvFileName(commandLine.getOptionValue("csv"));
+
+            std::fstream csv;
+            csv.open(csvFileName.toString(), std::ios::app);
+            if (csv.is_open())
+            {
+                csv.seekp(0, std::ios_base::end);
+
+                if (csv.tellp() <= 0)
+                    csv << "\"Reference\",\"Test\",\"Mean\",\"Weighted median\",\"1st weighted quartile\",\"3rd weighted quartile\",\"Min\",\"Max\",\"Evaluation time\"\n";
+
+                csv << "\"" << referenceFileName.toString() << "\",";
+                csv << "\"" << testFileName.toString() << "\",";
+                csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getMean(), 6) << "\",";
+                csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getPercentile(0.5f, true), 6) << "\",";
+                csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getPercentile(0.25f, true), 6) << "\",";
+                csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getPercentile(0.75f, true), 6) << "\",";
+                csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getMinValue(), 6) << "\",";
+                csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getMaxValue(), 6) << "\",";
+                csv << "\"" << FIXED_DECIMAL_DIGITS(std::chrono::duration_cast<std::chrono::microseconds>(t - t0).count() / 1000000.0f, 4) << "\"\n";
+
+                csv.close();
+            }
+            else
+            {
+                std::cout << "\nError: Could not write csv file " << csvFileName.toString() << "\n";
+            }
         }
 
         std::cout << FLIPString << " between reference image <" << referenceFileName.toString() << "> and test image <" << testFileName.toString() << ">\n";

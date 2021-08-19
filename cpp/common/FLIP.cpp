@@ -447,7 +447,7 @@ int main(int argc, char** argv)
 
             if (testQuantity > exitOnTestThresholdValue)
             {
-                std::cout << "Exiting with failure code due to that " << exitOnTestQuantity << " FLIP is " << FIXED_DECIMAL_DIGITS(testQuantity, 6) << ", while the threshold is for success is " << FIXED_DECIMAL_DIGITS(exitOnTestThresholdValue, 6) << ".\n";
+                std::cout << "Exiting with failure code because the " << exitOnTestQuantity << " of the FLIP error map is " << FIXED_DECIMAL_DIGITS(testQuantity, 6) << ", while the threshold for success is " << FIXED_DECIMAL_DIGITS(exitOnTestThresholdValue, 6) << ".\n";
                 exit(EXIT_FAILURE);     // from stdlib.h: equal to 1
             }
         }

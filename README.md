@@ -64,12 +64,12 @@ The `FLIP.sln` solution contains one CUDA backend project and one pure C++ backe
 
 Compiling the CUDA project requires a CUDA compatible GPU. Instruction on how to install CUDA can be found [here](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html).
 
-Alternatively, a CMake build can be done by creating a build directory and invoking CMake on the source `cpp` dir:
+Alternatively, a CMake build can be done by creating a build directory and invoking CMake on the source dir:
 
 ```
 mkdir build
 cd build
-cmake ../cpp
+cmake ..
 cmake --build .
 ```
 

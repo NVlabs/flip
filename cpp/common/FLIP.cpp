@@ -58,7 +58,6 @@
 
 #include "FLIP.h"
 
-
 struct
 {
     float PPD = 0;                          // If PPD==0.0, then it will be computed from the parameters below.
@@ -113,6 +112,8 @@ int main(int argc, char** argv)
         { "no-magma", "nm", 0, false, "", "Save FLIP error maps in grayscale instead of magma" },
         { "no-exposure-map", "nexm", 0, false, "", "Do not save the HDR-FLIP exposure map" },
         { "no-error-map", "nerm", 0, false, "", "Do not save the FLIP error map" },
+        { "exit-on-mean-test", "em", 0, false, "", "Do exit(EXIT_FAILURE) if the FLIP mean is greater than meanTestThreshold"},
+        { "mean-test-threshold", "mtt", 1, false, "", "Mean test threshold (default is 0.05)"},
     } };
     commandline commandLine(argc, argv, allowedCommandLineOptions);
 
@@ -408,7 +409,18 @@ int main(int argc, char** argv)
         std::cout << "     Max: " << FIXED_DECIMAL_DIGITS(pooledValues.getMaxValue(), 6) << "\n";
         std::cout << "     Evaluation time: " << FIXED_DECIMAL_DIGITS(std::chrono::duration_cast<std::chrono::microseconds>(t - t0).count() / 1000000.0f, 4) << " seconds\n";
         std::cout << (((++testFileCount) < commandLine.getOptionValues("test").size()) ? "\n" : "");
-    }
 
-    exit(0);
+        if (commandLine.optionSet("exit-on-mean-test"))
+        {
+            const float defaultMeanTestThreshold = 0.05f;
+            float meanTestThreshold = commandLine.optionSet("mean-test-threshold") ? float(atof(commandLine.getOptionValue("mean-test-threshold").c_str())) : defaultMeanTestThreshold;
+            float meanFLIP = pooledValues.getMean();
+            if (meanFLIP > meanTestThreshold)
+            {
+                std::cout << "Exiting with failure code due to that mean FLIP is " << FIXED_DECIMAL_DIGITS(meanFLIP, 6) << ", while the threshold is for success is " << FIXED_DECIMAL_DIGITS(defaultMeanTestThreshold, 6) << ".\n";
+                exit(EXIT_FAILURE);     // from stdlib.h: equal to 1
+            }
+        }
+    }
+    exit(EXIT_SUCCESS);                 // from stdlib.h: equal to 0
 }

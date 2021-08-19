@@ -58,7 +58,6 @@
 
 #include "FLIP.h"
 
-
 struct
 {
     float PPD = 0;                          // If PPD==0.0, then it will be computed from the parameters below.
@@ -113,6 +112,8 @@ int main(int argc, char** argv)
         { "no-magma", "nm", 0, false, "", "Save FLIP error maps in grayscale instead of magma" },
         { "no-exposure-map", "nexm", 0, false, "", "Do not save the HDR-FLIP exposure map" },
         { "no-error-map", "nerm", 0, false, "", "Do not save the FLIP error map" },
+        { "exit-on-test", "et", 0, false, "", "Do exit(EXIT_FAILURE) if the selected FLIP QUANTITY is greater than THRESHOLD"},
+        { "exit-test-parameters", "etp", 2, false, "QUANTITY = {MEAN (default) | WEIGHTED-MEDIAN | MAX} THRESHOLD (default = 0.05) ", "Test parameters for selected quantity and threshold value (in [0,1]) for exit on test"},
     } };
     commandline commandLine(argc, argv, allowedCommandLineOptions);
 
@@ -123,7 +124,26 @@ int main(int argc, char** argv)
             std::cout << commandLine.getErrorString() << "\n";
         }
         commandLine.print();
-        exit(0);
+        exit(EXIT_FAILURE);
+    }
+
+    std::string exitOnTestQuantity = "mean";
+    float exitOnTestThresholdValue = 0.05f;
+    if (commandLine.optionSet("exit-on-test") && commandLine.optionSet("exit-test-parameters"))
+    {
+        exitOnTestQuantity = commandLine.getOptionValue("exit-test-parameters", 0);
+        std::transform(exitOnTestQuantity.begin(), exitOnTestQuantity.end(), exitOnTestQuantity.begin(), [](unsigned char c) { return std::tolower(c); });
+        if (exitOnTestQuantity != "mean" && exitOnTestQuantity != "weighted-median" && exitOnTestQuantity != "max")
+        {
+            std::cout << "For --exit-test-parameters / -etp, the first paramter needs to be {MEAN | WEIGHTED-MEDIAN | MAX}\n";
+            exit(EXIT_FAILURE);
+        }
+        exitOnTestThresholdValue = std::stof(commandLine.getOptionValue("exit-test-parameters", 1));
+        if (exitOnTestThresholdValue < 0.0f || exitOnTestThresholdValue > 1.0f)
+        {
+            std::cout << "For --exit-test-parameters / -etp, the second paramter needs to be in [0,1]\n";
+            exit(EXIT_FAILURE);
+        }
     }
 
     FLIP::filename referenceFileName(commandLine.getOptionValue("reference"));
@@ -180,11 +200,11 @@ int main(int argc, char** argv)
         }
         if (bStartexp)
         {
-            startExposure = float(atof(commandLine.getOptionValue("start-exposure").c_str()));
+            startExposure = std::stof(commandLine.getOptionValue("start-exposure"));
         }
         if (bStopexp)
         {
-            stopExposure = float(atof(commandLine.getOptionValue("stop-exposure").c_str()));
+            stopExposure = std::stof(commandLine.getOptionValue("stop-exposure"));
         }
 
         if (startExposure > stopExposure)
@@ -364,7 +384,7 @@ int main(int argc, char** argv)
         {
             bool optionLog = commandLine.optionSet("log");
             bool optionExcludeValues = commandLine.optionSet("exclude-pooled-values");
-            float yMax = (commandLine.optionSet("y-max") ? float(atof(commandLine.getOptionValue("y-max").c_str())) : 0.0f);
+            float yMax = (commandLine.optionSet("y-max") ? std::stof(commandLine.getOptionValue("y-max")) : 0.0f);
             pooledValues.save(histogramFileName.toString(), errorMapFLIP.getWidth(), errorMapFLIP.getHeight(), optionLog, referenceFileName.toString(), testFileName.toString(), !optionExcludeValues, yMax);
         }
 
@@ -408,7 +428,29 @@ int main(int argc, char** argv)
         std::cout << "     Max: " << FIXED_DECIMAL_DIGITS(pooledValues.getMaxValue(), 6) << "\n";
         std::cout << "     Evaluation time: " << FIXED_DECIMAL_DIGITS(std::chrono::duration_cast<std::chrono::microseconds>(t - t0).count() / 1000000.0f, 4) << " seconds\n";
         std::cout << (((++testFileCount) < commandLine.getOptionValues("test").size()) ? "\n" : "");
-    }
 
-    exit(0);
+        if (commandLine.optionSet("exit-on-test"))
+        {
+            float testQuantity;
+            if (exitOnTestQuantity == "mean")
+            {
+                testQuantity = pooledValues.getMean();
+            }
+            else if (exitOnTestQuantity == "weigthed-median")
+            {
+                testQuantity = pooledValues.getPercentile(0.5f, true);
+            }
+            else if (exitOnTestQuantity == "max")
+            {
+                testQuantity = pooledValues.getMaxValue();
+            }
+
+            if (testQuantity > exitOnTestThresholdValue)
+            {
+                std::cout << "Exiting with failure code because the " << exitOnTestQuantity << " of the FLIP error map is " << FIXED_DECIMAL_DIGITS(testQuantity, 6) << ", while the threshold for success is " << FIXED_DECIMAL_DIGITS(exitOnTestThresholdValue, 6) << ".\n";
+                exit(EXIT_FAILURE);     // from stdlib.h: equal to 1
+            }
+        }
+    }
+    exit(EXIT_SUCCESS);                 // from stdlib.h: equal to 0
 }

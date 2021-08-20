@@ -33,7 +33,7 @@
 // Visualizing and Communicating Errors in Rendered Images
 // Ray Tracing Gems II, 2021,
 // by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
-// Pointer to the article: N/A.
+// Pointer to the chapter: https://research.nvidia.com/publication/2021-08_Visualizing-and-Communicating.
 
 // Visualizing Errors in Rendered High Dynamic Range Images
 // Eurographics 2021,

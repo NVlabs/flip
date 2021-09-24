@@ -43,6 +43,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Magdalena Martinek, Philip Thiemann, and Marc Stamminger, ["Spatio-temporal filtered motion DAGs for path-tracing"](https://www.sciencedirect.com/science/article/abs/pii/S0097849321001394), Computers & Graphics, Volume 99, pp. 224-233, October 2021.
 
+1. Alexander Dahlinand Veronica Sundstedt, ["Improving Ray Tracing Performance with Variable Rate Shading"](https://diglib.eg.org/handle/10.2312/cgvc20211319), EG UK Computer Graphics and Visual Computing (CGVC), 2021.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

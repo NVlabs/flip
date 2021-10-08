@@ -113,12 +113,14 @@ def read_exr(filename):
 
 	# Convert all channels in the image to numpy arrays
 	for c in header['channels']:
-		if c != 'A':
-			C = exrfile.channel(c, Imath.PixelType(Imath.PixelType.FLOAT))
-			C = np.frombuffer(C, dtype=np.float32)
-			C = np.reshape(C, isize)
+		C = exrfile.channel(c, Imath.PixelType(Imath.PixelType.FLOAT))
+		C = np.frombuffer(C, dtype=np.float32)
+		C = np.reshape(C, isize)
 
-			channelData[c] = C
+		channelData[c] = C
+
+	if len(channelData) == 1:
+		channelData['R'] = channelData['G'] = channelData['B'] = channelData[next(iter(channelData))]
 
 	colorChannels = ['R', 'G', 'B']
 	img = np.concatenate([channelData[c][...,np.newaxis] for c in colorChannels], axis=2)

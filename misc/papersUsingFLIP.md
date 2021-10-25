@@ -45,6 +45,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Alexander Dahlinand Veronica Sundstedt, ["Improving Ray Tracing Performance with Variable Rate Shading"](https://diglib.eg.org/handle/10.2312/cgvc20211319), EG UK Computer Graphics and Visual Computing (CGVC), 2021.
 
+1. Chao Wang, Bin Chen, Hans-Peter Seidel, Karol Myszkowskil, and Ana Serrano, ["Learning a Self-Supervised Tone Mapping Operator via Feature Contrast Masking Loss"](https://arxiv.org/pdf/2110.09866.pdf), arXiv:2110.09866, 2021.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

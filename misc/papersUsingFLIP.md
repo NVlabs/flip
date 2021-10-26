@@ -47,6 +47,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Chao Wang, Bin Chen, Hans-Peter Seidel, Karol Myszkowskil, and Ana Serrano, ["Learning a Self-Supervised Tone Mapping Operator via Feature Contrast Masking Loss"](https://arxiv.org/pdf/2110.09866.pdf), arXiv:2110.09866, 2021.
 
+1. Bjoern Haefner, Simon Green, Alan Oursland, Daniel Andersen, Michael Goesele, Daniel Cremers, Richard Newcombe, and Thomas Whelan,["Recovering Real-World Reflectance Properties and Shading From HDR Imagery"](https://research.fb.com/publications/recovering-real-world-reflectance-properties-and-shading-from-hdr-imagery/), International Conference on 3D Vision, 2021.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 
@@ -55,3 +57,6 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 1. Ha Manh Luu, Theo van Walsum, Daniel Franklin, Phuong Cam Pham, Luu Dang Vu, Adriaan Moelker, Marius Staring, Xiem VanHoang, Wiro Niessen, Nguyen Linh Trung, ["Efficiently Compressing 3D Medical Images for Teleinterventions via CNNs and Anisotropic Diffusion"](https://elastix.lumc.nl/marius/downloads/2021_j_MP.pdf), *Medical Physics*, 2021.
 
 1. Yining Karl Li, ["Porting Takua Renderer to 64-bit ARM- Part 1"](https://blog.yiningkarlli.com/2021/05/porting-takua-to-arm-pt1.html), blog, May 2021.
+
+1. Bipul Mohanto, Tariqul Islam, Enrico Gobbetti, and OliverStaadt, ["An Integrative View of Foveated Rendering"](https://www.sciencedirect.com/science/article/pii/S0097849321002211#bb254), Computers & Graphics, October 2021.
+ 

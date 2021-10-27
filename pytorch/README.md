@@ -25,9 +25,7 @@ and `stb_image`, which is subject to an [MIT License](../LICENSE-third-party.md#
 
 For individual contributions to the project, please confer the [Individual Contributor License Agreement](../CLA.md).
 
-For business inquiries, please contact researchinquiries@nvidia.com.
-
-For press and other inquiries, please contact Hector Marinez at hmarinez@nvidia.com.
+For business inquiries, please visit our website and submit the form: [NVIDIA Research Licensing](https://www.nvidia.com/en-us/research/inquiries/).
 
 # PyTorch (Loss Function)
 

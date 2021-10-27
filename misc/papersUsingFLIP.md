@@ -59,4 +59,6 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 1. Yining Karl Li, ["Porting Takua Renderer to 64-bit ARM- Part 1"](https://blog.yiningkarlli.com/2021/05/porting-takua-to-arm-pt1.html), blog, May 2021.
 
 1. Bipul Mohanto, Tariqul Islam, Enrico Gobbetti, and OliverStaadt, ["An Integrative View of Foveated Rendering"](https://www.sciencedirect.com/science/article/pii/S0097849321002211#bb254), Computers & Graphics, October 2021.
+
+1. Richard Szeliski, [Computer Vision: Algorithms and Applications](https://szeliski.org/Book/), 2nd ed., 2021.
  

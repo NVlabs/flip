@@ -49,6 +49,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Bjoern Haefner, Simon Green, Alan Oursland, Daniel Andersen, Michael Goesele, Daniel Cremers, Richard Newcombe, and Thomas Whelan,["Recovering Real-World Reflectance Properties and Shading From HDR Imagery"](https://research.fb.com/publications/recovering-real-world-reflectance-properties-and-shading-from-hdr-imagery/), International Conference on 3D Vision, 2021.
 
+1. Muhammad Huzaifa, Rishi Desai, Samuel Grayson, Xutao Jiang, Ying Jing, Jae Lee, Fang Lu, Yihan Pang, Joseph Ravichandran, Finn Sinclair, Boyuan Tian, Hengzhi Yuan, Jeffrey Zhang, and Sarita V. Adve, ["ILLIXR: Enabling End-to-End Extended Reality Research"](http://rsim.cs.illinois.edu/Pubs/IISWC_2021_ILLIXR.pdf), IEEE International Symposium on Workload Characterization, 2021.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

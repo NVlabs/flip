@@ -65,4 +65,6 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 1. Bipul Mohanto, Tariqul Islam, Enrico Gobbetti, and OliverStaadt, ["An Integrative View of Foveated Rendering"](https://www.sciencedirect.com/science/article/pii/S0097849321002211#bb254), Computers & Graphics, October 2021.
 
 1. Richard Szeliski, [Computer Vision: Algorithms and Applications](https://szeliski.org/Book/), 2nd ed., 2021.
- 
+
+1. Tomas Polasek, David Hrusa, Bedrich Benes, an Martin Čadík, ["ICTree: Automatic Perceptual Metrics for Tree Models"](http://cphoto.fit.vutbr.cz/ictree/),
+ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.

@@ -269,6 +269,7 @@ namespace FLIP
         {
             for (int z = 0; z < this->getDepth(); z++)
             {
+#pragma omp parallel for
                 for (int y = 0; y < this->getHeight(); y++)
                 {
                     for (int x = 0; x < this->getWidth(); x++)
@@ -283,6 +284,7 @@ namespace FLIP
         {
             for (int z = 0; z < this->getDepth(); z++)
             {
+#pragma omp parallel for
                 for (int y = 0; y < this->getHeight(); y++)
                 {
                     for (int x = 0; x < this->getWidth(); x++)
@@ -297,6 +299,7 @@ namespace FLIP
         {
             for (int z = 0; z < this->getDepth(); z++)
             {
+#pragma omp parallel for
                 for (int y = 0; y < this->getHeight(); y++)
                 {
                     for (int x = 0; x < this->getWidth(); x++)
@@ -311,6 +314,7 @@ namespace FLIP
         {
             for (int z = 0; z < this->getDepth(); z++)
             {
+#pragma omp parallel for
                 for (int y = 0; y < this->getHeight(); y++)
                 {
                     for (int x = 0; x < this->getWidth(); x++)
@@ -325,6 +329,7 @@ namespace FLIP
         {
             for (int z = 0; z < this->getDepth(); z++)
             {
+#pragma omp parallel for
                 for (int y = 0; y < this->getHeight(); y++)
                 {
                     for (int x = 0; x < this->getWidth(); x++)
@@ -339,6 +344,7 @@ namespace FLIP
         {
             for (int z = 0; z < this->getDepth(); z++)
             {
+#pragma omp parallel for
                 for (int y = 0; y < this->getHeight(); y++)
                 {
                     for (int x = 0; x < this->getWidth(); x++)
@@ -359,6 +365,7 @@ namespace FLIP
         {
             for (int z = 0; z < this->getDepth(); z++)
             {
+#pragma omp parallel for
                 for (int y = 0; y < this->getHeight(); y++)
                 {
                     for (int x = 0; x < this->getWidth(); x++)
@@ -376,6 +383,7 @@ namespace FLIP
 
             for (int z = 0; z < this->getDepth(); z++)
             {
+#pragma omp parallel for
                 for (int y = 0; y < this->getHeight(); y++)
                 {
                     for (int x = 0; x < this->getWidth(); x++)
@@ -406,6 +414,7 @@ namespace FLIP
         {
             for (int z = 0; z < this->getDepth(); z++)
             {
+#pragma omp parallel for
                 for (int y = 0; y < this->getHeight(); y++)
                 {
                     for (int x = 0; x < this->getWidth(); x++)
@@ -444,6 +453,7 @@ namespace FLIP
 
             for (int z = 0; z < this->getDepth(); z++)
             {
+#pragma omp parallel for
                 for (int y = 0; y < this->getHeight(); y++)
                 {
                     for (int x = 0; x < this->getWidth(); x++)
@@ -468,6 +478,7 @@ namespace FLIP
         {
             for (int z = 0; z < this->getDepth(); z++)
             {
+#pragma omp parallel for
                 for (int y = 0; y < this->getHeight(); y++)
                 {
                     for (int x = 0; x < this->getWidth(); x++)
@@ -505,6 +516,7 @@ namespace FLIP
 
             this->init({ width, height, z + 1 });
 
+#pragma omp parallel for
             for (int y = 0; y < this->mDim.y; y++)
             {
                 for (int x = 0; x < this->mDim.x; x++)
@@ -523,6 +535,7 @@ namespace FLIP
         {
             unsigned char* pixels = new unsigned char[3 * this->mDim.x * this->mDim.y];
 
+#pragma omp parallel for
             for (int y = 0; y < this->mDim.y; y++)
             {
                 for (int x = 0; x < this->mDim.x; x++)
@@ -652,6 +665,7 @@ namespace FLIP
             {
                 assert(idxR != -1 && idxG != -1);
 
+#pragma omp parallel for
                 for (int y = 0; y < this->mDim.y; y++)
                 {
                     for (int x = 0; x < this->mDim.x; x++)
@@ -671,6 +685,7 @@ namespace FLIP
             {
                 assert(idxR != -1 && idxG != -1 && idxB != -1);
 
+#pragma omp parallel for
                 for (int y = 0; y < this->mDim.y; y++)
                 {
                     for (int x = 0; x < this->mDim.x; x++)
@@ -691,6 +706,7 @@ namespace FLIP
             {
                 assert(idxR != -1 && idxG != -1 && idxB != -1);
 
+#pragma omp parallel for
                 for (int y = 0; y < this->mDim.y; y++)
                 {
                     for (int x = 0; x < this->mDim.x; x++)

@@ -49,6 +49,12 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Bjoern Haefner, Simon Green, Alan Oursland, Daniel Andersen, Michael Goesele, Daniel Cremers, Richard Newcombe, and Thomas Whelan,["Recovering Real-World Reflectance Properties and Shading From HDR Imagery"](https://research.fb.com/publications/recovering-real-world-reflectance-properties-and-shading-from-hdr-imagery/), International Conference on 3D Vision, 2021.
 
+1. Muhammad Huzaifa, Rishi Desai, Samuel Grayson, Xutao Jiang, Ying Jing, Jae Lee, Fang Lu, Yihan Pang, Joseph Ravichandran, Finn Sinclair, Boyuan Tian, Hengzhi Yuan, Jeffrey Zhang, and Sarita V. Adve, ["ILLIXR: Enabling End-to-End Extended Reality Research"](http://rsim.cs.illinois.edu/Pubs/IISWC_2021_ILLIXR.pdf), IEEE International Symposium on Workload Characterization, 2021.
+
+1. Albert Garifullin, Vladimir Frolov, and Anastasiya Khlupina, ["Approximate Instancing for Modeling Plant Ecosystems"](http://ceur-ws.org/Vol-3027/paper9.pdf), GraphiCon 2021.
+
+1. Pierre Moreau and Michael Doggett, ["Real-Time Rendering of Indirectly Visible Caustics"](https://fileadmin.cs.lth.se/graphics/research/papers/2022/indirectly_visible_caustics/), GRAPP, 2022.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 
@@ -61,4 +67,6 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 1. Bipul Mohanto, Tariqul Islam, Enrico Gobbetti, and OliverStaadt, ["An Integrative View of Foveated Rendering"](https://www.sciencedirect.com/science/article/pii/S0097849321002211#bb254), Computers & Graphics, October 2021.
 
 1. Richard Szeliski, [Computer Vision: Algorithms and Applications](https://szeliski.org/Book/), 2nd ed., 2021.
- 
+
+1. Tomas Polasek, David Hrusa, Bedrich Benes, an Martin Čadík, ["ICTree: Automatic Perceptual Metrics for Tree Models"](http://cphoto.fit.vutbr.cz/ictree/),
+ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.

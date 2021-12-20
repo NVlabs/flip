@@ -42,7 +42,7 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
 
   CUDA support is enabled via the `FLIP_ENABLE_CUDA`, which can be passed to CMake on the command line with `-DFLIP_ENABLE_CUDA=ON` or set interactively with `ccmake` or `cmake-gui`.
 - Usage: `flip[-cuda].exe --reference reference.{exr|png} --test test.{exr|png} [options]`, where the list of options can be seen by `flip[-cuda].exe -h`.
-- Tested on Windows 10 version 20H2 with CUDA 11.3. Compiled with Visual Studio 2019. If you use another version of CUDA, you will need to change the `CUDA 11.3` strings in the `CUDA.vcxproj` file accordingly.
+- Tested on Windows 10 version 20H2 with CUDA 11.5. Compiled with Visual Studio 2019. If you use another version of CUDA, you will need to change the `CUDA 11.5` strings in the `CUDA.vcxproj` file accordingly.
 - Weighted histograms are output as Python scripts. Running the script will create a PDF version of the histogram.
 - The naming convention used for the ꟻLIP tool's output is as follows (where `ppd` is the assumed number of pixels per degree,
   `tm` is the tone mapper assumed by HDR-ꟻLIP, `cstart` and `cstop` are the shortest and longest exposures, respectively, assumed by HDR-ꟻLIP,

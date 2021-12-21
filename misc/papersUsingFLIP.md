@@ -57,6 +57,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Alan Wolfe, Nathan Morrical, Tomas Akenine-Möller, and Ravi Ramamoorthi, ["Scalar Spatiotemporal Blue Noise Masks"](https://arxiv.org/abs/2112.09629), arXiv:2112.09629, 2021.
  
+1. Pierre Moreau, ["Towards Fully Dynamic Surface Illumination in Real-Time Rendering using Acceleration Data Structures"](https://fileadmin.cs.lth.se/graphics/research/papers/2022/phd_pm/PhD_thesis_Pierre_Moreau.pdf), PhD thesis, Lund University, 2022.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

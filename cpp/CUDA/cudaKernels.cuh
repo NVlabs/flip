@@ -501,7 +501,7 @@ namespace FLIP
         pImage[i] = color3::XYZ2YCxCz(color3::LinearRGB2XYZ(color3::sRGB2LinearRGB(pImage[i])));
     }
 
-    __global__ static void kernelCIELab2Gray(float* dstImage, color3* srcImage, const int3 dim)
+    __global__ static void kernelYCxCz2Gray(float* dstImage, color3* srcImage, const int3 dim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -509,10 +509,10 @@ namespace FLIP
 
         if (x >= dim.x || y >= dim.y) return;
 
-        dstImage[i] = color3::CIELab2Gray(srcImage[i]);
+        dstImage[i] = color3::YCxCz2Gray(srcImage[i]);
     }
 
-    __global__ static void kernelCIELab2Gray(color3* dstImage, color3* srcImage, const int3 dim)
+    __global__ static void kernelYCxCz2Gray(color3* dstImage, color3* srcImage, const int3 dim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -521,7 +521,7 @@ namespace FLIP
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
 
-        float gray = color3::CIELab2Gray(srcImage[i]);
+        float gray = color3::YCxCz2Gray(srcImage[i]);
         dstImage[i] = color3(gray);
     }
 

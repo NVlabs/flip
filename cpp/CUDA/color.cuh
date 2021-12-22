@@ -361,9 +361,9 @@ namespace FLIP
             return color3(X, Y, Z) * referenceIlluminant;
         }
 
-        __host__ __device__ static inline float CIELab2Gray(color3 CIELab)
+        __host__ __device__ static inline float YCxCz2Gray(color3 YCxCz)
         {
-            return (CIELab.x + 16.0f) / 116.0f; //  make it [0,1]
+            return (YCxCz.x + 16.0f) / 116.0f; //  make it [0,1]
         }
 
         //  FLIP-specific functions below

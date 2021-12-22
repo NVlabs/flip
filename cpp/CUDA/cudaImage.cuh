@@ -537,8 +537,8 @@ namespace FLIP
 
         //  grayscale images needed for feature detection
         image<color3> grayReference(width, height), grayTest(width, height);
-        grayReference.CIELab2Gray(referenceImage);
-        grayTest.CIELab2Gray(testImage);
+        grayReference.YCxCz2Gray(referenceImage);
+        grayTest.YCxCz2Gray(testImage);
 
         //  feature filtering
         pointReference.convolve(grayReference, pointFilter);

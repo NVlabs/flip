@@ -399,11 +399,11 @@ namespace FLIP
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 
-        void CIELab2Gray(tensor<color3>& srcImage)
+        void YCxCz2Gray(tensor<color3>& srcImage)
         {
             this->synchronizeDevice();
-            FLIP::kernelCIELab2Gray << <this->mGridDim, this->mBlockDim >> > (this->getDeviceData(), srcImage.getDeviceData(), this->mDim);
-            checkStatus("kernelCIELab2Gray");
+            FLIP::kernelYCxCz2Gray << <this->mGridDim, this->mBlockDim >> > (this->getDeviceData(), srcImage.getDeviceData(), this->mDim);
+            checkStatus("kernelYCxCz2Gray");
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 

@@ -310,7 +310,7 @@ namespace FLIP
             }
         }
 
-        void CIELab2Gray(tensor<color3>& srcImage)
+        void YCxCz2Gray(tensor<color3>& srcImage)
         {
             for (int z = 0; z < this->getDepth(); z++)
             {
@@ -319,7 +319,7 @@ namespace FLIP
                 {
                     for (int x = 0; x < this->getWidth(); x++)
                     {
-                        this->set(x, y, z, color3::CIELab2Gray(srcImage.get(x, y, z)));
+                        this->set(x, y, z, color3::YCxCz2Gray(srcImage.get(x, y, z)));
                     }
                 }
             }

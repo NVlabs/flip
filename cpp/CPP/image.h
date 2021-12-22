@@ -248,8 +248,6 @@ namespace FLIP
             image<color3> referenceImage(reference), testImage(test);
             image<color3> preprocessedReference(width, height), preprocessedTest(width, height);
             image<color3> colorDifference(width, height);
-            image<color3> pointReference(width, height), pointTest(width, height);
-            image<color3> edgeReference(width, height), edgeTest(width, height);
             image<color3> featureDifference(width, height);
 
             //  move from sRGB to YCxCz
@@ -289,16 +287,62 @@ namespace FLIP
             grayReference.YCxCz2Gray(referenceImage);
             grayTest.YCxCz2Gray(testImage);
 
-            //  feature filtering
-            pointReference.convolve(grayReference, pointFilter);
-            pointTest.convolve(grayTest, pointFilter);
-            edgeReference.convolve(grayReference, edgeFilter);
-            edgeTest.convolve(grayTest, edgeFilter);
-
-            //  feature difference
-            featureDifference.computeFeatureDifference(pointReference, pointTest, edgeReference, edgeTest);
+            featureDifference.computeFeatureDifference(grayReference, grayTest, edgeFilter, pointFilter);
 
             this->finalError(colorDifference, featureDifference);
+        }
+
+        void computeFeatureDifference(const image<color3>& grayRefImage, const image<color3>& grayTestImage, const image<color3>& edgeFilter, const image<color3>& pointFilter)
+        {
+            const float normalizationFactor = 1.0f / std::sqrt(2.0f);
+            const int halfFilterWidth = edgeFilter.getWidth() / 2;      // The edge and point filters are of the same size.
+            const int halfFilterHeight = edgeFilter.getHeight() / 2;
+            const int w = grayRefImage.getWidth();
+            const int h = grayRefImage.getHeight();
+#pragma omp parallel for
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    float  edgeRefX = 0.0f, edgeTestX = 0.0f, pointRefX = 0.0f, pointTestX = 0.0f;
+                    float  edgeRefY = 0.0f, edgeTestY = 0.0f, pointRefY = 0.0f, pointTestY = 0.0f;
+
+                    for (int iy = -halfFilterHeight; iy <= halfFilterHeight; iy++)
+                    {
+                        int yy = Min(Max(0, y + iy), this->getHeight() - 1);
+                        for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
+                        {
+                            int xx = Min(Max(0, x + ix), this->getWidth() - 1);
+
+                            const color3 edgeWeights = edgeFilter.get(ix + halfFilterWidth, iy + halfFilterHeight);
+                            const color3 pointWeights = pointFilter.get(ix + halfFilterWidth, iy + halfFilterHeight);
+                            const float grayRef = grayRefImage.get(xx, yy).x;
+                            const float grayTest = grayTestImage.get(xx, yy).x;
+
+                            edgeRefX += edgeWeights.x * grayRef;
+                            edgeRefY += edgeWeights.y * grayRef;
+                            edgeTestX += edgeWeights.x * grayTest;
+                            edgeTestY += edgeWeights.y * grayTest;
+                            pointRefX += pointWeights.x * grayRef;
+                            pointRefY += pointWeights.y * grayRef;
+                            pointTestX += pointWeights.x * grayTest;
+                            pointTestY += pointWeights.y * grayTest;
+                        }
+                    }
+
+                    const float edgeValueRef = std::sqrt(edgeRefX * edgeRefX + edgeRefY * edgeRefY);
+                    const float edgeValueTest = std::sqrt(edgeTestX * edgeTestX + edgeTestY * edgeTestY);
+                    const float pointValueRef = std::sqrt(pointRefX * pointRefX + pointRefY * pointRefY);
+                    const float pointValueTest = std::sqrt(pointTestX * pointTestX + pointTestY * pointTestY);
+
+                    const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
+                    const float pointDifference = std::abs(pointValueRef - pointValueTest);
+
+                    const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), HostFLIPConstants.gqf);
+
+                    this->set(x, y, color3(featureDifference, 0.0f, 0.0f));
+                }
+            }
         }
 
         void finalError(image<color3>& colorDifference, image<color3>& featureDifference)
@@ -360,34 +404,6 @@ namespace FLIP
                     pixel.y = color3::Hunt(pixel.x, pixel.y);
                     pixel.z = color3::Hunt(pixel.x, pixel.z);
                     this->set(x , y, pixel);
-                }
-            }
-        }
-
-        void computeFeatureDifference(image& pointReference, image& pointTest, image& edgeReference, image& edgeTest)
-        {
-            const float normalizationFactor = 1.0f / std::sqrt(2.0f);
-#pragma omp parallel for
-            for (int y = 0; y < this->getHeight(); y++)
-            {
-                for (int x = 0; x < this->getWidth(); x++)
-                {
-                    color3 er = edgeReference.get(x, y);
-                    color3 et = edgeTest.get(x, y);
-                    color3 pr = pointReference.get(x, y);
-                    color3 pt = pointTest.get(x, y);
-
-                    const float edgeValueRef = std::sqrt(er.x * er.x + er.y * er.y);
-                    const float edgeValueTest = std::sqrt(et.x * et.x + et.y * et.y);
-                    const float pointValueRef = std::sqrt(pr.x * pr.x + pr.y * pr.y);
-                    const float pointValueTest = std::sqrt(pt.x * pt.x + pt.y * pt.y);
-
-                    const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
-                    const float pointDifference = std::abs(pointValueRef - pointValueTest);
-
-                    const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), HostFLIPConstants.gqf);
-
-                    this->set(x, y, color3(featureDifference, 0.0f, 0.0f));
                 }
             }
         }

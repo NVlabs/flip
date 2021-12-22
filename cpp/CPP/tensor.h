@@ -178,12 +178,12 @@ namespace FLIP
             return this->mvpHostData;
         }
 
-        inline int index(int x, int y = 0, int z = 0)
+        inline int index(int x, int y = 0, int z = 0) const
         {
             return (z * this->mDim.y + y) * mDim.x + x;
         }
 
-        T get(int x, int y, int z)
+        T get(int x, int y, int z) const
         {
             return this->mvpHostData[this->index(x, y, z)];
         }

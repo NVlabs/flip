@@ -121,7 +121,7 @@ namespace FLIP
         {
         }
 
-        T get(int x, int y)
+        T get(int x, int y) const
         {
             return this->mvpHostData[this->index(x, y)];
         }
@@ -303,6 +303,7 @@ namespace FLIP
 
         void finalError(image<color3>& colorDifference, image<color3>& featureDifference)
         {
+#pragma omp parallel for
             for (int y = 0; y < this->getHeight(); y++)
             {
                 for (int x = 0; x < this->getWidth(); x++)
@@ -318,13 +319,13 @@ namespace FLIP
 
         void computeColorDifference(image& reference, image& test)
         {
+            const float cmax = color3::computeMaxDistance(HostFLIPConstants.gqc);
+            const float pccmax = HostFLIPConstants.gpc * cmax;
+#pragma omp parallel for
             for (int y = 0; y < this->getHeight(); y++)
             {
                 for (int x = 0; x < this->getWidth(); x++)
                 {
-                    const float cmax = color3::computeMaxDistance(HostFLIPConstants.gqc);
-                    const float pccmax = HostFLIPConstants.gpc * cmax;
-
                     color3 refPixel = reference.get(x, y);
                     color3 testPixel = test.get(x, y);
 
@@ -350,6 +351,7 @@ namespace FLIP
 
         void huntAdjustment(void)
         {
+#pragma omp parallel for
             for (int y = 0; y < this->getHeight(); y++)
             {
                 for (int x = 0; x < this->getWidth(); x++)
@@ -364,12 +366,12 @@ namespace FLIP
 
         void computeFeatureDifference(image& pointReference, image& pointTest, image& edgeReference, image& edgeTest)
         {
+            const float normalizationFactor = 1.0f / std::sqrt(2.0f);
+#pragma omp parallel for
             for (int y = 0; y < this->getHeight(); y++)
             {
                 for (int x = 0; x < this->getWidth(); x++)
                 {
-                    const float normalizationFactor = 1.0f / std::sqrt(2.0f);
-
                     color3 er = edgeReference.get(x, y);
                     color3 et = edgeTest.get(x, y);
                     color3 pr = pointReference.get(x, y);
@@ -392,6 +394,7 @@ namespace FLIP
 
         void setMaxExposure(image<float>& errorMap, image<float>& exposureMap, float exposure)
         {
+#pragma omp parallel for
             for (int y = 0; y < this->getHeight(); y++)
             {
                 for (int x = 0; x < this->getWidth(); x++)
@@ -410,7 +413,8 @@ namespace FLIP
 
         void expose(float level)
         {
-            float m = std::pow(2.0f, level);
+            const float m = std::pow(2.0f, level);
+#pragma omp parallel for
             for (int y = 0; y < this->getHeight(); y++)
             {
                 for (int x = 0; x < this->getWidth(); x++)

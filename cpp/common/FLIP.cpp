@@ -114,6 +114,7 @@ int main(int argc, char** argv)
         { "no-error-map", "nerm", 0, false, "", "Do not save the FLIP error map" },
         { "exit-on-test", "et", 0, false, "", "Do exit(EXIT_FAILURE) if the selected FLIP QUANTITY is greater than THRESHOLD"},
         { "exit-test-parameters", "etp", 2, false, "QUANTITY = {MEAN (default) | WEIGHTED-MEDIAN | MAX} THRESHOLD (default = 0.05) ", "Test parameters for selected quantity and threshold value (in [0,1]) for exit on test"},
+        { "directory", "d", 1, false, "Relative or absolute path to save directory"},
     } };
     commandline commandLine(argc, argv, allowedCommandLineOptions);
 
@@ -144,6 +145,12 @@ int main(int argc, char** argv)
             std::cout << "For --exit-test-parameters / -etp, the second paramter needs to be in [0,1]\n";
             exit(EXIT_FAILURE);
         }
+    }
+
+    std::string destinationDirectory = ".";
+    if (commandLine.optionSet("directory"))
+    {
+        destinationDirectory = commandLine.getOptionValue("directory");
     }
 
     FLIP::filename referenceFileName(commandLine.getOptionValue("reference"));
@@ -311,8 +318,8 @@ int main(int argc, char** argv)
                         rFileName.setName(basename + ".reference." + "." + expCount);
                         tFileName.setName(basename + ".test." + "." + expCount);
                     }
-                    rImage.pngSave(rFileName.toString());
-                    tImage.pngSave(tFileName.toString());
+                    rImage.pngSave(destinationDirectory + "/" + rFileName.toString());
+                    tImage.pngSave(destinationDirectory + "/" + tFileName.toString());
                 }
 
                 tmpErrorMap.FLIP(rImage, tImage, gFLIPOptions.PPD);
@@ -333,15 +340,15 @@ int main(int argc, char** argv)
 
                     if (basename == "")
                     {
-                        pngResult.pngSave("flip." + referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(gFLIPOptions.PPD))) + "ppd.ldr." + optionTonemapper + "." + expCount + "." + expString + ".png");
+                        pngResult.pngSave(destinationDirectory + "/" + "flip." + referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(gFLIPOptions.PPD))) + "ppd.ldr." + optionTonemapper + "." + expCount + "." + expString + ".png");
                     }
                     else
                     {
-                        pngResult.pngSave(basename + "." + expCount + ".png");
+                        pngResult.pngSave(destinationDirectory + "/" + basename + "." + expCount + ".png");
 
                     }
 
-                    pngResult.pngSave(flipFileName.toString());
+                    pngResult.pngSave(destinationDirectory + "/" + flipFileName.toString());
                 }
 
             }
@@ -351,7 +358,7 @@ int main(int argc, char** argv)
             {
                 FLIP::image<FLIP::color3> pngMaxErrorExposureMap(referenceImage.getWidth(), referenceImage.getHeight());
                 pngMaxErrorExposureMap.colorMap(maxErrorExposureMap, viridisMap);
-                pngMaxErrorExposureMap.pngSave(exposureFileName.toString());
+                pngMaxErrorExposureMap.pngSave(destinationDirectory + "/" + exposureFileName.toString());
             }
         }
         else
@@ -368,7 +375,7 @@ int main(int argc, char** argv)
             {
                 pngResult.colorMap(errorMapFLIP, magmaMap);
             }
-            pngResult.pngSave(flipFileName.toString());
+            pngResult.pngSave(destinationDirectory + "/" + flipFileName.toString());
         }
 
         pooling<float> pooledValues;
@@ -385,7 +392,7 @@ int main(int argc, char** argv)
             bool optionLog = commandLine.optionSet("log");
             bool optionExcludeValues = commandLine.optionSet("exclude-pooled-values");
             float yMax = (commandLine.optionSet("y-max") ? std::stof(commandLine.getOptionValue("y-max")) : 0.0f);
-            pooledValues.save(histogramFileName.toString(), errorMapFLIP.getWidth(), errorMapFLIP.getHeight(), optionLog, referenceFileName.toString(), testFileName.toString(), !optionExcludeValues, yMax);
+            pooledValues.save(destinationDirectory + "/" + histogramFileName.toString(), errorMapFLIP.getWidth(), errorMapFLIP.getHeight(), optionLog, referenceFileName.toString(), testFileName.toString(), !optionExcludeValues, yMax);
         }
 
         if (commandLine.optionSet("csv"))

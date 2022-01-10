@@ -250,8 +250,7 @@ namespace FLIP
             int spatialFilterWidth = 2 * spatialFilterRadius + 1;
             image<color3> spatialFilter(spatialFilterWidth, spatialFilterWidth);
             setSpatialFilter(spatialFilter, ppd, spatialFilterRadius);
-            preprocessedReference.convolve(referenceImage, spatialFilter);
-            preprocessedTest.convolve(testImage, spatialFilter);
+            convolve2images(referenceImage, preprocessedReference, testImage, preprocessedTest, spatialFilter);
 
             //  move from YCxCz to CIELab
             preprocessedReference.YCxCz2CIELab();
@@ -586,6 +585,43 @@ namespace FLIP
         }
 
     };
+
+    static void convolve2images(const FLIP::image<color3>& input1, FLIP::image<color3>& output1, const FLIP::image<color3>& input2, FLIP::image<color3>& output2, const FLIP::image<color3>& filter)
+    {
+        const int halfFilterWidth = filter.getWidth() / 2;
+        const int halfFilterHeight = filter.getHeight() / 2;
+
+        const int w = input1.getWidth();
+        const int h = input1.getHeight();
+#pragma omp parallel for
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                color3 colorSum1 = { 0.0f, 0.0f, 0.0f };
+                color3 colorSum2 = { 0.0f, 0.0f, 0.0f };
+
+                for (int iy = -halfFilterHeight; iy <= halfFilterHeight; iy++)
+                {
+                    int yy = Min(Max(0, y + iy), h - 1);
+                    for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
+                    {
+                        int xx = Min(Max(0, x + ix), w - 1);
+
+                        const color3 weights = filter.get(ix + halfFilterWidth, iy + halfFilterHeight);
+                        const color3 srcColor1 = input1.get(xx, yy);
+                        const color3 srcColor2 = input2.get(xx, yy);
+
+                        colorSum1 += weights * srcColor1;
+                        colorSum2 += weights * srcColor2;
+                    }
+                }
+                output1.set(x, y, colorSum1);
+                output2.set(x, y, colorSum2);
+            }
+        }
+    }
+
 
     template <>
     bool image<float>::exrSave(const std::string& fileName)

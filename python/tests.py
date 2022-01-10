@@ -74,8 +74,8 @@ if __name__ == '__main__':
 
 	# Compare output to reference output
 	test_results = []
-	test_results.append(filecmp.cmp('../images/reference_hdrflip_python.png', '../images/flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png'))
-	test_results.append(filecmp.cmp('../images/reference_ldrflip_python.png', '../images/flip.reference.test.67ppd.ldr.png'))
+	test_results.append(filecmp.cmp('../images/correct_hdrflip_python.png', '../images/flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png'))
+	test_results.append(filecmp.cmp('../images/correct_ldrflip_python.png', '../images/flip.reference.test.67ppd.ldr.png'))
 
 	for idx, passed in enumerate(test_results):
 		print("%s test %d - %s" % (("PASSED" if passed else "FAILED"), idx, test_descriptions[idx]))

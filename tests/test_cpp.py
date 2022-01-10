@@ -72,8 +72,8 @@ if __name__ == '__main__':
 	print("================")
 
 	# Load correct LDR/HDR FLIP image in the images directory
-	ldr_correct_result = load_image_array('../images/reference_ldrflip_cpp.png') # LDR, sRGB
-	hdr_correct_result = load_image_array('../images/reference_hdrflip_cpp.png') # HDR
+	ldr_correct_result = load_image_array('../images/correct_ldrflip_cpp.png') # LDR, sRGB
+	hdr_correct_result = load_image_array('../images/correct_hdrflip_cpp.png') # HDR
 
 	# Run the image pairs in the images directory
 	ldr_process = subprocess.run("../cpp/x64/release/flip.exe --reference ../images/reference.png --test ../images/test.png -v 0 --directory ../images", stdout=subprocess.PIPE, text=True)

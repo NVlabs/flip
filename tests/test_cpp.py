@@ -49,9 +49,7 @@
 # Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
 
 import subprocess
-#import filecmp
-#import os
-
+import os
 import numpy as np
 import sys
 sys.path.insert(1, '../python')
@@ -115,5 +113,10 @@ if __name__ == '__main__':
 	else:
 		print("HDr: PASSED mean test.")
 
+	# Remove output created during tests
+	os.remove(result_ldr_file)
+	os.remove(result_hdr_file)
+
 	print("================")
 	print("Tests complete!")
+

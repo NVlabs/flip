@@ -184,58 +184,49 @@ namespace FLIP
             filter.multiplyAndAdd(color3(1.0f) / filterSum);
         }
 
-        static void setFeatureFilter(image<color3>& filter, const float ppd, const bool pointDetector)
+        static void setFeatureFilter(image<color3>& filter, const float ppd)
         {
             const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
             const int radius = int(std::ceil(3.0f * stdDev));
             const int width = 2 * radius + 1;
 
-            float weightX, weightY;
-            float negativeWeightsSumX = 0.0f;
-            float positiveWeightsSumX = 0.0f;
-            float negativeWeightsSumY = 0.0f;
-            float positiveWeightsSumY = 0.0f;
+            float weight1, weight2;
+            float weightSum = 0.0f;
+            float negativeWeightsSum1 = 0.0f;
+            float positiveWeightsSum1 = 0.0f;
+            float negativeWeightsSum2 = 0.0f;
+            float positiveWeightsSum2 = 0.0f;
 
-            for (int y = 0; y < width; y++)
+            for (int x = 0; x < width; x++)
             {
-                int yy = y - radius;
-                for (int x = 0; x < width; x++)
-                {
-                    int xx = x - radius;
-                    float G = Gaussian(float(xx), float(yy), stdDev);
-                    if (pointDetector)
-                    {
-                        weightX = (float(xx) * float(xx) / (stdDev * stdDev) - 1.0f) * G;
-                        weightY = (float(yy) * float(yy) / (stdDev * stdDev) - 1.0f) * G;
-                    }
-                    else
-                    {
-                        weightX = -float(xx) * G;
-                        weightY = -float(yy) * G;
-                    }
-                    filter.set(x, y, color3(weightX, weightY, 0.0f));
+                int xx = x - radius;
 
-                    if (weightX > 0.0f)
-                        positiveWeightsSumX += weightX;
-                    else
-                        negativeWeightsSumX += -weightX;
+                // 0th derivative
+                float G = Gaussian(float(xx), 0, stdDev);
+                weightSum += G;
 
-                    if (weightY > 0.0f)
-                        positiveWeightsSumY += weightY;
-                    else
-                        negativeWeightsSumY += -weightY;
-                }
+                // 1st derivative
+                weight1 = -float(xx) * G;
+                if (weight1 > 0.0f)
+                    positiveWeightsSum1 += weight1;
+                else
+                    negativeWeightsSum1 += -weight1;
+
+                // 2nd derivative
+                weight2 = (float(xx) * float(xx) / (stdDev * stdDev) - 1.0f) * G;
+                if (weight2 > 0.0f)
+                    positiveWeightsSum2 += weight2;
+                else
+                    negativeWeightsSum2 += -weight2;
+
+                filter.set(x, 0, color3(G, weight1, weight2));
             }
 
-            // Normalize positive weights to sum to 1 and negative weights to sum to -1
-            for (int y = 0; y < width; y++)
+            for (int x = 0; x < width; x++)
             {
-                for (int x = 0; x < width; x++)
-                {
-                    color3 p = filter.get(x, y);
+                color3 p = filter.get(x, 0);
 
-                    filter.set(x, y, color3(p.x / (p.x > 0.0f ? positiveWeightsSumX : negativeWeightsSumX), p.y / (p.y > 0.0f ? positiveWeightsSumY : negativeWeightsSumY), 0.0f));
-                }
+                filter.set(x, 0, color3(p.x / weightSum, p.y / (p.y > 0.0f ? positiveWeightsSum1 : negativeWeightsSum1), p.z / (p.z > 0.0f ? positiveWeightsSum2 : negativeWeightsSum2)));
             }
         }
 
@@ -277,28 +268,61 @@ namespace FLIP
             const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
             const int featureFilterRadius = int(std::ceil(3.0f * stdDev));
             int featureFilterWidth = 2 * featureFilterRadius + 1;
-            image<color3> pointFilter(featureFilterWidth, featureFilterWidth);
-            image<color3> edgeFilter(featureFilterWidth, featureFilterWidth);
-            setFeatureFilter(pointFilter, ppd, true);
-            setFeatureFilter(edgeFilter, ppd, false);
+            image<color3> featureFilter(featureFilterWidth, 1);
+            setFeatureFilter(featureFilter, ppd);
 
             //  grayscale images needed for feature detection
             image<color3> grayReference(width, height), grayTest(width, height);
             grayReference.YCxCz2Gray(referenceImage);
             grayTest.YCxCz2Gray(testImage);
 
-            featureDifference.computeFeatureDifference(grayReference, grayTest, edgeFilter, pointFilter);
+            featureDifference.computeFeatureDifference(grayReference, grayTest, featureFilter);
 
             this->finalError(colorDifference, featureDifference);
         }
 
-        void computeFeatureDifference(const image<color3>& grayRefImage, const image<color3>& grayTestImage, const image<color3>& edgeFilter, const image<color3>& pointFilter)
+        void computeFeatureDifference(const image<color3>& grayRefImage, const image<color3>& grayTestImage, const image<color3>& featureFilter)
         {
             const float normalizationFactor = 1.0f / std::sqrt(2.0f);
-            const int halfFilterWidth = edgeFilter.getWidth() / 2;      // The edge and point filters are of the same size.
-            const int halfFilterHeight = edgeFilter.getHeight() / 2;
+            const int halfFilterWidth = featureFilter.getWidth() / 2;      // The edge and point filters are of the same size.
             const int w = grayRefImage.getWidth();
             const int h = grayRefImage.getHeight();
+
+            image<color3> iRefFeatures(w, h);
+            image<color3> iTestFeatures(w, h);
+
+            // convolve in x direction (1st and 2nd derivative for filter in x direction, 0th derivative for filter in y direction)
+#pragma omp parallel for
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    float  iEdgeRefX = 0.0f, iEdgeTestX = 0.0f, iPointRefX = 0.0f, iPointTestX = 0.0f;
+                    float  refGaussianFiltered = 0.0f, testGaussianFiltered = 0.0f;
+                    
+                    for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
+                    {
+                        int xx = Min(Max(0, x + ix), w - 1);
+
+                        const color3 featureWeights = featureFilter.get(ix + halfFilterWidth, 0);
+                        const float grayRef = grayRefImage.get(xx, y).x;
+                        const float grayTest = grayTestImage.get(xx, y).x;
+
+                        iEdgeRefX += featureWeights.y * grayRef;
+                        iEdgeTestX += featureWeights.y * grayTest;
+                        iPointRefX += featureWeights.z * grayRef;
+                        iPointTestX += featureWeights.z * grayTest;
+                        
+                        refGaussianFiltered += featureWeights.x * grayRef;
+                        testGaussianFiltered += featureWeights.x * grayTest;
+                    }
+
+                    iRefFeatures.set(x, y, color3(iEdgeRefX, iPointRefX, refGaussianFiltered));
+                    iTestFeatures.set(x, y, color3(iEdgeTestX, iPointTestX, testGaussianFiltered));
+                }
+            }
+
+            // convolve in y direction (1st and 2nd derivative for filter in y direction, 0th derivative for filter in x direction), then compute difference
 #pragma omp parallel for
             for (int y = 0; y < h; y++)
             {
@@ -307,27 +331,23 @@ namespace FLIP
                     float  edgeRefX = 0.0f, edgeTestX = 0.0f, pointRefX = 0.0f, pointTestX = 0.0f;
                     float  edgeRefY = 0.0f, edgeTestY = 0.0f, pointRefY = 0.0f, pointTestY = 0.0f;
 
-                    for (int iy = -halfFilterHeight; iy <= halfFilterHeight; iy++)
+                    for (int iy = -halfFilterWidth; iy <= halfFilterWidth; iy++)
                     {
-                        int yy = Min(Max(0, y + iy), this->getHeight() - 1);
-                        for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
-                        {
-                            int xx = Min(Max(0, x + ix), this->getWidth() - 1);
+                        int yy = Min(Max(0, y + iy), h - 1);
 
-                            const color3 edgeWeights = edgeFilter.get(ix + halfFilterWidth, iy + halfFilterHeight);
-                            const color3 pointWeights = pointFilter.get(ix + halfFilterWidth, iy + halfFilterHeight);
-                            const float grayRef = grayRefImage.get(xx, yy).x;
-                            const float grayTest = grayTestImage.get(xx, yy).x;
+                        const color3 featureWeights = featureFilter.get(iy + halfFilterWidth, 0);
+                        const color3 grayRef = iRefFeatures.get(x, yy);
+                        const color3 grayTest = iTestFeatures.get(x, yy);
 
-                            edgeRefX += edgeWeights.x * grayRef;
-                            edgeRefY += edgeWeights.y * grayRef;
-                            edgeTestX += edgeWeights.x * grayTest;
-                            edgeTestY += edgeWeights.y * grayTest;
-                            pointRefX += pointWeights.x * grayRef;
-                            pointRefY += pointWeights.y * grayRef;
-                            pointTestX += pointWeights.x * grayTest;
-                            pointTestY += pointWeights.y * grayTest;
-                        }
+                        edgeRefX += featureWeights.x * grayRef.x;
+                        edgeTestX += featureWeights.x * grayTest.x;
+                        pointRefX += featureWeights.x * grayRef.y;
+                        pointTestX += featureWeights.x * grayTest.y;
+
+                        edgeRefY += featureWeights.y * grayRef.z;
+                        edgeTestY += featureWeights.y * grayTest.z;
+                        pointRefY += featureWeights.z * grayRef.z;
+                        pointTestY += featureWeights.z * grayTest.z;
                     }
 
                     const float edgeValueRef = std::sqrt(edgeRefX * edgeRefX + edgeRefY * edgeRefY);

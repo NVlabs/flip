@@ -133,17 +133,23 @@ namespace FLIP
 
 
         //////////////////////////////////////////////////////////////////////////////////
+        static float Gaussian2D(const float x, const float y, const float sigma) // standard 2D Gaussian
+        {
+            return std::exp(-(x * x + y * y) / (2.0f * sigma * sigma));
+        }
 
-        static float GaussSum(const float x2, const float a1, const float b1, const float a2, const float b2)
+        static float Gaussian(const float x2, const float a, const float b) // 1D Gaussian in alternative form (see FLIP paper)
         {
             const float pi = float(PI);
             const float pi_sq = float(PI * PI);
-            return a1 * std::sqrt(pi / b1) * std::exp(-pi_sq * x2 / b1) + a2 * std::sqrt(pi / b2) * std::exp(-pi_sq * x2 / b2);
+            return a * std::sqrt(pi / b) * std::exp(-pi_sq * x2 / b);
         }
 
-        static float Gaussian(const float x, const float y, const float sigma)
+        static float GaussianSqrt(const float x2, const float a, const float b) // Needed to separate sum of Gaussians filters
         {
-            return std::exp(-(x * x + y * y) / (2.0f * sigma * sigma));
+            const float pi = float(PI);
+            const float pi_sq = float(PI * PI);
+            return std::sqrt(a * std::sqrt(pi / b)) * std::exp(-pi_sq * x2 / b);
         }
 
         static int calculateSpatialFilterRadius(const float ppd)
@@ -157,31 +163,41 @@ namespace FLIP
             return radius;
         }
 
-        static void setSpatialFilter(image<color3>& filter, float ppd, int filterRadius)
+        static void setSpatialFilters(image<color3>& filterARG, image<color3>& filterBY, float ppd, int filterRadius)
         {
             float deltaX = 1.0f / ppd;
-            color3 filterSum = { 0.0f, 0.0f, 0.0f };
+            color3 filterSumARG = { 0.0f, 0.0f, 0.0f };
+            color3 filterSumBY = { 0.0f, 0.0f, 0.0f };
             int filterWidth = 2 * filterRadius + 1;
 
-            for (int y = 0; y < filterWidth; y++)
+            for (int x = 0; x < filterWidth; x++)
             {
-                float iy = (y - filterRadius) * deltaX;
-                for (int x = 0; x < filterWidth; x++)
-                {
-                    float ix = (x - filterRadius) * deltaX;
+                float ix = (x - filterRadius) * deltaX;
 
-                    float dist2 = ix * ix + iy * iy;
-                    float gx = GaussSum(dist2, GaussianConstants.a1.x, GaussianConstants.b1.x, GaussianConstants.a2.x, GaussianConstants.b2.x);
-                    float gy = GaussSum(dist2, GaussianConstants.a1.y, GaussianConstants.b1.y, GaussianConstants.a2.y, GaussianConstants.b2.y);
-                    float gz = GaussSum(dist2, GaussianConstants.a1.z, GaussianConstants.b1.z, GaussianConstants.a2.z, GaussianConstants.b2.z);
-                    color3 value = color3(gx, gy, gz);
-                    filter.set(x, y, value);
-                    filterSum += value;
-                }
+                float ix2 = ix * ix;
+                float gA = Gaussian(ix2, GaussianConstants.a1.x, GaussianConstants.b1.x);
+                float gRG = Gaussian(ix2, GaussianConstants.a1.y, GaussianConstants.b1.y);
+                float gBY1 = GaussianSqrt(ix2, GaussianConstants.a1.z, GaussianConstants.b1.z);
+                float gBY2 = GaussianSqrt(ix2, GaussianConstants.a2.z, GaussianConstants.b2.z);
+                color3 valueARG = color3(gA, gRG, 0.0f);
+                color3 valueBY = color3(gBY1, gBY2, 0.0f);
+                filterARG.set(x, 0, valueARG);
+                filterBY.set(x, 0, valueBY);
+                filterSumARG += valueARG;
+                filterSumBY += valueBY;
             }
 
             // normalize weights
-            filter.multiplyAndAdd(color3(1.0f) / filterSum);
+            color3 normFactorARG = { 1.0f / filterSumARG.x, 1.0f / filterSumARG.y, 1.0f };
+            float normFactorBY = 1.0f / std::sqrt(filterSumBY.x * filterSumBY.x + filterSumBY.y * filterSumBY.y);
+            for (int x = 0; x < filterWidth; x++)
+            {
+                color3 pARG = filterARG.get(x, 0);
+                color3 pBY = filterBY.get(x, 0);
+
+                filterARG.set(x, 0, color3(pARG.x * normFactorARG.x, pARG.y * normFactorARG.y, 0.0f));
+                filterBY.set(x, 0, color3(pBY.x * normFactorBY, pBY.y * normFactorBY, 0.0f));
+            }
         }
 
         static void setFeatureFilter(image<color3>& filter, const float ppd)
@@ -202,7 +218,7 @@ namespace FLIP
                 int xx = x - radius;
 
                 // 0th derivative
-                float G = Gaussian(float(xx), 0, stdDev);
+                float G = Gaussian2D(float(xx), 0, stdDev);
                 weightSum += G;
 
                 // 1st derivative
@@ -248,9 +264,10 @@ namespace FLIP
             //  spatial filtering
             int spatialFilterRadius = calculateSpatialFilterRadius(ppd);
             int spatialFilterWidth = 2 * spatialFilterRadius + 1;
-            image<color3> spatialFilter(spatialFilterWidth, spatialFilterWidth);
-            setSpatialFilter(spatialFilter, ppd, spatialFilterRadius);
-            convolve2images(referenceImage, preprocessedReference, testImage, preprocessedTest, spatialFilter);
+            image<color3> spatialFilterARG(spatialFilterWidth, 1);
+            image<color3> spatialFilterBY(spatialFilterWidth, 1);
+            setSpatialFilters(spatialFilterARG, spatialFilterBY, ppd, spatialFilterRadius);
+            convolve2images(referenceImage, preprocessedReference, testImage, preprocessedTest, spatialFilterARG, spatialFilterBY);
 
             //  move from YCxCz to CIELab
             preprocessedReference.YCxCz2CIELab();
@@ -586,42 +603,90 @@ namespace FLIP
 
     };
 
-    static void convolve2images(const FLIP::image<color3>& input1, FLIP::image<color3>& output1, const FLIP::image<color3>& input2, FLIP::image<color3>& output2, const FLIP::image<color3>& filter)
+    static void convolve2images(const FLIP::image<color3>& input1, FLIP::image<color3>& output1, const FLIP::image<color3>& input2, FLIP::image<color3>& output2, const FLIP::image<color3>& filterARG, const FLIP::image<color3>& filterBY)
     {
-        const int halfFilterWidth = filter.getWidth() / 2;
-        const int halfFilterHeight = filter.getHeight() / 2;
+        const int halfFilterWidth = filterARG.getWidth() / 2; // ARG and BY filters are same size
 
         const int w = input1.getWidth();
         const int h = input1.getHeight();
+
+        image<color3> iImageARG1(w, h);
+        image<color3> iImageBY1(w, h);
+        image<color3> iImageARG2(w, h);
+        image<color3> iImageBY2(w, h);
+
+        // filter in x direction
 #pragma omp parallel for
         for (int y = 0; y < h; y++)
         {
             for (int x = 0; x < w; x++)
             {
-                color3 colorSum1 = { 0.0f, 0.0f, 0.0f };
-                color3 colorSum2 = { 0.0f, 0.0f, 0.0f };
+                color3 colorSumARG1 = { 0.0f, 0.0f, 0.0f };
+                color3 colorSumBY1 = { 0.0f, 0.0f, 0.0f };
+                color3 colorSumARG2 = { 0.0f, 0.0f, 0.0f };
+                color3 colorSumBY2 = { 0.0f, 0.0f, 0.0f };
 
-                for (int iy = -halfFilterHeight; iy <= halfFilterHeight; iy++)
+                for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
+                {
+                    int xx = Min(Max(0, x + ix), w - 1);
+
+                    const color3 weightsARG = filterARG.get(ix + halfFilterWidth, 0);
+                    const color3 weightsBY = filterBY.get(ix + halfFilterWidth, 0);
+                    const color3 srcColor1 = input1.get(xx, y);
+                    const color3 srcColor2 = input2.get(xx, y);
+
+                    colorSumARG1 += color3(weightsARG.x * srcColor1.x, weightsARG.y * srcColor1.y, 0.0f);
+                    colorSumBY1 += color3(weightsBY.x * srcColor1.z, weightsBY.y * srcColor1.z, 0.0f);
+                    colorSumARG2 += color3(weightsARG.x * srcColor2.x, weightsARG.y * srcColor2.y, 0.0f);
+                    colorSumBY2 += color3(weightsBY.x * srcColor2.z, weightsBY.y * srcColor2.z, 0.0f);
+                }
+
+                iImageARG1.set(x, y, colorSumARG1);
+                iImageBY1.set(x, y, colorSumBY1);
+                iImageARG2.set(x, y, colorSumARG2);
+                iImageBY2.set(x, y, colorSumBY2);
+            }
+        }
+
+        // filter in y direction
+#pragma omp parallel for
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                color3 colorSumARG1 = { 0.0f, 0.0f, 0.0f };
+                color3 colorSumBY1 = { 0.0f, 0.0f, 0.0f };
+                color3 colorSumARG2 = { 0.0f, 0.0f, 0.0f };
+                color3 colorSumBY2 = { 0.0f, 0.0f, 0.0f };
+
+                for (int iy = -halfFilterWidth; iy <= halfFilterWidth; iy++)
                 {
                     int yy = Min(Max(0, y + iy), h - 1);
-                    for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
-                    {
-                        int xx = Min(Max(0, x + ix), w - 1);
 
-                        const color3 weights = filter.get(ix + halfFilterWidth, iy + halfFilterHeight);
-                        const color3 srcColor1 = input1.get(xx, yy);
-                        const color3 srcColor2 = input2.get(xx, yy);
+                    const color3 weightsARG = filterARG.get(iy + halfFilterWidth, 0);
+                    const color3 weightsBY = filterBY.get(iy + halfFilterWidth, 0);
+                    const color3 iColorARG1 = iImageARG1.get(x, yy);
+                    const color3 iColorBY1 = iImageBY1.get(x, yy);
+                    const color3 iColorARG2 = iImageARG2.get(x, yy);
+                    const color3 iColorBY2 = iImageBY2.get(x, yy);
 
-                        colorSum1 += weights * srcColor1;
-                        colorSum2 += weights * srcColor2;
-                    }
+                    colorSumARG1 += color3(weightsARG.x * iColorARG1.x, weightsARG.y * iColorARG1.y, 0.0f);
+                    colorSumBY1 += color3(weightsBY.x * iColorBY1.x, weightsBY.y * iColorBY1.y, 0.0f);
+                    colorSumARG2 += color3(weightsARG.x * iColorARG2.x, weightsARG.y * iColorARG2.y, 0.0f);
+                    colorSumBY2 += color3(weightsBY.x * iColorBY2.x, weightsBY.y * iColorBY2.y, 0.0f);
                 }
-                output1.set(x, y, colorSum1);
-                output2.set(x, y, colorSum2);
+                output1.set(x, y, color3(colorSumARG1.x, colorSumARG1.y, colorSumBY1.x + colorSumBY1.y));
+                output2.set(x, y, color3(colorSumARG2.x, colorSumARG2.y, colorSumBY2.x + colorSumBY2.y));
+
+                if (x == 0 && y == 0)
+                {
+                    std::cout << colorSumARG2.x << "\n";
+                    std::cout << colorSumARG2.y << "\n";
+                    std::cout << colorSumBY2.x + colorSumBY2.y << "\n";
+                }
             }
         }
     }
-
 
     template <>
     bool image<float>::exrSave(const std::string& fileName)

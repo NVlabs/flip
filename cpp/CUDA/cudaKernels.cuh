@@ -404,60 +404,6 @@ namespace FLIP
         pDstImage[i] = color3(colorDifference, 0.0f, 0.0f);
     }
 
-    __global__ static void kernelFeatureDifference(color3* pDstImage, color3* grayRefImage, color3* grayTestImage, color3* edgeFilter, color3* pointFilter, const int3 dim, const int3 filterDim)
-    {
-        const float normalizationFactor = 1.0f / std::sqrt(2.0f);
-
-        int x = blockIdx.x * blockDim.x + threadIdx.x;
-        int y = blockIdx.y * blockDim.y + threadIdx.y;
-        int z = blockIdx.z * blockDim.z + threadIdx.z;
-        int dstIndex = (z * dim.y + y) * dim.x + x;
-
-        if (x >= dim.x || y >= dim.y) return;
-
-        const int2 halfFilterDim = { filterDim.x / 2, filterDim.y / 2 };
-
-        float  edgeRefX = 0.0f, edgeTestX = 0.0f, pointRefX = 0.0f, pointTestX = 0.0f;
-        float  edgeRefY = 0.0f, edgeTestY = 0.0f, pointRefY = 0.0f, pointTestY = 0.0f;
-
-        for (int iy = -halfFilterDim.y; iy <= halfFilterDim.y; iy++)
-        {
-            int yy = Min(Max(0, y + iy), dim.y - 1);
-            for (int ix = -halfFilterDim.x; ix <= halfFilterDim.x; ix++)
-            {
-                int xx = Min(Max(0, x + ix), dim.x - 1);
-
-                int filterIndex = (iy + halfFilterDim.y) * filterDim.x + (ix + halfFilterDim.x);
-                int srcIndex = yy * dim.x + xx;
-                const color3 edgeWeights = edgeFilter[filterIndex];
-                const color3 pointWeights = pointFilter[filterIndex];
-                const float grayRef = grayRefImage[srcIndex].x;
-                const float grayTest = grayTestImage[srcIndex].x;
-
-                edgeRefX += edgeWeights.x * grayRef;
-                edgeRefY += edgeWeights.y * grayRef;
-                edgeTestX += edgeWeights.x * grayTest;
-                edgeTestY += edgeWeights.y * grayTest;
-                pointRefX += pointWeights.x * grayRef;
-                pointRefY += pointWeights.y * grayRef;
-                pointTestX += pointWeights.x * grayTest;
-                pointTestY += pointWeights.y * grayTest;
-            }
-        }
-
-        const float edgeValueRef = std::sqrt(edgeRefX * edgeRefX + edgeRefY * edgeRefY);
-        const float edgeValueTest = std::sqrt(edgeTestX * edgeTestX + edgeTestY * edgeTestY);
-        const float pointValueRef = std::sqrt(pointRefX * pointRefX + pointRefY * pointRefY);
-        const float pointValueTest = std::sqrt(pointTestX * pointTestX + pointTestY * pointTestY);
-
-        const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
-        const float pointDifference = std::abs(pointValueRef - pointValueTest);
-
-        const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), DeviceFLIPConstants.gqf);
-
-        pDstImage[dstIndex] = color3(featureDifference, 0.0, 0.0);
-    }
-
     __global__ static void kernelHuntAdjustment(color3* pImage, const int3 dim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -750,7 +696,94 @@ namespace FLIP
         dstImage[dstIndex] = colorSum;
     }
 
-    __global__ static void kernelConvolve2images1DFirstDir(color3* dstImageARG1, color3* dstImageBY1, color3* srcImage1, color3* dstImageARG2, color3* dstImageBY2, color3* srcImage2, color3* pFilterARG, color3* pFilterBY, const int3 dim, int3 filterDim)
+    __global__ static void kernelFeatureFilterFirstDir(color3* dstImage1, color3* srcImage1, color3* dstImage2, color3* srcImage2, color3* pFilter, const int3 dim, int3 filterDim)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int dstIndex = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y) return;
+
+        const float halfFilterWidth = filterDim.x / 2;
+
+        float  edge1X = 0.0f, edge2X = 0.0f, point1X = 0.0f, point2X = 0.0f;
+        float  gaussianFiltered1 = 0.0f, gaussianFiltered2 = 0.0f;
+
+        for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
+        {
+            int xx = Min(Max(0, x + ix), dim.x - 1);
+
+            int filterIndex = ix + halfFilterWidth;
+            int srcIndex = y * dim.x + xx;
+            const color3 featureWeights = pFilter[filterIndex];
+            const float src1 = srcImage1[srcIndex].x;
+            const float src2 = srcImage2[srcIndex].x;
+
+            edge1X += featureWeights.y * src1;
+            edge2X += featureWeights.y * src2;
+            point1X += featureWeights.z * src1;
+            point2X += featureWeights.z * src2;
+
+            gaussianFiltered1 += featureWeights.x * src1;
+            gaussianFiltered2 += featureWeights.x * src2;
+        }
+
+        dstImage1[dstIndex] = color3(edge1X, point1X, gaussianFiltered1);
+        dstImage2[dstIndex] = color3(edge2X, point2X, gaussianFiltered2);
+    }
+
+    __global__ static void kernelFeatureFilterSecondDirAndFeatureDifference(color3* dstImage, color3* srcImage1, color3* srcImage2, color3* pFilter, const int3 dim, int3 filterDim)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int dstIndex = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y) return;
+
+        const float normalizationFactor = 1.0f / std::sqrt(2.0f);
+
+        const float halfFilterWidth = filterDim.x / 2;
+
+        float  edge1X = 0.0f, edge2X = 0.0f, point1X = 0.0f, point2X = 0.0f;
+        float  edge1Y = 0.0f, edge2Y = 0.0f, point1Y = 0.0f, point2Y = 0.0f;
+
+        for (int iy = -halfFilterWidth; iy <= halfFilterWidth; iy++)
+        {
+            int yy = Min(Max(0, y + iy), dim.y - 1);
+
+            int filterIndex = iy + halfFilterWidth;
+            int srcIndex = yy * dim.x + x;
+            const color3 featureWeights = pFilter[filterIndex];
+            const color3 src1 = srcImage1[srcIndex];
+            const color3 src2 = srcImage2[srcIndex];
+
+            edge1X += featureWeights.x * src1.x;
+            edge2X += featureWeights.x * src2.x;
+            point1X += featureWeights.x * src1.y;
+            point2X += featureWeights.x * src2.y;
+
+            edge1Y += featureWeights.y * src1.z;
+            edge2Y += featureWeights.y * src2.z;
+            point1Y += featureWeights.z * src1.z;
+            point2Y += featureWeights.z * src2.z;
+        }
+
+        const float edgeValueRef = std::sqrt(edge1X * edge1X + edge1Y * edge1Y);
+        const float edgeValueTest = std::sqrt(edge2X * edge2X + edge2Y * edge2Y);
+        const float pointValueRef = std::sqrt(point1X * point1X + point1Y * point1Y);
+        const float pointValueTest = std::sqrt(point2X * point2X + point2Y * point2Y);
+
+        const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
+        const float pointDifference = std::abs(pointValueRef - pointValueTest);
+
+        const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), DeviceFLIPConstants.gqf);
+
+        dstImage[dstIndex] = color3(featureDifference, 0.0, 0.0);
+    }
+
+    __global__ static void kernelSpatialFilterFirstDir(color3* dstImageARG1, color3* dstImageBY1, color3* srcImage1, color3* dstImageARG2, color3* dstImageBY2, color3* srcImage2, color3* pFilterARG, color3* pFilterBY, const int3 dim, int3 filterDim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -790,7 +823,7 @@ namespace FLIP
         dstImageBY2[dstIndex] = color3(colorSumBY2.x, colorSumBY2.y, 0.0f);
     }
 
-    __global__ static void kernelConvolve2images1DSecondDir(color3* dstImage1, color3* srcImageARG1, color3* srcImageBY1, color3* dstImage2, color3* srcImageARG2, color3* srcImageBY2, color3* pFilterARG, color3* pFilterBY, const int3 dim, int3 filterDim)
+    __global__ static void kernelSpatialFilterSecondDir(color3* dstImage1, color3* srcImageARG1, color3* srcImageBY1, color3* dstImage2, color3* srcImageARG2, color3* srcImageBY2, color3* pFilterARG, color3* pFilterBY, const int3 dim, int3 filterDim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;

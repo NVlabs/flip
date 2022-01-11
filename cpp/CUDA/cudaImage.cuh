@@ -164,32 +164,42 @@ namespace FLIP
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
 
-        void computeFeatureDifference(image& grayRefImage, image& grayTestImage, image& edgeFilter, image& pointFilter)
+        static void featureFilterFirstDir(image& input1, image& output1, image& input2, image& output2, image& featureFilter)
         {
-            grayRefImage.synchronizeDevice();
-            grayTestImage.synchronizeDevice();
-            edgeFilter.synchronizeDevice();
-            pointFilter.synchronizeDevice();
-            FLIP::kernelFeatureDifference << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, grayRefImage.mvpDeviceData, grayTestImage.mvpDeviceData, edgeFilter.mvpDeviceData, pointFilter.mvpDeviceData, this->mDim, edgeFilter.mDim);
-            image<T>::checkStatus("kernelFeatureDifference");
-            this->setState(CudaTensorState::DEVICE_ONLY);
+            input1.synchronizeDevice();
+            input2.synchronizeDevice();
+            featureFilter.synchronizeDevice();
+            FLIP::kernelFeatureFilterFirstDir << <output1.mGridDim, output1.mBlockDim >> > (output1.mvpDeviceData, input1.mvpDeviceData, output2.mvpDeviceData, input2.mvpDeviceData, featureFilter.mvpDeviceData, output1.mDim, featureFilter.mDim);
+            image<T>::checkStatus("kernelFeatureFilterFirstDir");
+            output1.setState(CudaTensorState::DEVICE_ONLY);
+            output2.setState(CudaTensorState::DEVICE_ONLY);
         }
 
-        static void convolve2images1DFirstDir(image& input1, image& output1ARG, image& output1BY, image& input2, image& output2ARG, image& output2BY, image& filterARG, image& filterBY)
+        static void featureFilterSecondDirAndFeatureDifference(image& input1, image& input2, image& output1, image& featureFilter)
+        {
+            input1.synchronizeDevice();
+            input2.synchronizeDevice();
+            featureFilter.synchronizeDevice();
+            FLIP::kernelFeatureFilterSecondDirAndFeatureDifference << <output1.mGridDim, output1.mBlockDim >> > (output1.mvpDeviceData, input1.mvpDeviceData, input2.mvpDeviceData, featureFilter.mvpDeviceData, output1.mDim, featureFilter.mDim);
+            image<T>::checkStatus("kernelFeatureFilterSecondDirAndFeatureDifference");
+            output1.setState(CudaTensorState::DEVICE_ONLY);
+        }
+
+        static void spatialFilterFirstDir(image& input1, image& output1ARG, image& output1BY, image& input2, image& output2ARG, image& output2BY, image& filterARG, image& filterBY)
         {
             input1.synchronizeDevice();
             input2.synchronizeDevice();
             filterARG.synchronizeDevice();
             filterBY.synchronizeDevice();
-            FLIP::kernelConvolve2images1DFirstDir << <output1ARG.getGridDim(), output1ARG.getBlockDim() >> > (output1ARG.mvpDeviceData, output1BY.mvpDeviceData, input1.mvpDeviceData, output2ARG.mvpDeviceData, output2BY.mvpDeviceData, input2.mvpDeviceData, filterARG.mvpDeviceData, filterBY.mvpDeviceData, output1ARG.mDim, filterARG.mDim); // filter sizes are the same
-            checkStatus("kernelConvolve2images1DFirstDir");
+            FLIP::kernelSpatialFilterFirstDir << <output1ARG.getGridDim(), output1ARG.getBlockDim() >> > (output1ARG.mvpDeviceData, output1BY.mvpDeviceData, input1.mvpDeviceData, output2ARG.mvpDeviceData, output2BY.mvpDeviceData, input2.mvpDeviceData, filterARG.mvpDeviceData, filterBY.mvpDeviceData, output1ARG.mDim, filterARG.mDim); // filter sizes are the same
+            checkStatus("kernelSpatialFilterFirstDir");
             output1ARG.setState(CudaTensorState::DEVICE_ONLY);
             output1BY.setState(CudaTensorState::DEVICE_ONLY);
             output2ARG.setState(CudaTensorState::DEVICE_ONLY);
             output2BY.setState(CudaTensorState::DEVICE_ONLY);
         }
 
-        static void convolve2images1DSecondDir(image& input1ARG, image& input1BY, image& output1, image& input2ARG, image& input2BY, image& output2, image& filterARG, image& filterBY)
+        static void spatialFilterSecondDir(image& input1ARG, image& input1BY, image& output1, image& input2ARG, image& input2BY, image& output2, image& filterARG, image& filterBY)
         {
             input1ARG.synchronizeDevice();
             input1BY.synchronizeDevice();
@@ -197,8 +207,8 @@ namespace FLIP
             input2BY.synchronizeDevice();
             filterARG.synchronizeDevice();
             filterBY.synchronizeDevice();
-            FLIP::kernelConvolve2images1DSecondDir << <output1.getGridDim(), output1.getBlockDim() >> > (output1.mvpDeviceData, input1ARG.mvpDeviceData, input1BY.mvpDeviceData, output2.mvpDeviceData, input2ARG.mvpDeviceData, input2BY.mvpDeviceData, filterARG.mvpDeviceData, filterBY.mvpDeviceData, output1.mDim, filterARG.mDim); // filter sizes are the same
-            checkStatus("kernelConvolve2images1DSecondDir");
+            FLIP::kernelSpatialFilterSecondDir << <output1.getGridDim(), output1.getBlockDim() >> > (output1.mvpDeviceData, input1ARG.mvpDeviceData, input1BY.mvpDeviceData, output2.mvpDeviceData, input2ARG.mvpDeviceData, input2BY.mvpDeviceData, filterARG.mvpDeviceData, filterBY.mvpDeviceData, output1.mDim, filterARG.mDim); // filter sizes are the same
+            checkStatus("kernelSpatialFilterSecondDir");
             output1.setState(CudaTensorState::DEVICE_ONLY);
             output2.setState(CudaTensorState::DEVICE_ONLY);
         }
@@ -481,58 +491,49 @@ namespace FLIP
         }
     }
 
-    static void setFeatureFilter(image<color3>& filter, const float ppd, const bool pointDetector)
+    static void setFeatureFilter(image<color3>& filter, const float ppd)
     {
         const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
         const int radius = int(std::ceil(3.0f * stdDev));
         const int width = 2 * radius + 1;
 
-        float weightX, weightY;
-        float negativeWeightsSumX = 0.0f;
-        float positiveWeightsSumX = 0.0f;
-        float negativeWeightsSumY = 0.0f;
-        float positiveWeightsSumY = 0.0f;
+        float weight1, weight2;
+        float weightSum = 0.0f;
+        float negativeWeightsSum1 = 0.0f;
+        float positiveWeightsSum1 = 0.0f;
+        float negativeWeightsSum2 = 0.0f;
+        float positiveWeightsSum2 = 0.0f;
 
-        for (int y = 0; y < width; y++)
+        for (int x = 0; x < width; x++)
         {
-            int yy = y - radius;
-            for (int x = 0; x < width; x++)
-            {
-                int xx = x - radius;
-                float G = Gaussian2D(float(xx), float(yy), stdDev);
-                if (pointDetector)
-                {
-                    weightX = (float(xx) * float(xx) / (stdDev * stdDev) - 1.0f) * G;
-                    weightY = (float(yy) * float(yy) / (stdDev * stdDev) - 1.0f) * G;
-                }
-                else
-                {
-                    weightX = -float(xx) * G;
-                    weightY = -float(yy) * G;
-                }
-                filter.set(x, y, color3(weightX, weightY, 0.0f));
+            int xx = x - radius;
 
-                if (weightX > 0.0f)
-                    positiveWeightsSumX += weightX;
-                else
-                    negativeWeightsSumX += -weightX;
+            // 0th derivative
+            float G = Gaussian2D(float(xx), 0, stdDev);
+            weightSum += G;
 
-                if (weightY > 0.0f)
-                    positiveWeightsSumY += weightY;
-                else
-                    negativeWeightsSumY += -weightY;
-            }
+            // 1st derivative
+            weight1 = -float(xx) * G;
+            if (weight1 > 0.0f)
+                positiveWeightsSum1 += weight1;
+            else
+                negativeWeightsSum1 += -weight1;
+
+            // 2nd derivative
+            weight2 = (float(xx) * float(xx) / (stdDev * stdDev) - 1.0f) * G;
+            if (weight2 > 0.0f)
+                positiveWeightsSum2 += weight2;
+            else
+                negativeWeightsSum2 += -weight2;
+
+            filter.set(x, 0, color3(G, weight1, weight2));
         }
 
-        // Normalize positive weights to sum to 1 and negative weights to sum to -1
-        for (int y = 0; y < width; y++)
+        for (int x = 0; x < width; x++)
         {
-            for (int x = 0; x < width; x++)
-            {
-                color3 p = filter.get(x, y);
+            color3 p = filter.get(x, 0);
 
-                filter.set(x, y, color3(p.x / (p.x > 0.0f ? positiveWeightsSumX : negativeWeightsSumX), p.y / (p.y > 0.0f ? positiveWeightsSumY : negativeWeightsSumY), 0.0f));
-            }
+            filter.set(x, 0, color3(p.x / weightSum, p.y / (p.y > 0.0f ? positiveWeightsSum1 : negativeWeightsSum1), p.z / (p.z > 0.0f ? positiveWeightsSum2 : negativeWeightsSum2)));
         }
     }
 
@@ -548,8 +549,6 @@ namespace FLIP
         image<color3> referenceImage(reference), testImage(test);
         image<color3> preprocessedReferenceARG(width, height), preprocessedReferenceBY(width, height), preprocessedReference(width, height), preprocessedTestARG(width, height), preprocessedTestBY(width, height), preprocessedTest(width, height);
         image<color3> colorDifference(width, height);
-        image<color3> pointReference(width, height), pointTest(width, height);
-        image<color3> edgeReference(width, height), edgeTest(width, height);
         image<color3> featureDifference(width, height);
 
         //  move from sRGB to YCxCz
@@ -562,8 +561,8 @@ namespace FLIP
         image<color3> spatialFilterARG(spatialFilterWidth, 1);
         image<color3> spatialFilterBY(spatialFilterWidth, 1);
         setSpatialFilters(spatialFilterARG, spatialFilterBY, ppd, spatialFilterRadius);
-        FLIP::image<color3>::convolve2images1DFirstDir(referenceImage, preprocessedReferenceARG, preprocessedReferenceBY, testImage, preprocessedTestARG, preprocessedTestBY, spatialFilterARG, spatialFilterBY);
-        FLIP::image<color3>::convolve2images1DSecondDir(preprocessedReferenceARG, preprocessedReferenceBY, preprocessedReference, preprocessedTestARG, preprocessedTestBY, preprocessedTest, spatialFilterARG, spatialFilterBY);
+        FLIP::image<color3>::spatialFilterFirstDir(referenceImage, preprocessedReferenceARG, preprocessedReferenceBY, testImage, preprocessedTestARG, preprocessedTestBY, spatialFilterARG, spatialFilterBY);
+        FLIP::image<color3>::spatialFilterSecondDir(preprocessedReferenceARG, preprocessedReferenceBY, preprocessedReference, preprocessedTestARG, preprocessedTestBY, preprocessedTest, spatialFilterARG, spatialFilterBY);
 
         //  move from YCxCz to CIELab
         preprocessedReference.YCxCz2CIELab();
@@ -580,17 +579,18 @@ namespace FLIP
         const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
         const int featureFilterRadius = int(std::ceil(3.0f * stdDev));
         int featureFilterWidth = 2 * featureFilterRadius + 1;
-        image<color3> pointFilter(featureFilterWidth, featureFilterWidth);
-        image<color3> edgeFilter(featureFilterWidth, featureFilterWidth);
-        setFeatureFilter(pointFilter, ppd, true);
-        setFeatureFilter(edgeFilter, ppd, false);
+        image<color3> featureFilter(featureFilterWidth, 1);
+        setFeatureFilter(featureFilter, ppd);
 
         //  grayscale images needed for feature detection
         image<color3> grayReference(width, height), grayTest(width, height);
         grayReference.YCxCz2Gray(referenceImage);
         grayTest.YCxCz2Gray(testImage);
 
-        featureDifference.computeFeatureDifference(grayReference, grayTest, edgeFilter, pointFilter);
+        // feature detection and difference computation
+        image<color3> iFeaturesReference(width, height), iFeaturesTest(width, height);
+        FLIP::image<color3>::featureFilterFirstDir(grayReference, iFeaturesReference, grayTest, iFeaturesTest, featureFilter);
+        FLIP::image<color3>::featureFilterSecondDirAndFeatureDifference(iFeaturesReference, iFeaturesTest, featureDifference, featureFilter);
 
         this->finalError(colorDifference, featureDifference);
     }

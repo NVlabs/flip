@@ -677,13 +677,6 @@ namespace FLIP
                 }
                 output1.set(x, y, color3(colorSumARG1.x, colorSumARG1.y, colorSumBY1.x + colorSumBY1.y));
                 output2.set(x, y, color3(colorSumARG2.x, colorSumARG2.y, colorSumBY2.x + colorSumBY2.y));
-
-                if (x == 0 && y == 0)
-                {
-                    std::cout << colorSumARG2.x << "\n";
-                    std::cout << colorSumARG2.y << "\n";
-                    std::cout << colorSumBY2.x + colorSumBY2.y << "\n";
-                }
             }
         }
     }

@@ -278,35 +278,6 @@ namespace FLIP
         pDstImage[i] = color3(pSrcImage[i]);
     }
 
-    __global__ static void kernelComputeFeatureDifference(color3* pDstImage, color3* pEdgeReference, color3* pEdgeTest, color3* pPointReference, color3* pPointTest, const int3 dim, const float ppd)
-    {
-        int x = blockIdx.x * blockDim.x + threadIdx.x;
-        int y = blockIdx.y * blockDim.y + threadIdx.y;
-        int z = blockIdx.z * blockDim.z + threadIdx.z;
-        int i = (z * dim.y + y) * dim.x + x;
-
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
-        const float normalizationFactor = 1.0f / std::sqrt(2.0f);
-
-        color3 er = pEdgeReference[i];
-        color3 et = pEdgeTest[i];
-        color3 pr = pPointReference[i];
-        color3 pt = pPointTest[i];
-
-        const float edgeValueRef = std::sqrt(er.x * er.x + er.y * er.y);
-        const float edgeValueTest = std::sqrt(et.x * et.x + et.y * et.y);
-        const float pointValueRef = std::sqrt(pr.x * pr.x + pr.y * pr.y);
-        const float pointValueTest = std::sqrt(pt.x * pt.x + pt.y * pt.y);
-
-        const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
-        const float pointDifference = std::abs(pointValueRef - pointValueTest);
-
-        const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), DeviceFLIPConstants.gqf);
-
-        pDstImage[i] = color3(featureDifference, 0.0f, 0.0f);
-    }
-
     __global__ static void kernelFinalError(float* pDstImage, color3* pColorDifference, color3* pFeatureDifference, const int3 dim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -433,33 +404,58 @@ namespace FLIP
         pDstImage[i] = color3(colorDifference, 0.0f, 0.0f);
     }
 
-    __global__ static void kernelFeatureDifference(color3* pDstImage, color3* pPointReference, color3* pPointTest, color3* pEdgeReference, color3* pEdgeTest, const int3 dim)
+    __global__ static void kernelFeatureDifference(color3* pDstImage, color3* grayRefImage, color3* grayTestImage, color3* edgeFilter, color3* pointFilter, const int3 dim, const int3 filterDim)
     {
+        const float normalizationFactor = 1.0f / std::sqrt(2.0f);
+
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
         int z = blockIdx.z * blockDim.z + threadIdx.z;
-        int i = (z * dim.y + y) * dim.x + x;
+        int dstIndex = (z * dim.y + y) * dim.x + x;
 
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+        if (x >= dim.x || y >= dim.y) return;
 
-        const float normalizationFactor = 1.0f / std::sqrt(2.0f);
+        const int2 halfFilterDim = { filterDim.x / 2, filterDim.y / 2 };
 
-        color3 er = pEdgeReference[i];
-        color3 et = pEdgeTest[i];
-        color3 pr = pPointReference[i];
-        color3 pt = pPointTest[i];
+        float  edgeRefX = 0.0f, edgeTestX = 0.0f, pointRefX = 0.0f, pointTestX = 0.0f;
+        float  edgeRefY = 0.0f, edgeTestY = 0.0f, pointRefY = 0.0f, pointTestY = 0.0f;
 
-        const float edgeValueRef = std::sqrt(er.x * er.x + er.y * er.y);
-        const float edgeValueTest = std::sqrt(et.x * et.x + et.y * et.y);
-        const float pointValueRef = std::sqrt(pr.x * pr.x + pr.y * pr.y);
-        const float pointValueTest = std::sqrt(pt.x * pt.x + pt.y * pt.y);
+        for (int iy = -halfFilterDim.y; iy <= halfFilterDim.y; iy++)
+        {
+            int yy = Min(Max(0, y + iy), dim.y - 1);
+            for (int ix = -halfFilterDim.x; ix <= halfFilterDim.x; ix++)
+            {
+                int xx = Min(Max(0, x + ix), dim.x - 1);
+
+                int filterIndex = (iy + halfFilterDim.y) * filterDim.x + (ix + halfFilterDim.x);
+                int srcIndex = yy * dim.x + xx;
+                const color3 edgeWeights = edgeFilter[filterIndex];
+                const color3 pointWeights = pointFilter[filterIndex];
+                const float grayRef = grayRefImage[srcIndex].x;
+                const float grayTest = grayTestImage[srcIndex].x;
+
+                edgeRefX += edgeWeights.x * grayRef;
+                edgeRefY += edgeWeights.y * grayRef;
+                edgeTestX += edgeWeights.x * grayTest;
+                edgeTestY += edgeWeights.y * grayTest;
+                pointRefX += pointWeights.x * grayRef;
+                pointRefY += pointWeights.y * grayRef;
+                pointTestX += pointWeights.x * grayTest;
+                pointTestY += pointWeights.y * grayTest;
+            }
+        }
+
+        const float edgeValueRef = std::sqrt(edgeRefX * edgeRefX + edgeRefY * edgeRefY);
+        const float edgeValueTest = std::sqrt(edgeTestX * edgeTestX + edgeTestY * edgeTestY);
+        const float pointValueRef = std::sqrt(pointRefX * pointRefX + pointRefY * pointRefY);
+        const float pointValueTest = std::sqrt(pointTestX * pointTestX + pointTestY * pointTestY);
 
         const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
         const float pointDifference = std::abs(pointValueRef - pointValueTest);
 
         const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), DeviceFLIPConstants.gqf);
 
-        pDstImage[i] = color3(featureDifference, 0.0f, 0.0f);
+        pDstImage[dstIndex] = color3(featureDifference, 0.0, 0.0);
     }
 
     __global__ static void kernelHuntAdjustment(color3* pImage, const int3 dim)
@@ -761,34 +757,31 @@ namespace FLIP
         int z = blockIdx.z * blockDim.z + threadIdx.z;
         int dstIndex = (z * dim.y + y) * dim.x + x;
 
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+        if (x >= dim.x || y >= dim.y) return;
 
-        const int3 halfFilterDim = { filterDim.x / 2, filterDim.y / 2, filterDim.z / 2 };
+        const int2 halfFilterDim = { filterDim.x / 2, filterDim.y / 2};
 
         color3 colorSum1 = { 0.0f, 0.0f, 0.0f };
         color3 colorSum2 = { 0.0f, 0.0f, 0.0f };
 
-        for (int iz = -halfFilterDim.z; iz <= halfFilterDim.z; iz++)
+        for (int iy = -halfFilterDim.y; iy <= halfFilterDim.y; iy++)
         {
-            int zz = Min(Max(0, z + iz), dim.z - 1);
-            for (int iy = -halfFilterDim.y; iy <= halfFilterDim.y; iy++)
+            int yy = Min(Max(0, y + iy), dim.y - 1);
+            for (int ix = -halfFilterDim.x; ix <= halfFilterDim.x; ix++)
             {
-                int yy = Min(Max(0, y + iy), dim.y - 1);
-                for (int ix = -halfFilterDim.x; ix <= halfFilterDim.x; ix++)
-                {
-                    int xx = Min(Max(0, x + ix), dim.x - 1);
+                int xx = Min(Max(0, x + ix), dim.x - 1);
 
-                    int filterIndex = (zz * filterDim.y + (iy + halfFilterDim.y)) * filterDim.x + (ix + halfFilterDim.x);
-                    int srcIndex = yy * dim.x + xx;
-                    const color3 weights = pFilter[filterIndex];
-                    const color3 srcColor1 = srcImage1[srcIndex];
-                    const color3 srcColor2 = srcImage2[srcIndex];
+                int filterIndex = (iy + halfFilterDim.y) * filterDim.x + (ix + halfFilterDim.x);
+                int srcIndex = yy * dim.x + xx;
+                const color3 weights = pFilter[filterIndex];
+                const color3 srcColor1 = srcImage1[srcIndex];
+                const color3 srcColor2 = srcImage2[srcIndex];
 
-                    colorSum1 += weights * srcColor1;
-                    colorSum2 += weights * srcColor2;
-                }
+                colorSum1 += weights * srcColor1;
+                colorSum2 += weights * srcColor2;
             }
         }
+
         dstImage1[dstIndex] = colorSum1;
         dstImage2[dstIndex] = colorSum2;
     }

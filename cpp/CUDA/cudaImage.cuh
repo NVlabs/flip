@@ -164,9 +164,13 @@ namespace FLIP
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
 
-        void computeFeatureDifference(image& pointReference, image& pointTest, image& edgeReference, image& edgeTest)
+        void computeFeatureDifference(image& grayRefImage, image& grayTestImage, image& edgeFilter, image& pointFilter)
         {
-            FLIP::kernelFeatureDifference << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, pointReference.mvpDeviceData, pointTest.mvpDeviceData, edgeReference.mvpDeviceData, edgeTest.mvpDeviceData, this->mDim);
+            grayRefImage.synchronizeDevice();
+            grayTestImage.synchronizeDevice();
+            edgeFilter.synchronizeDevice();
+            pointFilter.synchronizeDevice();
+            FLIP::kernelFeatureDifference << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, grayRefImage.mvpDeviceData, grayTestImage.mvpDeviceData, edgeFilter.mvpDeviceData, pointFilter.mvpDeviceData, this->mDim, edgeFilter.mDim);
             image<T>::checkStatus("kernelFeatureDifference");
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
@@ -555,14 +559,7 @@ namespace FLIP
         grayReference.YCxCz2Gray(referenceImage);
         grayTest.YCxCz2Gray(testImage);
 
-        //  feature filtering
-        pointReference.convolve(grayReference, pointFilter);
-        pointTest.convolve(grayTest, pointFilter);
-        edgeReference.convolve(grayReference, edgeFilter);
-        edgeTest.convolve(grayTest, edgeFilter);
-
-        //  feature difference
-        featureDifference.computeFeatureDifference(pointReference, pointTest, edgeReference, edgeTest);
+        featureDifference.computeFeatureDifference(grayReference, grayTest, edgeFilter, pointFilter);
 
         this->finalError(colorDifference, featureDifference);
     }

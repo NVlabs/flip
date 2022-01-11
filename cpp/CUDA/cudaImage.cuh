@@ -171,6 +171,17 @@ namespace FLIP
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
 
+        static void convolve2images(image& input1, image& output1, image& input2, image& output2, image& filter)   // output1 is "this".
+        {
+            input1.synchronizeDevice();
+            input2.synchronizeDevice();
+            filter.synchronizeDevice();
+            FLIP::kernelConvolve2images << <output1.getGridDim(), output1.getBlockDim() >> > (output1.mvpDeviceData, input1.mvpDeviceData, output2.mvpDeviceData, input2.mvpDeviceData, filter.mvpDeviceData, output1.mDim, filter.mDim);
+            checkStatus("kernelConvolve2images");
+            output1.setState(CudaTensorState::DEVICE_ONLY);
+            output2.setState(CudaTensorState::DEVICE_ONLY);
+        }
+
         void setMaxExposure(tensor<float>& errorMap, tensor<float>& exposureMap, float exposure)
         {
             errorMap.synchronizeDevice();
@@ -512,9 +523,13 @@ namespace FLIP
         int spatialFilterWidth = 2 * spatialFilterRadius + 1;
         image<color3> spatialFilter(spatialFilterWidth, spatialFilterWidth);
         setSpatialFilter(spatialFilter, ppd, spatialFilterRadius);
+#if 0
         preprocessedReference.convolve(referenceImage, spatialFilter);
         preprocessedTest.convolve(testImage, spatialFilter);
-
+#else
+//        preprocessedReference.convolve2images(referenceImage, testImage, preprocessedTest, spatialFilter);
+        FLIP::image<color3>::convolve2images(referenceImage, preprocessedReference, testImage, preprocessedTest, spatialFilter);
+#endif
         //  move from YCxCz to CIELab
         preprocessedReference.YCxCz2CIELab();
         preprocessedTest.YCxCz2CIELab();

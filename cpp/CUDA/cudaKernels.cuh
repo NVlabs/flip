@@ -750,7 +750,7 @@ namespace FLIP
         dstImage[dstIndex] = colorSum;
     }
 
-    __global__ static void kernelConvolve2images(color3* dstImage1, color3* srcImage1, color3* dstImage2, color3* srcImage2, color3* pFilter, const int3 dim, int3 filterDim)
+    __global__ static void kernelConvolve2images1DFirstDir(color3* dstImageARG1, color3* dstImageBY1, color3* srcImage1, color3* dstImageARG2, color3* dstImageBY2, color3* srcImage2, color3* pFilterARG, color3* pFilterBY, const int3 dim, int3 filterDim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -759,32 +759,74 @@ namespace FLIP
 
         if (x >= dim.x || y >= dim.y) return;
 
-        const int2 halfFilterDim = { filterDim.x / 2, filterDim.y / 2};
+        const float halfFilterWidth = filterDim.x / 2;
 
-        color3 colorSum1 = { 0.0f, 0.0f, 0.0f };
-        color3 colorSum2 = { 0.0f, 0.0f, 0.0f };
+        // filter in x direction
+        color3 colorSumARG1 = { 0.0f, 0.0f, 0.0f };
+        color3 colorSumBY1 = { 0.0f, 0.0f, 0.0f };
+        color3 colorSumARG2 = { 0.0f, 0.0f, 0.0f };
+        color3 colorSumBY2 = { 0.0f, 0.0f, 0.0f };
 
-        for (int iy = -halfFilterDim.y; iy <= halfFilterDim.y; iy++)
+        for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
         {
-            int yy = Min(Max(0, y + iy), dim.y - 1);
-            for (int ix = -halfFilterDim.x; ix <= halfFilterDim.x; ix++)
-            {
-                int xx = Min(Max(0, x + ix), dim.x - 1);
+            int xx = Min(Max(0, x + ix), dim.x - 1);
 
-                int filterIndex = (iy + halfFilterDim.y) * filterDim.x + (ix + halfFilterDim.x);
-                int srcIndex = yy * dim.x + xx;
-                const color3 weights = pFilter[filterIndex];
-                const color3 srcColor1 = srcImage1[srcIndex];
-                const color3 srcColor2 = srcImage2[srcIndex];
+            int filterIndex = ix + halfFilterWidth;
+            int srcIndex = y * dim.x + xx;
+            const color3 weightsARG = pFilterARG[filterIndex];
+            const color3 weightsBY = pFilterBY[filterIndex];
+            const color3 srcColor1 = srcImage1[srcIndex];
+            const color3 srcColor2 = srcImage2[srcIndex];
 
-                colorSum1 += weights * srcColor1;
-                colorSum2 += weights * srcColor2;
-            }
+            colorSumARG1 += color3(weightsARG.x * srcColor1.x, weightsARG.y * srcColor1.y, 0.0f);
+            colorSumARG2 += color3(weightsARG.x * srcColor2.x, weightsARG.y * srcColor2.y, 0.0f);
+            colorSumBY1 += color3(weightsBY.x * srcColor1.z, weightsBY.y * srcColor1.z, 0.0f);
+            colorSumBY2 += color3(weightsBY.x * srcColor2.z, weightsBY.y * srcColor2.z, 0.0f);
         }
 
-        dstImage1[dstIndex] = colorSum1;
-        dstImage2[dstIndex] = colorSum2;
+        dstImageARG1[dstIndex] = color3(colorSumARG1.x, colorSumARG1.y, 0.0f);
+        dstImageBY1[dstIndex] = color3(colorSumBY1.x, colorSumBY1.y, 0.0f);
+        dstImageARG2[dstIndex] = color3(colorSumARG2.x, colorSumARG2.y, 0.0f);
+        dstImageBY2[dstIndex] = color3(colorSumBY2.x, colorSumBY2.y, 0.0f);
     }
 
+    __global__ static void kernelConvolve2images1DSecondDir(color3* dstImage1, color3* srcImageARG1, color3* srcImageBY1, color3* dstImage2, color3* srcImageARG2, color3* srcImageBY2, color3* pFilterARG, color3* pFilterBY, const int3 dim, int3 filterDim)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int dstIndex = (z * dim.y + y) * dim.x + x;
 
+        if (x >= dim.x || y >= dim.y) return;
+
+        const float halfFilterWidth = filterDim.x / 2;
+
+        // filter in y direction
+        color3 colorSumARG1 = { 0.0f, 0.0f, 0.0f };
+        color3 colorSumBY1 = { 0.0f, 0.0f, 0.0f };
+        color3 colorSumARG2 = { 0.0f, 0.0f, 0.0f };
+        color3 colorSumBY2 = { 0.0f, 0.0f, 0.0f };
+
+        for (int iy = -halfFilterWidth; iy <= halfFilterWidth; iy++)
+        {
+            int yy = Min(Max(0, y + iy), dim.y - 1);
+
+            int filterIndex = iy + halfFilterWidth;
+            int srcIndex = yy * dim.x + x;
+            const color3 weightsARG = pFilterARG[filterIndex];
+            const color3 weightsBY = pFilterBY[filterIndex];
+            const color3 srcColorARG1 = srcImageARG1[srcIndex];
+            const color3 srcColorBY1 = srcImageBY1[srcIndex];
+            const color3 srcColorARG2 = srcImageARG2[srcIndex];
+            const color3 srcColorBY2 = srcImageBY2[srcIndex];
+
+            colorSumARG1 += color3(weightsARG.x * srcColorARG1.x, weightsARG.y * srcColorARG1.y, 0.0f);
+            colorSumARG2 += color3(weightsARG.x * srcColorARG2.x, weightsARG.y * srcColorARG2.y, 0.0f);
+            colorSumBY1 += color3(weightsBY.x * srcColorBY1.x, weightsBY.y * srcColorBY1.y, 0.0f);
+            colorSumBY2 += color3(weightsBY.x * srcColorBY2.x, weightsBY.y * srcColorBY2.y, 0.0f);
+        }
+
+        dstImage1[dstIndex] = color3(colorSumARG1.x, colorSumARG1.y, colorSumBY1.x + colorSumBY1.y);
+        dstImage2[dstIndex] = color3(colorSumARG2.x, colorSumARG2.y, colorSumBY2.x + colorSumBY2.y);
+    }
 }

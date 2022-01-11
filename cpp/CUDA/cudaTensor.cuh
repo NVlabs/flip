@@ -236,6 +236,16 @@ namespace FLIP
             return this->mvpDeviceData + z * this->mArea;
         }
 
+        inline dim3 getBlockDim() const 
+        {
+            return mBlockDim;
+        }
+
+        inline dim3 getGridDim() const
+        {
+            return mGridDim;
+        }
+
         inline int index(int x, int y = 0, int z = 0)
         {
             return (z * this->mDim.y + y) * mDim.x + x;
@@ -429,7 +439,7 @@ namespace FLIP
             this->multiplyAndAdd(T(1.0f) / sum);
         }
 
-        void checkStatus(std::string kernelName)
+        static void checkStatus(std::string kernelName)
         {
             cudaError_t cudaError = cudaGetLastError();
             if (cudaError != cudaSuccess)
@@ -446,7 +456,7 @@ namespace FLIP
         }
 
         //  used if debugging
-        void deviceSynchronize(std::string kernelName)
+        static void deviceSynchronize(std::string kernelName)
         {
             cudaError_t cudaError = cudaDeviceSynchronize();
             if (cudaError != cudaSuccess)
@@ -782,7 +792,5 @@ namespace FLIP
                 return true;
             }
         }
-
     };
-
 }

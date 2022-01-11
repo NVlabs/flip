@@ -60,16 +60,12 @@ if __name__ == '__main__':
 	Test script. Runs flip.exe from the cpp/x64/release/-directory for both LDR and HDR.
     Both the mean FLIP is tested and the pixel values from the resulting FLIP images.
 	"""
-	# Test descriptions
-	test_descriptions = []
-	test_descriptions.append("CPP: HDR-FLIP output matches reference HDR-FLIP output")
-	test_descriptions.append("CPP: LDR-FLIP output matches reference LDR-FLIP output")
 
 	# Set up test results
 	test_results = []
 
-	print("Running tests...")
-	print("================")
+	print("Running CPP-CPU tests...")
+	print("========================")
 
 	# Load correct LDR/HDR FLIP image in the images directory
 	ldr_correct_result = load_image_array('../images/correct_ldrflip_cpp.png') # LDR, sRGB
@@ -117,6 +113,6 @@ if __name__ == '__main__':
 	os.remove(result_ldr_file)
 	os.remove(result_hdr_file)
 
-	print("================")
+	print("========================")
 	print("Tests complete!")
 

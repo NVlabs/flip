@@ -175,7 +175,7 @@ namespace FLIP
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
 
-        static void convolve2images(image& input1, image& output1, image& input2, image& output2, image& filter)   // output1 is "this".
+        static void convolve2images(image& input1, image& output1, image& input2, image& output2, image& filter)
         {
             input1.synchronizeDevice();
             input2.synchronizeDevice();

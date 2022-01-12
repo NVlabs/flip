@@ -3,6 +3,17 @@
 In addition to various minor changes, the following was
 changed for the different versions of ꟻLIP:
 
+#Version 1.2 (commit TODO)
+- Changed to CUDA 11.5 (was done after v1.1, but before v1.2).
+- Adds tests for CPP and CUDA in the tests-directory.
+- Performance optimizations for CPU and GPU:
+    - Uses separable filters.
+    - Merges several functions/kernels into fewer.
+    - Uses OpenMP for the CPU.
+    - Results:
+        - Over to 70x faster for LDR/HDR CPU (depends on CPU setup, though).
+        - 1.6-1.7x faster LDR/HDR CUDA (depends on CPU/GPU setup)
+
 # Version 1.1 (commit 4ed59e9)
 - NVIDIA Source Code License changed to a 3-Clause BSD License
 - Precision updates:

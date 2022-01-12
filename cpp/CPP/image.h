@@ -254,8 +254,7 @@ namespace FLIP
             //  temporary images (on device)
             image<color3> referenceImage(reference), testImage(test);
             image<color3> preprocessedReference(width, height), preprocessedTest(width, height);
-            image<color3> colorDifference(width, height);
-            image<color3> featureDifference(width, height);
+            image<color3> colorFeatureDifference(width, height);    // .x == color diff, .y == feature diff.
 
             //  move from sRGB to YCxCz
             referenceImage.sRGB2YCxCz();
@@ -278,7 +277,7 @@ namespace FLIP
             preprocessedTest.huntAdjustment();
 
             //  color difference
-            colorDifference.computeColorDifference(preprocessedReference, preprocessedTest);
+            colorFeatureDifference.computeColorDifference(preprocessedReference, preprocessedTest);
 
             //  feature (point/edge) filtering
             const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
@@ -292,9 +291,9 @@ namespace FLIP
             grayReference.YCxCz2Gray(referenceImage);
             grayTest.YCxCz2Gray(testImage);
 
-            featureDifference.computeFeatureDifference(grayReference, grayTest, featureFilter);
+            colorFeatureDifference.computeFeatureDifference(grayReference, grayTest, featureFilter);
 
-            this->finalError(colorDifference, featureDifference);
+            this->finalError(colorFeatureDifference);
         }
 
         void computeFeatureDifference(const image<color3>& grayRefImage, const image<color3>& grayTestImage, const image<color3>& featureFilter)
@@ -376,20 +375,22 @@ namespace FLIP
 
                     const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), HostFLIPConstants.gqf);
 
-                    this->set(x, y, color3(featureDifference, 0.0f, 0.0f));
+                    const float colorDifference = this->get(x, y).x;
+                    this->set(x, y, color3(colorDifference, featureDifference, 0.0f));
                 }
             }
         }
 
-        void finalError(image<color3>& colorDifference, image<color3>& featureDifference)
+        void finalError(image<color3>& colorFeatureDifference)
         {
 #pragma omp parallel for
             for (int y = 0; y < this->getHeight(); y++)
             {
                 for (int x = 0; x < this->getWidth(); x++)
                 {
-                    const float cdiff = colorDifference.get(x, y).x;
-                    const float fdiff = featureDifference.get(x, y).x;
+                    const color3 colorFeatureDiff = colorFeatureDifference.get(x, y);
+                    const float cdiff = colorFeatureDiff.x;
+                    const float fdiff = colorFeatureDiff.y;
                     const float errorFLIP = std::pow(cdiff, 1.0f - fdiff);
 
                     this->set(x, y, errorFLIP);

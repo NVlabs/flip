@@ -448,14 +448,14 @@ namespace FLIP
                 exit(-1);
             }
 
-            //  used if debugging
+            // Used if debugging.
             if (true)
             {
                 deviceSynchronize(kernelName);
             }
         }
 
-        //  used if debugging
+        // Used if debugging.
         static void deviceSynchronize(std::string kernelName)
         {
             cudaError_t cudaError = cudaDeviceSynchronize();
@@ -706,7 +706,7 @@ namespace FLIP
             auto rawImgChn = reinterpret_cast<float**>(exrImage.images);
             bool loaded = false;
 
-            // 1 channel images can be loaded into either scalar or vector formats
+            // 1 channel images can be loaded into either scalar or vector formats.
             if (exrHeader.num_channels == 1)
             {
                 for (int y = 0; y < this->mDim.y; y++)
@@ -720,7 +720,7 @@ namespace FLIP
                 loaded = true;
             }
 
-            // 2 channel images can only be loaded into vector2/3/4 formats
+            // 2 channel images can only be loaded into vector2/3/4 formats.
             if (exrHeader.num_channels == 2)
             {
                 assert(idxR != -1 && idxG != -1);
@@ -739,7 +739,7 @@ namespace FLIP
                 loaded = true;
             }
 
-            // 3 channel images can only be loaded into vector3/4 formats
+            // 3 channel images can only be loaded into vector3/4 formats.
             if (exrHeader.num_channels == 3)
             {
                 assert(idxR != -1 && idxG != -1 && idxB != -1);
@@ -759,7 +759,7 @@ namespace FLIP
                 loaded = true;
             }
 
-            // 4 channel images can only be loaded into vector4 formats
+            // 4 channel images can only be loaded into vector4 formats.
             if (exrHeader.num_channels == 4)
             {
                 assert(idxR != -1 && idxG != -1 && idxB != -1);

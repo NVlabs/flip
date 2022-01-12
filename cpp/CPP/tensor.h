@@ -295,21 +295,6 @@ namespace FLIP
             }
         }
 
-        void YCxCz2Gray(tensor<color3>& srcImage)
-        {
-            for (int z = 0; z < this->getDepth(); z++)
-            {
-#pragma omp parallel for
-                for (int y = 0; y < this->getHeight(); y++)
-                {
-                    for (int x = 0; x < this->getWidth(); x++)
-                    {
-                        this->set(x, y, z, color3::YCxCz2Gray(srcImage.get(x, y, z)));
-                    }
-                }
-            }
-        }
-
         void LinearRGB2sRGB(void)
         {
             for (int z = 0; z < this->getDepth(); z++)

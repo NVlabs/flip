@@ -409,14 +409,6 @@ namespace FLIP
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 
-        void YCxCz2Gray(tensor<color3>& srcImage)
-        {
-            this->synchronizeDevice();
-            FLIP::kernelYCxCz2Gray << <this->mGridDim, this->mBlockDim >> > (this->getDeviceData(), srcImage.getDeviceData(), this->mDim);
-            checkStatus("kernelYCxCz2Gray");
-            this->mState = CudaTensorState::DEVICE_ONLY;
-        }
-
         void LinearRGB2sRGB(void)
         {
             this->synchronizeDevice();

@@ -361,11 +361,6 @@ namespace FLIP
             return color3(X, Y, Z) * referenceIlluminant;
         }
 
-        __host__ __device__ static inline float YCxCz2Gray(color3 YCxCz)
-        {
-            return (YCxCz.x + 16.0f) / 116.0f; //  make it [0,1]
-        }
-
         //  FLIP-specific functions below
 
         __host__ __device__ static inline float Hunt(const float luminance, const float chrominance)

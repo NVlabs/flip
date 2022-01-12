@@ -240,20 +240,6 @@ namespace FLIP
         }
     }
 
-
-    __global__ static void kernelLab2Gray(color3* pDstImage, const color3* pSrcImage, const int3 dim)
-    {
-        int x = blockIdx.x * blockDim.x + threadIdx.x;
-        int y = blockIdx.y * blockDim.y + threadIdx.y;
-        int z = blockIdx.z * blockDim.z + threadIdx.z;
-        int i = (z * dim.y + y) * dim.x + x;
-
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
-        float l = (pSrcImage[i].x + 16.0f) / 116.0f;  // make it [0,1]
-        pDstImage[i] = color3(l, l, 0.0f);  // luminance [0,1] stored in both x and y since we apply both horizontal and verticals filters at the same time
-    }
-
     __global__ static void kernelColorMap(color3* pDstImage, const float* pSrcImage, const color3* pColorMap, const int3 dim, const int mapSize)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -451,30 +437,6 @@ namespace FLIP
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
 
         pImage[i] = color3::XYZ2YCxCz(color3::LinearRGB2XYZ(color3::sRGB2LinearRGB(pImage[i])));
-    }
-
-    __global__ static void kernelYCxCz2Gray(float* dstImage, color3* srcImage, const int3 dim)
-    {
-        int x = blockIdx.x * blockDim.x + threadIdx.x;
-        int y = blockIdx.y * blockDim.y + threadIdx.y;
-        int i = y * dim.x + x;
-
-        if (x >= dim.x || y >= dim.y) return;
-
-        dstImage[i] = color3::YCxCz2Gray(srcImage[i]);
-    }
-
-    __global__ static void kernelYCxCz2Gray(color3* dstImage, color3* srcImage, const int3 dim)
-    {
-        int x = blockIdx.x * blockDim.x + threadIdx.x;
-        int y = blockIdx.y * blockDim.y + threadIdx.y;
-        int z = blockIdx.z * blockDim.z + threadIdx.z;
-        int i = (z * dim.y + y) * dim.x + x;
-
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
-        float gray = color3::YCxCz2Gray(srcImage[i]);
-        dstImage[i] = color3(gray);
     }
 
     __global__ static void kernelLinearRGB2sRGB(color3* pImage, const int3 dim)
@@ -728,8 +690,12 @@ namespace FLIP
             int filterIndex = ix + halfFilterWidth;
             int srcIndex = y * dim.x + xx;
             const color3 featureWeights = pFilter[filterIndex];
-            const float src1 = srcImage1[srcIndex].x;
-            const float src2 = srcImage2[srcIndex].x;
+            float src1 = srcImage1[srcIndex].x;
+            float src2 = srcImage2[srcIndex].x;
+
+            // Normalize the gray values to [0,1].
+            src1 = (src1 + 16.0f) / 116.0f;
+            src2 = (src2 + 16.0f) / 116.0f;
 
             edge1X += featureWeights.y * src1;
             edge2X += featureWeights.y * src2;

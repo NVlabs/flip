@@ -552,7 +552,7 @@ namespace FLIP
         //  Temporary images (on device).
         image<color3> referenceImage(reference), testImage(test);
         image<color3> preprocessedReferenceARG(width, height), preprocessedReferenceBY(width, height), preprocessedReference(width, height), preprocessedTestARG(width, height), preprocessedTestBY(width, height), preprocessedTest(width, height);
-        image<color3> grayReference(width, height), grayTest(width, height);
+        image<color3> iFeaturesReference(width, height), iFeaturesTest(width, height);
         image<color3> colorFeatureDifference(width, height);
 
         //  Transform from sRGB to YCxCz.
@@ -579,12 +579,9 @@ namespace FLIP
         int featureFilterWidth = 2 * featureFilterRadius + 1;
         image<color3> featureFilter(featureFilterWidth, 1);
         setFeatureFilter(featureFilter, ppd);
-        grayReference.YCxCz2Gray(referenceImage);
-        grayTest.YCxCz2Gray(testImage);
 
-        // The following two calls convolve (separably) grayReference and grayTest with the edge and point detection filters and performs additional computations for the feature differences.
-        image<color3> iFeaturesReference(width, height), iFeaturesTest(width, height);
-        FLIP::image<color3>::featureFilterFirstDir(grayReference, iFeaturesReference, grayTest, iFeaturesTest, featureFilter);
+        // The following two calls convolve (separably) referenceImage and testImage with the edge and point detection filters and performs additional computations for the feature differences.
+        FLIP::image<color3>::featureFilterFirstDir(referenceImage, iFeaturesReference, testImage, iFeaturesTest, featureFilter);
         FLIP::image<color3>::featureFilterSecondDirAndFeatureDifference(iFeaturesReference, iFeaturesTest, colorFeatureDifference, featureFilter);
 
         this->finalError(colorFeatureDifference);

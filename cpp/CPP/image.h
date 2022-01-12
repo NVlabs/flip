@@ -255,7 +255,6 @@ namespace FLIP
             //  Temporary images.
             image<color3> referenceImage(reference), testImage(test);
             image<color3> preprocessedReference(width, height), preprocessedTest(width, height);
-            image<color3> grayReference(width, height), grayTest(width, height);
             image<color3> colorFeatureDifference(width, height);    // .x == color diff, .y == feature diff.
 
             //  Transform from sRGB to YCxCz.
@@ -281,11 +280,9 @@ namespace FLIP
             int featureFilterWidth = 2 * featureFilterRadius + 1;
             image<color3> featureFilter(featureFilterWidth, 1);
             setFeatureFilter(featureFilter, ppd);
-            grayReference.YCxCz2Gray(referenceImage);
-            grayTest.YCxCz2Gray(testImage);
 
-            // The following call convolves grayReference and grayTest with the edge and point detection filters and performs additional computations for the final feature differences.
-            colorFeatureDifference.computeFeatureDifference(grayReference, grayTest, featureFilter);    // Compute and store the feature difference in colorFeatureDifference.y.
+            // The following call convolves referenceImage and testImage with the edge and point detection filters and performs additional computations for the final feature differences.
+            colorFeatureDifference.computeFeatureDifference(referenceImage, testImage, featureFilter);    // Compute and store the feature difference in colorFeatureDifference.y.
 
             // Compute the final FLIP value given the color and feature differences.
             this->finalError(colorFeatureDifference);
@@ -318,8 +315,12 @@ namespace FLIP
                         int xx = Min(Max(0, x + ix), w - 1);
 
                         const color3 featureWeights = featureFilter.get(ix + halfFilterWidth, 0);
-                        const float grayRef = grayRefImage.get(xx, y).x;
-                        const float grayTest = grayTestImage.get(xx, y).x;
+                        float grayRef = grayRefImage.get(xx, y).x;
+                        float grayTest = grayTestImage.get(xx, y).x;
+
+                        // Normalize the gray values to [0,1].
+                        grayRef = (grayRef + 16.0f) / 116.0f;
+                        grayTest = (grayTest + 16.0f) / 116.0f;
 
                         iEdgeRefX += featureWeights.y * grayRef;
                         iEdgeTestX += featureWeights.y * grayTest;

@@ -61,6 +61,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
@@ -75,23 +76,13 @@ namespace FLIP
         L2
     };
 
-    struct FLIPConstants
-    {
-        float gqc = 0.7f;
-        float gpc = 0.4f;
-        float gpt = 0.95f;
-        float gw = 0.082f;
-        float gqf = 0.5f;
-    };
 }
-
-#include "color.cuh"
+#define USING_CUDA
+#include "sharedflip.h"
 #include "cudaKernels.cuh"
 
 namespace FLIP
 {
-    const float PI = 3.14159265358979f;
-
     const dim3 DEFAULT_KERNEL_BLOCK_DIM = { 32, 32, 1 };  //  1.2s
 
     enum class CudaTensorState

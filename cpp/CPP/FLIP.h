@@ -50,7 +50,7 @@
 
 #pragma once
 
-#include "color.h"
+#include "sharedflip.h"
 #include "image.h"
 #include "commandline.h"
 #include "filename.h"

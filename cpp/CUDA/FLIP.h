@@ -53,7 +53,9 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-#include "color.cuh"
+#define USING_CUDA
+#include "sharedflip.h"
+
 #include "cudaImage.cuh"
 #include "mapMagma.cuh"
 #include "mapViridis.cuh"

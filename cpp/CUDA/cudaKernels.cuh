@@ -357,49 +357,6 @@ namespace FLIP
         }
     }
 
-    __global__ static void kernelColorDifference(color3* pDstImage, color3* pSrcReferenceImage, color3* pSrcTestImage, const int3 dim)
-    {
-        int x = blockIdx.x * blockDim.x + threadIdx.x;
-        int y = blockIdx.y * blockDim.y + threadIdx.y;
-        int z = blockIdx.z * blockDim.z + threadIdx.z;
-        int i = (z * dim.y + y) * dim.x + x;
-
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
-        const float cmax = color3::computeMaxDistance(FLIP::DeviceFLIPConstants.gqc);
-        const float pccmax = FLIP::DeviceFLIPConstants.gpc * cmax;
-
-        color3 refPixel = pSrcReferenceImage[i];
-        color3 testPixel = pSrcTestImage[i];
-
-        // move from linear RGB to CIELab
-        refPixel = color3::XYZ2CIELab(color3::LinearRGB2XYZ(refPixel));
-        testPixel = color3::XYZ2CIELab(color3::LinearRGB2XYZ(testPixel));
-
-        // Hunt adjustment
-        refPixel.y = color3::Hunt(refPixel.x, refPixel.y);
-        refPixel.z = color3::Hunt(refPixel.x, refPixel.z);
-        testPixel.y = color3::Hunt(testPixel.x, testPixel.y);
-        testPixel.z = color3::Hunt(testPixel.x, testPixel.z);
-
-        float colorDifference = color3::HyAB(refPixel, testPixel);
-
-        colorDifference = powf(colorDifference, FLIP::DeviceFLIPConstants.gqc);
-
-        // Re-map error to the [0, 1] range. Values between 0 and pccmax are mapped to the range [0, gpt],
-        // while the rest are mapped to the range (gpt, 1]
-        if (colorDifference < pccmax)
-        {
-            colorDifference *= FLIP::DeviceFLIPConstants.gpt / pccmax;
-        }
-        else
-        {
-            colorDifference = FLIP::DeviceFLIPConstants.gpt + ((colorDifference - pccmax) / (cmax - pccmax)) * (1.0f - FLIP::DeviceFLIPConstants.gpt);
-        }
-
-        pDstImage[i] = color3(colorDifference, 0.0f, 0.0f);
-    }
-
     __global__ static void kernelHuntAdjustment(color3* pImage, const int3 dim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -683,6 +640,8 @@ namespace FLIP
         float  edge1X = 0.0f, edge2X = 0.0f, point1X = 0.0f, point2X = 0.0f;
         float  gaussianFiltered1 = 0.0f, gaussianFiltered2 = 0.0f;
 
+        const float oneOver116 = 1.0f / 116.0f;
+        const float sixteenOver116 = 16.0f / 116.0f;
         for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
         {
             int xx = Min(Max(0, x + ix), dim.x - 1);
@@ -694,8 +653,8 @@ namespace FLIP
             float src2 = srcImage2[srcIndex].x;
 
             // Normalize the gray values to [0,1].
-            src1 = (src1 + 16.0f) / 116.0f;
-            src2 = (src2 + 16.0f) / 116.0f;
+            src1 = src1 * oneOver116 + sixteenOver116;
+            src2 = src2 * oneOver116 + sixteenOver116;
 
             edge1X += featureWeights.y * src1;
             edge2X += featureWeights.y * src2;
@@ -806,10 +765,14 @@ namespace FLIP
     }
 
     // Performs spatial filtering in the y direction (and clamps the results) on both the reference and test image at the same time (for better performance).
-    // Filtering has been changed to using separable filtering for better performance.
-    // For details on the convolution, see the note on separable filters in the FLIP repository.
-    __global__ static void kernelSpatialFilterSecondDir(color3* dstImage1, color3* srcImageARG1, color3* srcImageBY1, color3* dstImage2, color3* srcImageARG2, color3* srcImageBY2, color3* pFilterARG, color3* pFilterBY, const int3 dim, int3 filterDim)
+    // Filtering has been changed to using separable filtering for better performance. For details on the convolution, see the note on separable filters in the FLIP repository.
+    // After filtering, compute color differences.
+    __global__ static void kernelSpatialFilterSecondDirAndColorDifference(color3* dstImage, color3* srcImageARG1, color3* srcImageBY1, color3* srcImageARG2, color3* srcImageBY2, color3* pFilterARG, color3* pFilterBY, const int3 dim, int3 filterDim)
     {
+        // Color difference constants.
+        const float cmax = color3::computeMaxDistance(FLIP::DeviceFLIPConstants.gqc);
+        const float pccmax = FLIP::DeviceFLIPConstants.gpc * cmax;
+
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
         int z = blockIdx.z * blockDim.z + threadIdx.z;
@@ -819,7 +782,7 @@ namespace FLIP
 
         const float halfFilterWidth = filterDim.x / 2;
 
-        // filter in y direction
+        // Filter in y direction.
         color3 colorSumARG1 = { 0.0f, 0.0f, 0.0f };
         color3 colorSumBY1 = { 0.0f, 0.0f, 0.0f };
         color3 colorSumARG2 = { 0.0f, 0.0f, 0.0f };
@@ -844,13 +807,37 @@ namespace FLIP
             colorSumBY2 += color3(weightsBY.x * srcColorBY2.x, weightsBY.y * srcColorBY2.y, 0.0f);
         }
 
-        // Clamp to [0,1] in linear RGB
+        // Clamp to [0,1] in linear RGB.
         color3 color1 = color3(colorSumARG1.x, colorSumARG1.y, colorSumBY1.x + colorSumBY1.y);
         color3 color2 = color3(colorSumARG2.x, colorSumARG2.y, colorSumBY2.x + colorSumBY2.y);
         color1 = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(color1)));
         color2 = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(color2)));
 
-        dstImage1[dstIndex] = color1;
-        dstImage2[dstIndex] = color2;
+        // Move from linear RGB to CIELab.
+        color1 = color3::XYZ2CIELab(color3::LinearRGB2XYZ(color1));
+        color2 = color3::XYZ2CIELab(color3::LinearRGB2XYZ(color2));
+
+        // Apply Hunt adjustment.
+        color1.y = color3::Hunt(color1.x, color1.y);
+        color1.z = color3::Hunt(color1.x, color1.z);
+        color2.y = color3::Hunt(color2.x, color2.y);
+        color2.z = color3::Hunt(color2.x, color2.z);
+
+        float colorDifference = color3::HyAB(color1, color2);
+
+        colorDifference = powf(colorDifference, FLIP::DeviceFLIPConstants.gqc);
+
+        // Re-map error to the [0, 1] range. Values between 0 and pccmax are mapped to the range [0, gpt],
+        // while the rest are mapped to the range (gpt, 1]
+        if (colorDifference < pccmax)
+        {
+            colorDifference *= FLIP::DeviceFLIPConstants.gpt / pccmax;
+        }
+        else
+        {
+            colorDifference = FLIP::DeviceFLIPConstants.gpt + ((colorDifference - pccmax) / (cmax - pccmax)) * (1.0f - FLIP::DeviceFLIPConstants.gpt);
+        }
+
+        dstImage[dstIndex] = color3(colorDifference, 0.0f, 0.0f);
     }
 }

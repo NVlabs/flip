@@ -274,6 +274,8 @@ namespace FLIP
             // Convolve in x direction (1st and 2nd derivative for filter in x direction, 0th derivative for filter in y direction).
             // For details, see the note on separable filters in the FLIP repository.
             // We filter both reference and test image simultaneously (for better performance).
+            const float oneOver116 = 1.0f / 116.0f;
+            const float sixteenOver116 = 16.0f / 116.0f;
 #pragma omp parallel for
             for (int y = 0; y < h; y++)
             {
@@ -291,8 +293,8 @@ namespace FLIP
                         float grayTest = grayTestImage.get(xx, y).x;
 
                         // Normalize the gray values to [0,1].
-                        grayRef = (grayRef + 16.0f) / 116.0f;
-                        grayTest = (grayTest + 16.0f) / 116.0f;
+                        grayRef = grayRef * oneOver116 + sixteenOver116;
+                        grayTest = grayTest * oneOver116 + sixteenOver116;
 
                         iEdgeRefX += featureWeights.y * grayRef;
                         iEdgeTestX += featureWeights.y * grayTest;

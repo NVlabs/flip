@@ -143,9 +143,9 @@ namespace FLIP
 
         void FLIP(image<color3>& reference, image<color3>& test, float ppd);
 
-        void finalError(image<color3>& colorDifference, image<color3>& featureDifference)
+        void finalError(image<color3>& colorFeatureDifference)
         {
-            FLIP::kernelFinalError << <this->mGridDim, this->mBlockDim >> > (this->getDeviceData(), colorDifference.getDeviceData(), featureDifference.getDeviceData(), this->mDim);
+            FLIP::kernelFinalError << <this->mGridDim, this->mBlockDim >> > (this->getDeviceData(), colorFeatureDifference.getDeviceData(), this->mDim);
             image<T>::checkStatus("kernelFinalError");
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
@@ -548,8 +548,7 @@ namespace FLIP
         //  temporary images (on device)
         image<color3> referenceImage(reference), testImage(test);
         image<color3> preprocessedReferenceARG(width, height), preprocessedReferenceBY(width, height), preprocessedReference(width, height), preprocessedTestARG(width, height), preprocessedTestBY(width, height), preprocessedTest(width, height);
-        image<color3> colorDifference(width, height);
-        image<color3> featureDifference(width, height);
+        image<color3> colorFeatureDifference(width, height);
 
         //  move from sRGB to YCxCz
         referenceImage.sRGB2YCxCz();
@@ -573,7 +572,7 @@ namespace FLIP
         preprocessedTest.huntAdjustment();
 
         //  color difference
-        colorDifference.computeColorDifference(preprocessedReference, preprocessedTest);
+        colorFeatureDifference.computeColorDifference(preprocessedReference, preprocessedTest);
 
         //  feature (point/edge) filtering
         const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
@@ -590,9 +589,9 @@ namespace FLIP
         // feature detection and difference computation
         image<color3> iFeaturesReference(width, height), iFeaturesTest(width, height);
         FLIP::image<color3>::featureFilterFirstDir(grayReference, iFeaturesReference, grayTest, iFeaturesTest, featureFilter);
-        FLIP::image<color3>::featureFilterSecondDirAndFeatureDifference(iFeaturesReference, iFeaturesTest, featureDifference, featureFilter);
+        FLIP::image<color3>::featureFilterSecondDirAndFeatureDifference(iFeaturesReference, iFeaturesTest, colorFeatureDifference, featureFilter);
 
-        this->finalError(colorDifference, featureDifference);
+        this->finalError(colorFeatureDifference);
     }
 
 }

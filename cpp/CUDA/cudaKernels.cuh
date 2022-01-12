@@ -278,7 +278,7 @@ namespace FLIP
         pDstImage[i] = color3(pSrcImage[i]);
     }
 
-    __global__ static void kernelFinalError(float* pDstImage, color3* pColorDifference, color3* pFeatureDifference, const int3 dim)
+    __global__ static void kernelFinalError(float* pDstImage, color3* pColorFeatureDifference, const int3 dim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -287,8 +287,8 @@ namespace FLIP
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
 
-        const float cdiff = pColorDifference[i].x;
-        const float fdiff = pFeatureDifference[i].x;
+        const float cdiff = pColorFeatureDifference[i].x;
+        const float fdiff = pColorFeatureDifference[i].y;
         const float errorFLIP = std::pow(cdiff, 1.0f - fdiff);
 
         pDstImage[i] = errorFLIP;
@@ -780,7 +780,7 @@ namespace FLIP
 
         const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), DeviceFLIPConstants.gqf);
 
-        dstImage[dstIndex] = color3(featureDifference, 0.0, 0.0);
+        dstImage[dstIndex].y = featureDifference;
     }
 
     __global__ static void kernelSpatialFilterFirstDir(color3* dstImageARG1, color3* dstImageBY1, color3* srcImage1, color3* dstImageARG2, color3* dstImageBY2, color3* srcImage2, color3* pFilterARG, color3* pFilterBY, const int3 dim, int3 filterDim)

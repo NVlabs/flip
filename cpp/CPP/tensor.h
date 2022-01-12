@@ -304,7 +304,7 @@ namespace FLIP
                 {
                     for (int x = 0; x < this->getWidth(); x++)
                     {
-                        this->set(x, y, z, color3::XYZ2CIELab(color3::LinearRGB2XYZ(color3::clamp(color3::XYZ2LinearRGB(color3::YCxCz2XYZ(this->get(x, y, z)))))));
+                        this->set(x, y, z, color3::XYZ2CIELab(color3::YCxCz2XYZ(this->get(x, y, z))));
                     }
                 }
             }

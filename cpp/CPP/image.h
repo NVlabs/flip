@@ -268,14 +268,6 @@ namespace FLIP
             setSpatialFilters(spatialFilterARG, spatialFilterBY, ppd, spatialFilterRadius);
             convolve2images(referenceImage, preprocessedReference, testImage, preprocessedTest, spatialFilterARG, spatialFilterBY);
 
-            //  move from YCxCz to CIELab
-            preprocessedReference.YCxCz2CIELab();
-            preprocessedTest.YCxCz2CIELab();
-
-            //  Hunt adjustment
-            preprocessedReference.huntAdjustment();
-            preprocessedTest.huntAdjustment();
-
             //  color difference
             colorFeatureDifference.computeColorDifference(preprocessedReference, preprocessedTest);
 
@@ -409,6 +401,16 @@ namespace FLIP
                 {
                     color3 refPixel = reference.get(x, y);
                     color3 testPixel = test.get(x, y);
+
+                    //  move from YCxCz to CIELab
+                    refPixel = color3::XYZ2CIELab(color3::LinearRGB2XYZ(refPixel));
+                    testPixel = color3::XYZ2CIELab(color3::LinearRGB2XYZ(testPixel));
+
+                    // Hunt adjustment
+                    refPixel.y = color3::Hunt(refPixel.x, refPixel.y);
+                    refPixel.z = color3::Hunt(refPixel.x, refPixel.z);
+                    testPixel.y = color3::Hunt(testPixel.x, testPixel.y);
+                    testPixel.z = color3::Hunt(testPixel.x, testPixel.z);
 
                     float colorDifference = color3::HyAB(refPixel, testPixel);
 
@@ -676,8 +678,15 @@ namespace FLIP
                     colorSumARG2 += color3(weightsARG.x * iColorARG2.x, weightsARG.y * iColorARG2.y, 0.0f);
                     colorSumBY2 += color3(weightsBY.x * iColorBY2.x, weightsBY.y * iColorBY2.y, 0.0f);
                 }
-                output1.set(x, y, color3(colorSumARG1.x, colorSumARG1.y, colorSumBY1.x + colorSumBY1.y));
-                output2.set(x, y, color3(colorSumARG2.x, colorSumARG2.y, colorSumBY2.x + colorSumBY2.y));
+
+                // Clamp to [0,1] in linear RGB
+                color3 color1 = color3(colorSumARG1.x, colorSumARG1.y, colorSumBY1.x + colorSumBY1.y);
+                color3 color2 = color3(colorSumARG2.x, colorSumARG2.y, colorSumBY2.x + colorSumBY2.y);
+                color1 = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(color1)));
+                color2 = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(color2)));
+
+                output1.set(x, y, color1);
+                output2.set(x, y, color2);
             }
         }
     }

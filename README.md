@@ -25,7 +25,7 @@ The changes made for the different versions of ꟻLIP are summarized in the [ver
 
 # License
 
-Copyright © 2020-2021, NVIDIA Corporation & Affiliates. All rights reserved.
+Copyright © 2020-2022, NVIDIA Corporation & Affiliates. All rights reserved.
 
 This work is made available under a [BSD 3-Clause License](LICENSE.md).
 

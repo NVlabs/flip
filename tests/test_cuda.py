@@ -1,5 +1,5 @@
 #################################################################################
-# Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -26,7 +26,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# SPDX-FileCopyrightText: Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES
+# SPDX-FileCopyrightText: Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES
 # SPDX-License-Identifier: BSD-3-Clause
 #################################################################################
 
@@ -75,13 +75,13 @@ if __name__ == '__main__':
 	hdr_process = subprocess.run("../cpp/x64/release/flip-cuda.exe --reference ../images/reference.exr --test ../images/test.exr -v 0 --no-exposure-map --directory ../images", stdout=subprocess.PIPE, text=True)
 
 	ldr_result_strings = ldr_process.stdout.split('\n')
-	subpos = ldr_result_strings[4].find(':')    
+	subpos = ldr_result_strings[4].find(':')
 	ldr_mean = float(ldr_result_strings[4][subpos + 2 : len(ldr_result_strings[4])])
 
 	hdr_result_strings = hdr_process.stdout.split('\n')
-	subpos = hdr_result_strings[8].find(':')    
+	subpos = hdr_result_strings[8].find(':')
 	hdr_mean = float(hdr_result_strings[8][subpos + 2 : len(hdr_result_strings[4])])
-		
+
    # Load the images that were just created.
 	result_ldr_file = "../images/flip.reference.test.67ppd.ldr.png";
 	result_hdr_file = "../images/flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png";
@@ -94,7 +94,7 @@ if __name__ == '__main__':
 		print("LDR: PASSED per-pixel test on FLIP images.")
 
 	if(ldr_mean != 0.159691):
-		print("LDR: FAILED mean test.") 
+		print("LDR: FAILED mean test.")
 	else:
 		print("LDR: PASSED mean test.")
 
@@ -104,7 +104,7 @@ if __name__ == '__main__':
 		print("HDR: PASSED per-pixel test on FLIP images.")
 
 	if(hdr_mean != 0.283478):
-		print("HDR: FAILED mean test.") 
+		print("HDR: FAILED mean test.")
 	else:
 		print("HDr: PASSED mean test.")
 

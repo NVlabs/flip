@@ -106,7 +106,7 @@ if __name__ == '__main__':
 	if(hdr_mean != 0.283547):
 		print("HDR: FAILED mean test.")
 	else:
-		print("HDr: PASSED mean test.")
+		print("HDR: PASSED mean test.")
 
 	# Remove output created during tests
 	os.remove(result_ldr_file)

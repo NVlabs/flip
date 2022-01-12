@@ -61,7 +61,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#include "color.h"
+#include "sharedflip.h"
 
 
 namespace FLIP
@@ -83,21 +83,10 @@ namespace FLIP
         L2
     };
 
-    struct FLIPConstants
-    {
-        float gqc = 0.7f;
-        float gpc = 0.4f;
-        float gpt = 0.95f;
-        float gw = 0.082f;
-        float gqf = 0.5f;
-    };
-
     union int3
     {
         struct { int x, y, z; };
     };
-
-    const float PI = 3.14159265358979f;
 
     template<typename T = color3>
     class tensor

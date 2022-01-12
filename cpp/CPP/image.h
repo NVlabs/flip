@@ -230,7 +230,7 @@ namespace FLIP
             //  Temporary images.
             image<color3> referenceImage(reference), testImage(test);
             image<color3> preprocessedReference(width, height), preprocessedTest(width, height);
-            image<color3> colorFeatureDifference(width, height);    // .x == color diff, .y == feature diff.
+//            image<color3> colorFeatureDifference(width, height);    // .x == color diff, .y == feature diff.
 
             //  Transform from sRGB to YCxCz.
             referenceImage.sRGB2YCxCz();
@@ -246,8 +246,8 @@ namespace FLIP
             // The next call performs spatial filtering on both the reference and test image at the same time (for better performance).
             convolve2images(referenceImage, preprocessedReference, testImage, preprocessedTest, spatialFilterARG, spatialFilterBY);
 
-            //  Compute color difference.
-            colorFeatureDifference.computeColorDifference(preprocessedReference, preprocessedTest);     // Compute and store the color difference in colorFeatureDifference.x.
+            //  Compute color difference. "this" is an image<float> here, so we store the color difference in that image.
+            this->computeColorDifference(preprocessedReference, preprocessedTest); 
 
             //  Feature (point/edge) filtering.
             const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
@@ -256,15 +256,14 @@ namespace FLIP
             image<color3> featureFilter(featureFilterWidth, 1);
             setFeatureFilter(featureFilter, ppd);
 
-            // The following call convolves referenceImage and testImage with the edge and point detection filters and performs additional computations for the final feature differences.
-            colorFeatureDifference.computeFeatureDifference(referenceImage, testImage, featureFilter);    // Compute and store the feature difference in colorFeatureDifference.y.
-
-            // Compute the final FLIP value given the color and feature differences.
-            this->finalError(colorFeatureDifference);
+            // The following call convolves referenceImage and testImage with the edge and point detection filters and performs additional
+            // computations for the final feature differences, and then computes the final FLIP error and stores in "this".
+            this->computeFeatureDifferenceAndFinalError(referenceImage, testImage, featureFilter);
         }
 
         // This includes convolution (using separable filtering) of grayRefImage and grayTestImage for both edge and point filtering.
-        void computeFeatureDifference(const image<color3>& grayRefImage, const image<color3>& grayTestImage, const image<color3>& featureFilter)
+        // In addition, it computes the final FLIP error and stores in "this".
+        void computeFeatureDifferenceAndFinalError(const image<color3>& grayRefImage, const image<color3>& grayTestImage, const image<color3>& featureFilter)
         {
             const float normalizationFactor = 1.0f / std::sqrt(2.0f);
             const int halfFilterWidth = featureFilter.getWidth() / 2;      // The edge and point filters are of the same size.
@@ -284,7 +283,7 @@ namespace FLIP
                 {
                     float  iEdgeRefX = 0.0f, iEdgeTestX = 0.0f, iPointRefX = 0.0f, iPointTestX = 0.0f;
                     float  refGaussianFiltered = 0.0f, testGaussianFiltered = 0.0f;
-                    
+
                     for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
                     {
                         int xx = Min(Max(0, x + ix), w - 1);
@@ -301,7 +300,7 @@ namespace FLIP
                         iEdgeTestX += featureWeights.y * grayTest;
                         iPointRefX += featureWeights.z * grayRef;
                         iPointTestX += featureWeights.z * grayTest;
-                        
+
                         refGaussianFiltered += featureWeights.x * grayRef;
                         testGaussianFiltered += featureWeights.x * grayTest;
                     }
@@ -350,31 +349,16 @@ namespace FLIP
                     const float pointDifference = std::abs(pointValueRef - pointValueTest);
 
                     const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), HostFLIPConstants.gqf);
+                    const float colorDifference = this->get(x, y);
 
-                    const float colorDifference = this->get(x, y).x;
-                    this->set(x, y, color3(colorDifference, featureDifference, 0.0f));
-                }
-            }
-        }
-
-        void finalError(image<color3>& colorFeatureDifference)
-        {
-#pragma omp parallel for
-            for (int y = 0; y < this->getHeight(); y++)
-            {
-                for (int x = 0; x < this->getWidth(); x++)
-                {
-                    const color3 colorFeatureDiff = colorFeatureDifference.get(x, y);
-                    const float cdiff = colorFeatureDiff.x;
-                    const float fdiff = colorFeatureDiff.y;
-                    const float errorFLIP = std::pow(cdiff, 1.0f - fdiff);
+                    const float errorFLIP = std::pow(colorDifference, 1.0f - featureDifference);
 
                     this->set(x, y, errorFLIP);
                 }
             }
         }
 
-        void computeColorDifference(image& reference, image& test)
+        void computeColorDifference(image<color3>& reference, image<color3>& test)
         {
             const float cmax = color3::computeMaxDistance(HostFLIPConstants.gqc);
             const float pccmax = HostFLIPConstants.gpc * cmax;
@@ -411,7 +395,7 @@ namespace FLIP
                         colorDifference = HostFLIPConstants.gpt + ((colorDifference - pccmax) / (cmax - pccmax)) * (1.0f - HostFLIPConstants.gpt);
                     }
 
-                    this->set(x, y, color3(colorDifference, 0.0f, 0.0f));
+                    this->set(x, y, colorDifference);
                 }
             }
         }

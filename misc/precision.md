@@ -14,5 +14,7 @@ These include:
    operation is also computed at higher precision. Since the CPU implementation may not use FMA, this is another source of difference
    between implementations.
 5. Depending on compiler flags, `sqrt()` may be computed using lower precision on GPUs.
+6. We have changed to using separable filters for faster performance, but that also gives rise to small errors.
+   In our tests, we have therefore updated the `images/correct_*.{png,exr}` images.
 
 That said, we have tried to make our implementations as close to each other as we could. There may still be differences.

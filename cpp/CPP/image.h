@@ -62,7 +62,7 @@ namespace FLIP
         color3 b1 = { 0.0047f, 0.0053f, 0.04f };
         color3 a2 = { 0.0f, 0.0f, 13.5f };
         color3 b2 = { 1.0e-5f, 1.0e-5f, 0.025f };
-    } GaussianConstants;  // constants for Gaussians -- see paper for details.
+    } GaussianConstants;  // Constants for Gaussians -- see paper for details.
 
     template<typename T>
     class image :
@@ -133,19 +133,19 @@ namespace FLIP
 
 
         //////////////////////////////////////////////////////////////////////////////////
-        static float Gaussian2D(const float x, const float y, const float sigma) // standard 2D Gaussian
+        static float Gaussian2D(const float x, const float y, const float sigma) // Standard 2D Gaussian.
         {
             return std::exp(-(x * x + y * y) / (2.0f * sigma * sigma));
         }
 
-        static float Gaussian(const float x2, const float a, const float b) // 1D Gaussian in alternative form (see FLIP paper)
+        static float Gaussian(const float x2, const float a, const float b) // 1D Gaussian in alternative form (see FLIP paper).
         {
             const float pi = float(PI);
             const float pi_sq = float(PI * PI);
             return a * std::sqrt(pi / b) * std::exp(-pi_sq * x2 / b);
         }
 
-        static float GaussianSqrt(const float x2, const float a, const float b) // Needed to separate sum of Gaussians filters
+        static float GaussianSqrt(const float x2, const float a, const float b) // Needed to separate sum of Gaussians filters.
         {
             const float pi = float(PI);
             const float pi_sq = float(PI * PI);
@@ -158,7 +158,7 @@ namespace FLIP
             const float pi_sq = float(PI * PI);
 
             float maxScaleParameter = std::max(std::max(std::max(GaussianConstants.b1.x, GaussianConstants.b1.y), std::max(GaussianConstants.b1.z, GaussianConstants.b2.x)), std::max(GaussianConstants.b2.y, GaussianConstants.b2.z));
-            int radius = int(std::ceil(3.0f * std::sqrt(maxScaleParameter / (2.0f * pi_sq)) * ppd)); // Set radius based on largest scale parameter
+            int radius = int(std::ceil(3.0f * std::sqrt(maxScaleParameter / (2.0f * pi_sq)) * ppd)); // Set radius based on largest scale parameter.
 
             return radius;
         }
@@ -187,7 +187,7 @@ namespace FLIP
                 filterSumBY += valueBY;
             }
 
-            // normalize weights
+            // Normalize weights.
             color3 normFactorARG = { 1.0f / filterSumARG.x, 1.0f / filterSumARG.y, 1.0f };
             float normFactorBY = 1.0f / std::sqrt(filterSumBY.x * filterSumBY.x + filterSumBY.y * filterSumBY.y);
             for (int x = 0; x < filterWidth; x++)
@@ -217,18 +217,18 @@ namespace FLIP
             {
                 int xx = x - radius;
 
-                // 0th derivative
+                // 0th derivative.
                 float G = Gaussian2D(float(xx), 0, stdDev);
                 weightSum += G;
 
-                // 1st derivative
+                // 1st derivative.
                 weight1 = -float(xx) * G;
                 if (weight1 > 0.0f)
                     positiveWeightsSum1 += weight1;
                 else
                     negativeWeightsSum1 += -weight1;
 
-                // 2nd derivative
+                // 2nd derivative.
                 weight2 = (float(xx) * float(xx) / (stdDev * stdDev) - 1.0f) * G;
                 if (weight2 > 0.0f)
                     positiveWeightsSum2 += weight2;
@@ -251,43 +251,45 @@ namespace FLIP
             int width = reference.getWidth();
             int height = reference.getHeight();
 
-            //  temporary images (on device)
+            //  Temporary images.
             image<color3> referenceImage(reference), testImage(test);
             image<color3> preprocessedReference(width, height), preprocessedTest(width, height);
             image<color3> colorFeatureDifference(width, height);    // .x == color diff, .y == feature diff.
 
-            //  move from sRGB to YCxCz
+            //  Transform from sRGB to YCxCz.
             referenceImage.sRGB2YCxCz();
             testImage.sRGB2YCxCz();
 
-            //  spatial filtering
+            //  Spatial filtering.
             int spatialFilterRadius = calculateSpatialFilterRadius(ppd);
             int spatialFilterWidth = 2 * spatialFilterRadius + 1;
             image<color3> spatialFilterARG(spatialFilterWidth, 1);
             image<color3> spatialFilterBY(spatialFilterWidth, 1);
             setSpatialFilters(spatialFilterARG, spatialFilterBY, ppd, spatialFilterRadius);
-            convolve2images(referenceImage, preprocessedReference, testImage, preprocessedTest, spatialFilterARG, spatialFilterBY);
+            convolve2images(referenceImage, preprocessedReference, testImage, preprocessedTest, spatialFilterARG, spatialFilterBY); // Performs spatial filtering on both the reference and test image at the same time (for better performance).
 
-            //  color difference
-            colorFeatureDifference.computeColorDifference(preprocessedReference, preprocessedTest);
+            //  Compute color difference.
+            colorFeatureDifference.computeColorDifference(preprocessedReference, preprocessedTest);     // Compute and store the color difference in colorFeatureDifference.x.
 
-            //  feature (point/edge) filtering
+            //  Feature (point/edge) filtering.
             const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
             const int featureFilterRadius = int(std::ceil(3.0f * stdDev));
             int featureFilterWidth = 2 * featureFilterRadius + 1;
             image<color3> featureFilter(featureFilterWidth, 1);
             setFeatureFilter(featureFilter, ppd);
 
-            //  grayscale images needed for feature detection
+            //  Grayscale images needed for feature detection.
             image<color3> grayReference(width, height), grayTest(width, height);
             grayReference.YCxCz2Gray(referenceImage);
             grayTest.YCxCz2Gray(testImage);
 
-            colorFeatureDifference.computeFeatureDifference(grayReference, grayTest, featureFilter);
+            // The following call convolves grayReference and grayTest with the edge and point detection filters and performs additional computations for the final color & feature differences.
+            colorFeatureDifference.computeFeatureDifference(grayReference, grayTest, featureFilter);    // Compute and store the feature difference in colorFeatureDifference.y.
 
             this->finalError(colorFeatureDifference);
         }
 
+        // This includes convolution (using separable filtering) of grayRefImage and grayTestImage for both edge and point filtering.
         void computeFeatureDifference(const image<color3>& grayRefImage, const image<color3>& grayTestImage, const image<color3>& featureFilter)
         {
             const float normalizationFactor = 1.0f / std::sqrt(2.0f);
@@ -298,7 +300,7 @@ namespace FLIP
             image<color3> iRefFeatures(w, h);
             image<color3> iTestFeatures(w, h);
 
-            // convolve in x direction (1st and 2nd derivative for filter in x direction, 0th derivative for filter in y direction)
+            // Convolve in x direction (1st and 2nd derivative for filter in x direction, 0th derivative for filter in y direction).
 #pragma omp parallel for
             for (int y = 0; y < h; y++)
             {
@@ -329,7 +331,7 @@ namespace FLIP
                 }
             }
 
-            // convolve in y direction (1st and 2nd derivative for filter in y direction, 0th derivative for filter in x direction), then compute difference
+            // Convolve in y direction (1st and 2nd derivative for filter in y direction, 0th derivative for filter in x direction), then compute difference.
 #pragma omp parallel for
             for (int y = 0; y < h; y++)
             {
@@ -402,11 +404,11 @@ namespace FLIP
                     color3 refPixel = reference.get(x, y);
                     color3 testPixel = test.get(x, y);
 
-                    //  move from linear RGB to CIELab
+                    //  Transform from linear RGB to CIELab.
                     refPixel = color3::XYZ2CIELab(color3::LinearRGB2XYZ(refPixel));
                     testPixel = color3::XYZ2CIELab(color3::LinearRGB2XYZ(testPixel));
 
-                    // Hunt adjustment
+                    // Hunt adjustment.
                     refPixel.y = color3::Hunt(refPixel.x, refPixel.y);
                     refPixel.z = color3::Hunt(refPixel.x, refPixel.z);
                     testPixel.y = color3::Hunt(testPixel.x, testPixel.y);
@@ -417,7 +419,7 @@ namespace FLIP
                     colorDifference = powf(colorDifference, HostFLIPConstants.gqc);
 
                     // Re-map error to the [0, 1] range. Values between 0 and pccmax are mapped to the range [0, gpt],
-                    // while the rest are mapped to the range (gpt, 1]
+                    // while the rest are mapped to the range (gpt, 1].
                     if (colorDifference < pccmax)
                     {
                         colorDifference *= HostFLIPConstants.gpt / pccmax;
@@ -428,21 +430,6 @@ namespace FLIP
                     }
 
                     this->set(x, y, color3(colorDifference, 0.0f, 0.0f));
-                }
-            }
-        }
-
-        void huntAdjustment(void)
-        {
-#pragma omp parallel for
-            for (int y = 0; y < this->getHeight(); y++)
-            {
-                for (int x = 0; x < this->getWidth(); x++)
-                {
-                    color3 pixel = this->get(x, y);
-                    pixel.y = color3::Hunt(pixel.x, pixel.y);
-                    pixel.z = color3::Hunt(pixel.x, pixel.z);
-                    this->set(x , y, pixel);
                 }
             }
         }
@@ -606,6 +593,8 @@ namespace FLIP
 
     };
 
+    // Performs spatial filtering on both the reference and test image at the same time (for better performance).
+    // Filtering has been changed to using separable filtering (also done for better performance).
     static void convolve2images(const FLIP::image<color3>& input1, FLIP::image<color3>& output1, const FLIP::image<color3>& input2, FLIP::image<color3>& output2, const FLIP::image<color3>& filterARG, const FLIP::image<color3>& filterBY)
     {
         const int halfFilterWidth = filterARG.getWidth() / 2; // ARG and BY filters are same size
@@ -618,7 +607,7 @@ namespace FLIP
         image<color3> iImageARG2(w, h);
         image<color3> iImageBY2(w, h);
 
-        // filter in x direction
+        // Filter in x direction.
 #pragma omp parallel for
         for (int y = 0; y < h; y++)
         {
@@ -651,7 +640,7 @@ namespace FLIP
             }
         }
 
-        // filter in y direction
+        // Filter in y direction.
 #pragma omp parallel for
         for (int y = 0; y < h; y++)
         {
@@ -679,7 +668,7 @@ namespace FLIP
                     colorSumBY2 += color3(weightsBY.x * iColorBY2.x, weightsBY.y * iColorBY2.y, 0.0f);
                 }
 
-                // Clamp to [0,1] in linear RGB
+                // Clamp to [0,1] in linear RGB.
                 color3 color1 = color3(colorSumARG1.x, colorSumARG1.y, colorSumBY1.x + colorSumBY1.y);
                 color3 color2 = color3(colorSumARG2.x, colorSumARG2.y, colorSumBY2.x + colorSumBY2.y);
                 color1 = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(color1)));

@@ -269,7 +269,8 @@ namespace FLIP
             image<color3> spatialFilterARG(spatialFilterWidth, 1);
             image<color3> spatialFilterBY(spatialFilterWidth, 1);
             setSpatialFilters(spatialFilterARG, spatialFilterBY, ppd, spatialFilterRadius);
-            convolve2images(referenceImage, preprocessedReference, testImage, preprocessedTest, spatialFilterARG, spatialFilterBY); // Performs spatial filtering on both the reference and test image at the same time (for better performance).
+            // The next call performs spatial filtering on both the reference and test image at the same time (for better performance).
+            convolve2images(referenceImage, preprocessedReference, testImage, preprocessedTest, spatialFilterARG, spatialFilterBY);
 
             //  Compute color difference.
             colorFeatureDifference.computeColorDifference(preprocessedReference, preprocessedTest);     // Compute and store the color difference in colorFeatureDifference.x.

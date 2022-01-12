@@ -59,6 +59,10 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
  
 1. Pierre Moreau, ["Towards Fully Dynamic Surface Illumination in Real-Time Rendering using Acceleration Data Structures"](https://fileadmin.cs.lth.se/graphics/research/papers/2022/phd_pm/PhD_thesis_Pierre_Moreau.pdf), PhD thesis, Lund University, 2022.
 
+1. Mick van der Spoel, Marijn van Wingerden, and L.L. Sharon Ong, ["Comparing loss functions for optimization of generative adversarial networks for MR-contrast image-to-image translation"](https://openreview.net/pdf?id=J5F7GFz8jvf), Proceedings of Machine Learning, 2022.
+
+1. Mikhail Derevyannykh, ["Real-Time Path-Guiding Based on Parametric Mixture Models"](https://arxiv.org/pdf/2112.09728.pdf), arXiv:2112.09728, 2021.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

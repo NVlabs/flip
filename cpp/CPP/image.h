@@ -62,7 +62,7 @@ namespace FLIP
         color3 b1 = { 0.0047f, 0.0053f, 0.04f };
         color3 a2 = { 0.0f, 0.0f, 13.5f };
         color3 b2 = { 1.0e-5f, 1.0e-5f, 0.025f };
-    } GaussianConstants;  // Constants for Gaussians -- see paper for details.
+    } GaussianConstants;  // Constants for Gaussians -- see the FLIP paper for details.
 
     template<typename T>
     class image :
@@ -599,8 +599,8 @@ namespace FLIP
 
     };
 
-    // Performs spatial filtering on both the reference and test image at the same time (for better performance).
-    // Filtering has been changed to using separable filtering (also done for better performance).
+    // Performs spatial filtering (and clamps the results) on both the reference and test image at the same time (for better performance).
+    // Filtering has been changed to separable filtering for better performance.
     // For details on the convolution, see the note on separable filters in the FLIP repository.
     static void convolve2images(const FLIP::image<color3>& input1, FLIP::image<color3>& output1, const FLIP::image<color3>& input2, FLIP::image<color3>& output2, const FLIP::image<color3>& filterARG, const FLIP::image<color3>& filterBY)
     {

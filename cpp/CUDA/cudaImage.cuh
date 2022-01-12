@@ -62,7 +62,7 @@ namespace FLIP
         float3 b1 = { 0.0047f, 0.0053f, 0.04f };
         float3 a2 = { 0.0f, 0.0f, 13.5f };
         float3 b2 = { 1.0e-5f, 1.0e-5f, 0.025f };
-    } GaussianConstants;  // Constants for Gaussians -- see paper for details.
+    } GaussianConstants;  // Constants for Gaussians -- see the FLIP paper for details.
 
     template<typename T>
     class image :
@@ -450,14 +450,14 @@ namespace FLIP
         return a * std::sqrt(pi / b) * std::exp(-pi_sq * x2 / b);
     }
 
-    static float GaussianSqrt(const float x2, const float a, const float b) // Needed to separate sum of Gaussians filters.
+    static float GaussianSqrt(const float x2, const float a, const float b) // Needed to separate sum of Gaussians filters (see note on separable filters in the FLIP repository).
     {
         const float pi = float(PI);
         const float pi_sq = float(PI * PI);
         return std::sqrt(a * std::sqrt(pi / b)) * std::exp(-pi_sq * x2 / b);
     }
 
-    static void setSpatialFilters(image<color3>& filterARG, image<color3>& filterBY, float ppd, int filterRadius)
+    static void setSpatialFilters(image<color3>& filterARG, image<color3>& filterBY, float ppd, int filterRadius) // For details, see the note on separable filters in the FLIP repository.
     {
         float deltaX = 1.0f / ppd;
         color3 filterSumARG = { 0.0f, 0.0f, 0.0f };
@@ -532,6 +532,7 @@ namespace FLIP
             filter.set(x, 0, color3(G, weight1, weight2));
         }
 
+        // Normalize weights (0th derivative should sum to 1; postive and negative weights of 1st and 2nd derivative should sum to 1 and -1, respectively).
         for (int x = 0; x < width; x++)
         {
             color3 p = filter.get(x, 0);
@@ -551,19 +552,21 @@ namespace FLIP
         //  Temporary images (on device).
         image<color3> referenceImage(reference), testImage(test);
         image<color3> preprocessedReferenceARG(width, height), preprocessedReferenceBY(width, height), preprocessedReference(width, height), preprocessedTestARG(width, height), preprocessedTestBY(width, height), preprocessedTest(width, height);
+        image<color3> grayReference(width, height), grayTest(width, height);
         image<color3> colorFeatureDifference(width, height);
 
         //  Transform from sRGB to YCxCz.
         referenceImage.sRGB2YCxCz();
         testImage.sRGB2YCxCz();
 
-        //  Spatial filtering.
+        // Spatial filtering. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
+        // (ARG for the Achromatic and Red-Green channels and BY for the Blue-Yellow channel). For details, see the note on separable filters in the FLIP repository.
         int spatialFilterRadius = calculateSpatialFilterRadius(ppd);
         int spatialFilterWidth = 2 * spatialFilterRadius + 1;
         image<color3> spatialFilterARG(spatialFilterWidth, 1);
         image<color3> spatialFilterBY(spatialFilterWidth, 1);
         setSpatialFilters(spatialFilterARG, spatialFilterBY, ppd, spatialFilterRadius);
-        // The next two call performs separable spatial filtering on both the reference and test image at the same time (for better performance).
+        // The next two calls perform separable spatial filtering on both the reference and test image at the same time (for better performance).
         FLIP::image<color3>::spatialFilterFirstDir(referenceImage, preprocessedReferenceARG, preprocessedReferenceBY, testImage, preprocessedTestARG, preprocessedTestBY, spatialFilterARG, spatialFilterBY);
         FLIP::image<color3>::spatialFilterSecondDir(preprocessedReferenceARG, preprocessedReferenceBY, preprocessedReference, preprocessedTestARG, preprocessedTestBY, preprocessedTest, spatialFilterARG, spatialFilterBY);
 
@@ -576,13 +579,10 @@ namespace FLIP
         int featureFilterWidth = 2 * featureFilterRadius + 1;
         image<color3> featureFilter(featureFilterWidth, 1);
         setFeatureFilter(featureFilter, ppd);
-
-        //  Grayscale images needed for feature detection.
-        image<color3> grayReference(width, height), grayTest(width, height);
         grayReference.YCxCz2Gray(referenceImage);
         grayTest.YCxCz2Gray(testImage);
 
-        // The following two call convolves (separably) grayReference and grayTest with the edge and point detection filters and performs additional computations for the final color & feature differences.
+        // The following two calls convolve (separably) grayReference and grayTest with the edge and point detection filters and performs additional computations for the feature differences.
         image<color3> iFeaturesReference(width, height), iFeaturesTest(width, height);
         FLIP::image<color3>::featureFilterFirstDir(grayReference, iFeaturesReference, grayTest, iFeaturesTest, featureFilter);
         FLIP::image<color3>::featureFilterSecondDirAndFeatureDifference(iFeaturesReference, iFeaturesTest, colorFeatureDifference, featureFilter);

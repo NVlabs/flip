@@ -1,4 +1,3 @@
-""" FLIP metric test script """
 #################################################################################
 # Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -38,8 +37,8 @@
 
 # Visualizing Errors in Rendered High Dynamic Range Images
 # Eurographics 2021,
-# by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller,
-# Pointer to the paper: https://research.nvidia.com/publication/2021-05_HDR-FLIP
+# by Pontus Andersson, Jim Nilsson, Peter Shirley, and Tomas Akenine-Moller.
+# Pointer to the paper: https://research.nvidia.com/publication/2021-05_HDR-FLIP.
 
 # FLIP: A Difference Evaluator for Alternating Images
 # High Performance Graphics 2020,
@@ -47,42 +46,72 @@
 # Magnus Oskarsson, Kalle Astrom, and Mark D. Fairchild.
 # Pointer to the paper: https://research.nvidia.com/publication/2020-07_FLIP.
 
-# Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller
+# Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
 
 import subprocess
-import filecmp
 import os
+import sys
+sys.path.insert(1, '../python')
+from data import *
 
 if __name__ == '__main__':
 	"""
-	Test script. Add tests by appending descriptions to the test_description list,
-	and set up tests (results should be booleans - True if test passed, False otherwise).
-	Add results to the test_results list. Printed output will show which tests succeed and
-	which fail.
+	Test script. Runs flip.py from the python directory for both LDR and HDR.
+    Both the mean FLIP is tested and the pixel values from the resulting FLIP images.
 	"""
-	# Test descriptions
-	test_descriptions = []
-	test_descriptions.append("HDR-FLIP output matches reference HDR-FLIP output")
-	test_descriptions.append("LDR-FLIP output matches reference LDR-FLIP output")
 
-	print("Running tests...")
-	print("================")
+	# Set up test results
+	test_results = []
+
+	print("Running Python tests...")
+	print("========================")
+
+	# Load correct LDR/HDR FLIP image in the images directory
+	ldr_correct_result = load_image_array('../images/correct_ldrflip_python.png') # LDR, sRGB
+	hdr_correct_result = load_image_array('../images/correct_hdrflip_python.png') # HDR
 
 	# Run the image pairs in the images directory
-	subprocess.run("python flip.py --reference ../images/reference.exr --test ../images/test.exr -v 0 --no_exposure_map --directory ../images")
-	subprocess.run("python flip.py --reference ../images/reference.png --test ../images/test.png -v 0 --directory ../images")
+	ldr_process = subprocess.run("python ../python/flip.py --reference ../images/reference.png --test ../images/test.png --directory ../images", stdout=subprocess.PIPE, text=True)
+	hdr_process = subprocess.run("python ../python/flip.py --reference ../images/reference.exr --test ../images/test.exr --no_exposure_map --directory ../images", stdout=subprocess.PIPE, text=True)
 
-	# Compare output to reference output
-	test_results = []
-	test_results.append(filecmp.cmp('../images/correct_hdrflip_python.png', '../images/flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png'))
-	test_results.append(filecmp.cmp('../images/correct_ldrflip_python.png', '../images/flip.reference.test.67ppd.ldr.png'))
+	ldr_result_strings = ldr_process.stdout.split('\n')
+	subpos = ldr_result_strings[4].find(':')
+	ldr_mean = float(ldr_result_strings[4][subpos + 2 : len(ldr_result_strings[4])])
 
-	for idx, passed in enumerate(test_results):
-		print("%s test %d - %s" % (("PASSED" if passed else "FAILED"), idx, test_descriptions[idx]))
+	hdr_result_strings = hdr_process.stdout.split('\n')
+	subpos = hdr_result_strings[8].find(':')
+	hdr_mean = float(hdr_result_strings[8][subpos + 2 : len(hdr_result_strings[4])])
+
+   # Load the images that were just created.
+	result_ldr_file = "../images/flip.reference.test.67ppd.ldr.png"
+	result_hdr_file = "../images/flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png"
+	ldr_new_result = load_image_array(result_ldr_file) # LDR, sRGB
+	hdr_new_result = load_image_array(result_hdr_file) # HDR
+
+	if((abs(ldr_correct_result - ldr_new_result) > 0).any()):
+		print("LDR: FAILED per-pixel test on FLIP images.")
+	else:
+		print("LDR: PASSED per-pixel test on FLIP images.")
+
+	if(ldr_mean != 0.159693):
+		print("LDR: FAILED mean test.")
+	else:
+		print("LDR: PASSED mean test.")
+
+	if((abs(hdr_correct_result - hdr_new_result) > 0).any()):
+		print("HDR: FAILED per-pixel test on FLIP images.")
+	else:
+		print("HDR: PASSED per-pixel test on FLIP images.")
+
+	if(hdr_mean != 0.283547):
+		print("HDR: FAILED mean test.")
+	else:
+		print("HDr: PASSED mean test.")
 
 	# Remove output created during tests
-	os.remove('../images/flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png')
-	os.remove('../images/flip.reference.test.67ppd.ldr.png')
+	os.remove(result_ldr_file)
+	os.remove(result_hdr_file)
 
-	print("================")
+	print("========================")
 	print("Tests complete!")
+

@@ -50,7 +50,6 @@
 
 import subprocess
 import os
-import numpy as np
 import sys
 sys.path.insert(1, '../python')
 from data import *
@@ -60,6 +59,7 @@ if __name__ == '__main__':
 	Test script. Runs flip-cuda.exe from the cpp/x64/release/-directory for both LDR and HDR.
     Both the mean FLIP is tested and the pixel values from the resulting FLIP images.
 	"""
+
 	# Set up test results
 	test_results = []
 
@@ -83,8 +83,8 @@ if __name__ == '__main__':
 	hdr_mean = float(hdr_result_strings[8][subpos + 2 : len(hdr_result_strings[4])])
 
    # Load the images that were just created.
-	result_ldr_file = "../images/flip.reference.test.67ppd.ldr.png";
-	result_hdr_file = "../images/flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png";
+	result_ldr_file = "../images/flip.reference.test.67ppd.ldr.png"
+	result_hdr_file = "../images/flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png"
 	ldr_new_result = load_image_array(result_ldr_file) # LDR, sRGB
 	hdr_new_result = load_image_array(result_hdr_file) # HDR
 

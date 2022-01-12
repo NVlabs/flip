@@ -1,4 +1,3 @@
-""" FLIP metric test script """
 #################################################################################
 # Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -38,8 +37,8 @@
 
 # Visualizing Errors in Rendered High Dynamic Range Images
 # Eurographics 2021,
-# by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller,
-# Pointer to the paper: https://research.nvidia.com/publication/2021-05_HDR-FLIP
+# by Pontus Andersson, Jim Nilsson, Peter Shirley, and Tomas Akenine-Moller.
+# Pointer to the paper: https://research.nvidia.com/publication/2021-05_HDR-FLIP.
 
 # FLIP: A Difference Evaluator for Alternating Images
 # High Performance Graphics 2020,
@@ -47,11 +46,12 @@
 # Magnus Oskarsson, Kalle Astrom, and Mark D. Fairchild.
 # Pointer to the paper: https://research.nvidia.com/publication/2020-07_FLIP.
 
-# Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller
+# Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
 
-import subprocess
-import filecmp
-import os
+import sys
+sys.path.insert(1, '../pytorch')
+from flip_loss import LDRFLIPLoss, HDRFLIPLoss
+from data import *
 
 if __name__ == '__main__':
 	"""
@@ -65,24 +65,30 @@ if __name__ == '__main__':
 	test_descriptions.append("HDR-FLIP output matches reference HDR-FLIP output")
 	test_descriptions.append("LDR-FLIP output matches reference LDR-FLIP output")
 
+	# Set up test results
+	test_results = []
+
 	print("Running tests...")
 	print("================")
 
+	# HDR test
 	# Run the image pairs in the images directory
-	subprocess.run("python flip.py --reference ../images/reference.exr --test ../images/test.exr -v 0 --no_exposure_map --directory ../images")
-	subprocess.run("python flip.py --reference ../images/reference.png --test ../images/test.png -v 0 --directory ../images")
+	hdr_reference = read_exr('../images/reference.exr') # EXR
+	hdr_test = read_exr('../images/test.exr') # EXR
+	hdrflip_loss_fn = HDRFLIPLoss()
+	hdrflip_loss = hdrflip_loss_fn(hdr_test, hdr_reference)
+	test_results.append(round(hdrflip_loss.item(), 4) == 0.2835)
 
-	# Compare output to reference output
-	test_results = []
-	test_results.append(filecmp.cmp('../images/correct_hdrflip_python.png', '../images/flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png'))
-	test_results.append(filecmp.cmp('../images/correct_ldrflip_python.png', '../images/flip.reference.test.67ppd.ldr.png'))
+	# LDR test
+	# Run the image pairs in the images directory
+	ldr_reference = load_image_tensor('../images/reference.png') # sRGB
+	ldr_test = load_image_tensor('../images/test.png') # sRGB
+	ldrflip_loss_fn = LDRFLIPLoss()
+	ldrflip_loss = ldrflip_loss_fn(ldr_test, ldr_reference)
+	test_results.append(round(ldrflip_loss.item(), 4) == 0.1597)
 
 	for idx, passed in enumerate(test_results):
-		print("%s test %d - %s" % (("PASSED" if passed else "FAILED"), idx, test_descriptions[idx]))
-
-	# Remove output created during tests
-	os.remove('../images/flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png')
-	os.remove('../images/flip.reference.test.67ppd.ldr.png')
+		print(("PASSED " if passed else "FAILED ") + "test " + str(idx) + " - " + test_descriptions[idx])
 
 	print("================")
 	print("Tests complete!")

@@ -57,5 +57,5 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
   **NOTE:** When start and/or stop exposures are not provided, HDR-ꟻLIP is not symmetric. The
   user should therefore make sure to input the test images as the *first* argument and the reference image
   as the *second* argument to the `HDRFLIPLoss`'s `forward()` function.
-- `tests.py` contains simple tests used to check that code updates do not alter results and
+- `../tests/test_pytorch.py` contains simple tests used to test whether code updates alter results and
   `data.py` contains image loading/saving functions.

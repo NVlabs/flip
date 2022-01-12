@@ -236,18 +236,17 @@ namespace FLIP
             referenceImage.sRGB2YCxCz();
             testImage.sRGB2YCxCz();
 
-            // Spatial filtering. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
+            // Prepare spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
             // (ARG for the Achromatic and Red-Green channels and BY for the Blue-Yellow channel).
             int spatialFilterRadius = calculateSpatialFilterRadius(ppd);
             int spatialFilterWidth = 2 * spatialFilterRadius + 1;
             image<color3> spatialFilterARG(spatialFilterWidth, 1);
             image<color3> spatialFilterBY(spatialFilterWidth, 1);
             setSpatialFilters(spatialFilterARG, spatialFilterBY, ppd, spatialFilterRadius);
-            // The next call performs spatial filtering on both the reference and test image at the same time (for better performance).
-            convolve2images(referenceImage, preprocessedReference, testImage, preprocessedTest, spatialFilterARG, spatialFilterBY);
 
-            //  Compute color difference.
-            colorFeatureDifference.computeColorDifference(preprocessedReference, preprocessedTest);     // Compute and store the color difference in colorFeatureDifference.x.
+            // The next call performs spatial filtering on both the reference and test image at the same time (for better performance).
+            // It then computes the color difference between the images.
+            colorFeatureDifference.computeColorDifference(referenceImage, testImage, spatialFilterARG, spatialFilterBY);
 
             //  Feature (point/edge) filtering.
             const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
@@ -374,30 +373,105 @@ namespace FLIP
             }
         }
 
-        void computeColorDifference(image& reference, image& test)
+
+        // Performs spatial filtering (and clamps the results) on both the reference and test image at the same time (for better performance).
+        // Filtering has been changed to separable filtering for better performance. For details on the convolution, see the note on separable filters in the FLIP repository.
+        // After filtering, compute color differences.
+        void computeColorDifference(const FLIP::image<color3>& input1, const FLIP::image<color3>& input2, const FLIP::image<color3>& filterARG, const FLIP::image<color3>& filterBY)
         {
+            // Color difference constants
             const float cmax = color3::computeMaxDistance(HostFLIPConstants.gqc);
             const float pccmax = HostFLIPConstants.gpc * cmax;
+
+            const int halfFilterWidth = filterARG.getWidth() / 2; // ARG and BY filters are same size
+
+            const int w = input1.getWidth();
+            const int h = input1.getHeight();
+
+            image<color3> iImageARG1(w, h);
+            image<color3> iImageBY1(w, h);
+            image<color3> iImageARG2(w, h);
+            image<color3> iImageBY2(w, h);
+
+            // Filter in x direction.
 #pragma omp parallel for
-            for (int y = 0; y < this->getHeight(); y++)
+            for (int y = 0; y < h; y++)
             {
-                for (int x = 0; x < this->getWidth(); x++)
+                for (int x = 0; x < w; x++)
                 {
-                    color3 refPixel = reference.get(x, y);
-                    color3 testPixel = test.get(x, y);
+                    color3 colorSumARG1 = { 0.0f, 0.0f, 0.0f };
+                    color3 colorSumBY1 = { 0.0f, 0.0f, 0.0f };
+                    color3 colorSumARG2 = { 0.0f, 0.0f, 0.0f };
+                    color3 colorSumBY2 = { 0.0f, 0.0f, 0.0f };
+
+                    for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
+                    {
+                        int xx = Min(Max(0, x + ix), w - 1);
+
+                        const color3 weightsARG = filterARG.get(ix + halfFilterWidth, 0);
+                        const color3 weightsBY = filterBY.get(ix + halfFilterWidth, 0);
+                        const color3 srcColor1 = input1.get(xx, y);
+                        const color3 srcColor2 = input2.get(xx, y);
+
+                        colorSumARG1 += color3(weightsARG.x * srcColor1.x, weightsARG.y * srcColor1.y, 0.0f);
+                        colorSumBY1 += color3(weightsBY.x * srcColor1.z, weightsBY.y * srcColor1.z, 0.0f);
+                        colorSumARG2 += color3(weightsARG.x * srcColor2.x, weightsARG.y * srcColor2.y, 0.0f);
+                        colorSumBY2 += color3(weightsBY.x * srcColor2.z, weightsBY.y * srcColor2.z, 0.0f);
+                    }
+
+                    iImageARG1.set(x, y, colorSumARG1);
+                    iImageBY1.set(x, y, colorSumBY1);
+                    iImageARG2.set(x, y, colorSumARG2);
+                    iImageBY2.set(x, y, colorSumBY2);
+                }
+            }
+
+            // Filter in y direction.
+#pragma omp parallel for
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    color3 colorSumARG1 = { 0.0f, 0.0f, 0.0f };
+                    color3 colorSumBY1 = { 0.0f, 0.0f, 0.0f };
+                    color3 colorSumARG2 = { 0.0f, 0.0f, 0.0f };
+                    color3 colorSumBY2 = { 0.0f, 0.0f, 0.0f };
+
+                    for (int iy = -halfFilterWidth; iy <= halfFilterWidth; iy++)
+                    {
+                        int yy = Min(Max(0, y + iy), h - 1);
+
+                        const color3 weightsARG = filterARG.get(iy + halfFilterWidth, 0);
+                        const color3 weightsBY = filterBY.get(iy + halfFilterWidth, 0);
+                        const color3 iColorARG1 = iImageARG1.get(x, yy);
+                        const color3 iColorBY1 = iImageBY1.get(x, yy);
+                        const color3 iColorARG2 = iImageARG2.get(x, yy);
+                        const color3 iColorBY2 = iImageBY2.get(x, yy);
+
+                        colorSumARG1 += color3(weightsARG.x * iColorARG1.x, weightsARG.y * iColorARG1.y, 0.0f);
+                        colorSumBY1 += color3(weightsBY.x * iColorBY1.x, weightsBY.y * iColorBY1.y, 0.0f);
+                        colorSumARG2 += color3(weightsARG.x * iColorARG2.x, weightsARG.y * iColorARG2.y, 0.0f);
+                        colorSumBY2 += color3(weightsBY.x * iColorBY2.x, weightsBY.y * iColorBY2.y, 0.0f);
+                    }
+
+                    // Clamp to [0,1] in linear RGB.
+                    color3 color1 = color3(colorSumARG1.x, colorSumARG1.y, colorSumBY1.x + colorSumBY1.y);
+                    color3 color2 = color3(colorSumARG2.x, colorSumARG2.y, colorSumBY2.x + colorSumBY2.y);
+                    color1 = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(color1)));
+                    color2 = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(color2)));
 
                     //  Transform from linear RGB to CIELab.
-                    refPixel = color3::XYZ2CIELab(color3::LinearRGB2XYZ(refPixel));
-                    testPixel = color3::XYZ2CIELab(color3::LinearRGB2XYZ(testPixel));
+                    color1 = color3::XYZ2CIELab(color3::LinearRGB2XYZ(color1));
+                    color2 = color3::XYZ2CIELab(color3::LinearRGB2XYZ(color2));
 
                     // Apply Hunt adjustment.
-                    refPixel.y = color3::Hunt(refPixel.x, refPixel.y);
-                    refPixel.z = color3::Hunt(refPixel.x, refPixel.z);
-                    testPixel.y = color3::Hunt(testPixel.x, testPixel.y);
-                    testPixel.z = color3::Hunt(testPixel.x, testPixel.z);
+                    color1.y = color3::Hunt(color1.x, color1.y);
+                    color1.z = color3::Hunt(color1.x, color1.z);
+                    color2.y = color3::Hunt(color2.x, color2.y);
+                    color2.z = color3::Hunt(color2.x, color2.z);
 
-                    float colorDifference = color3::HyAB(refPixel, testPixel);
-
+                    // Compute color difference
+                    float colorDifference = color3::HyAB(color1, color2);
                     colorDifference = powf(colorDifference, HostFLIPConstants.gqc);
 
                     // Re-map error to the [0, 1] range. Values between 0 and pccmax are mapped to the range [0, gpt],
@@ -559,94 +633,6 @@ namespace FLIP
         }
 
     };
-
-    // Performs spatial filtering (and clamps the results) on both the reference and test image at the same time (for better performance).
-    // Filtering has been changed to separable filtering for better performance.
-    // For details on the convolution, see the note on separable filters in the FLIP repository.
-    static void convolve2images(const FLIP::image<color3>& input1, FLIP::image<color3>& output1, const FLIP::image<color3>& input2, FLIP::image<color3>& output2, const FLIP::image<color3>& filterARG, const FLIP::image<color3>& filterBY)
-    {
-        const int halfFilterWidth = filterARG.getWidth() / 2; // ARG and BY filters are same size
-
-        const int w = input1.getWidth();
-        const int h = input1.getHeight();
-
-        image<color3> iImageARG1(w, h);
-        image<color3> iImageBY1(w, h);
-        image<color3> iImageARG2(w, h);
-        image<color3> iImageBY2(w, h);
-
-        // Filter in x direction.
-#pragma omp parallel for
-        for (int y = 0; y < h; y++)
-        {
-            for (int x = 0; x < w; x++)
-            {
-                color3 colorSumARG1 = { 0.0f, 0.0f, 0.0f };
-                color3 colorSumBY1 = { 0.0f, 0.0f, 0.0f };
-                color3 colorSumARG2 = { 0.0f, 0.0f, 0.0f };
-                color3 colorSumBY2 = { 0.0f, 0.0f, 0.0f };
-
-                for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
-                {
-                    int xx = Min(Max(0, x + ix), w - 1);
-
-                    const color3 weightsARG = filterARG.get(ix + halfFilterWidth, 0);
-                    const color3 weightsBY = filterBY.get(ix + halfFilterWidth, 0);
-                    const color3 srcColor1 = input1.get(xx, y);
-                    const color3 srcColor2 = input2.get(xx, y);
-
-                    colorSumARG1 += color3(weightsARG.x * srcColor1.x, weightsARG.y * srcColor1.y, 0.0f);
-                    colorSumBY1 += color3(weightsBY.x * srcColor1.z, weightsBY.y * srcColor1.z, 0.0f);
-                    colorSumARG2 += color3(weightsARG.x * srcColor2.x, weightsARG.y * srcColor2.y, 0.0f);
-                    colorSumBY2 += color3(weightsBY.x * srcColor2.z, weightsBY.y * srcColor2.z, 0.0f);
-                }
-
-                iImageARG1.set(x, y, colorSumARG1);
-                iImageBY1.set(x, y, colorSumBY1);
-                iImageARG2.set(x, y, colorSumARG2);
-                iImageBY2.set(x, y, colorSumBY2);
-            }
-        }
-
-        // Filter in y direction.
-#pragma omp parallel for
-        for (int y = 0; y < h; y++)
-        {
-            for (int x = 0; x < w; x++)
-            {
-                color3 colorSumARG1 = { 0.0f, 0.0f, 0.0f };
-                color3 colorSumBY1 = { 0.0f, 0.0f, 0.0f };
-                color3 colorSumARG2 = { 0.0f, 0.0f, 0.0f };
-                color3 colorSumBY2 = { 0.0f, 0.0f, 0.0f };
-
-                for (int iy = -halfFilterWidth; iy <= halfFilterWidth; iy++)
-                {
-                    int yy = Min(Max(0, y + iy), h - 1);
-
-                    const color3 weightsARG = filterARG.get(iy + halfFilterWidth, 0);
-                    const color3 weightsBY = filterBY.get(iy + halfFilterWidth, 0);
-                    const color3 iColorARG1 = iImageARG1.get(x, yy);
-                    const color3 iColorBY1 = iImageBY1.get(x, yy);
-                    const color3 iColorARG2 = iImageARG2.get(x, yy);
-                    const color3 iColorBY2 = iImageBY2.get(x, yy);
-
-                    colorSumARG1 += color3(weightsARG.x * iColorARG1.x, weightsARG.y * iColorARG1.y, 0.0f);
-                    colorSumBY1 += color3(weightsBY.x * iColorBY1.x, weightsBY.y * iColorBY1.y, 0.0f);
-                    colorSumARG2 += color3(weightsARG.x * iColorARG2.x, weightsARG.y * iColorARG2.y, 0.0f);
-                    colorSumBY2 += color3(weightsBY.x * iColorBY2.x, weightsBY.y * iColorBY2.y, 0.0f);
-                }
-
-                // Clamp to [0,1] in linear RGB.
-                color3 color1 = color3(colorSumARG1.x, colorSumARG1.y, colorSumBY1.x + colorSumBY1.y);
-                color3 color2 = color3(colorSumARG2.x, colorSumARG2.y, colorSumBY2.x + colorSumBY2.y);
-                color1 = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(color1)));
-                color2 = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(color2)));
-
-                output1.set(x, y, color1);
-                output2.set(x, y, color2);
-            }
-        }
-    }
 
     template <>
     bool image<float>::exrSave(const std::string& fileName)

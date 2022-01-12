@@ -563,14 +563,6 @@ namespace FLIP
         FLIP::image<color3>::spatialFilterFirstDir(referenceImage, preprocessedReferenceARG, preprocessedReferenceBY, testImage, preprocessedTestARG, preprocessedTestBY, spatialFilterARG, spatialFilterBY);
         FLIP::image<color3>::spatialFilterSecondDir(preprocessedReferenceARG, preprocessedReferenceBY, preprocessedReference, preprocessedTestARG, preprocessedTestBY, preprocessedTest, spatialFilterARG, spatialFilterBY);
 
-        //  move from YCxCz to CIELab
-        preprocessedReference.YCxCz2CIELab();
-        preprocessedTest.YCxCz2CIELab();
-
-        //  Hunt adjustment
-        preprocessedReference.huntAdjustment();
-        preprocessedTest.huntAdjustment();
-
         //  color difference
         colorFeatureDifference.computeColorDifference(preprocessedReference, preprocessedTest);
 

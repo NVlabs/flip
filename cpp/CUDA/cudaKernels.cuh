@@ -386,6 +386,16 @@ namespace FLIP
         color3 refPixel = pSrcReferenceImage[i];
         color3 testPixel = pSrcTestImage[i];
 
+        // move from linear RGB to CIELab
+        refPixel = color3::XYZ2CIELab(color3::LinearRGB2XYZ(refPixel));
+        testPixel = color3::XYZ2CIELab(color3::LinearRGB2XYZ(testPixel));
+
+        // Hunt adjustment
+        refPixel.y = color3::Hunt(refPixel.x, refPixel.y);
+        refPixel.z = color3::Hunt(refPixel.x, refPixel.z);
+        testPixel.y = color3::Hunt(testPixel.x, testPixel.y);
+        testPixel.z = color3::Hunt(testPixel.x, testPixel.z);
+
         float colorDifference = color3::HyAB(refPixel, testPixel);
 
         colorDifference = powf(colorDifference, FLIP::DeviceFLIPConstants.gqc);
@@ -428,7 +438,7 @@ namespace FLIP
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
 
-        pImage[i] = color3::XYZ2CIELab(color3::LinearRGB2XYZ(color3::clamp(color3::XYZ2LinearRGB(color3::YCxCz2XYZ(pImage[i])))));
+        pImage[i] = color3::XYZ2CIELab(color3::YCxCz2XYZ(pImage[i]));
     }
 
     __global__ static void kernelsRGB2YCxCz(color3* pImage, const int3 dim)
@@ -859,7 +869,13 @@ namespace FLIP
             colorSumBY2 += color3(weightsBY.x * srcColorBY2.x, weightsBY.y * srcColorBY2.y, 0.0f);
         }
 
-        dstImage1[dstIndex] = color3(colorSumARG1.x, colorSumARG1.y, colorSumBY1.x + colorSumBY1.y);
-        dstImage2[dstIndex] = color3(colorSumARG2.x, colorSumARG2.y, colorSumBY2.x + colorSumBY2.y);
+        // Clamp to [0,1] in linear RGB
+        color3 color1 = color3(colorSumARG1.x, colorSumARG1.y, colorSumBY1.x + colorSumBY1.y);
+        color3 color2 = color3(colorSumARG2.x, colorSumARG2.y, colorSumBY2.x + colorSumBY2.y);
+        color1 = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(color1)));
+        color2 = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(color2)));
+
+        dstImage1[dstIndex] = color1;
+        dstImage2[dstIndex] = color2;
     }
 }

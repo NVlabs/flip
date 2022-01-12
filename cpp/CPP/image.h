@@ -402,7 +402,7 @@ namespace FLIP
                     color3 refPixel = reference.get(x, y);
                     color3 testPixel = test.get(x, y);
 
-                    //  move from YCxCz to CIELab
+                    //  move from linear RGB to CIELab
                     refPixel = color3::XYZ2CIELab(color3::LinearRGB2XYZ(refPixel));
                     testPixel = color3::XYZ2CIELab(color3::LinearRGB2XYZ(testPixel));
 

@@ -48,9 +48,8 @@
 
 # Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
 
-import torch
-import numpy as np
-
+import sys
+sys.path.insert(1, '../pytorch')
 from flip_loss import LDRFLIPLoss, HDRFLIPLoss
 from data import *
 

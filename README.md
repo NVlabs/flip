@@ -23,6 +23,9 @@ The changes made for the different versions of ꟻLIP are summarized in the [ver
 
 [A note](misc/precision.md) about the precision of ꟻLIP.
 
+[An image gallery](https://research.nvidia.com/node/3525) displaying a large quantity of reference/test images and corresponding error maps from
+different metrics.
+
 # License
 
 Copyright © 2020-2022, NVIDIA Corporation & Affiliates. All rights reserved.

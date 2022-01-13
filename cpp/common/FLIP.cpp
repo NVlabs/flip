@@ -83,7 +83,7 @@ int main(int argc, char** argv)
 {
     std::string FLIPString = "FLIP";
     int MajorVersion = 1;
-    int MinorVersion = 1;
+    int MinorVersion = 2;
 
     const commandline_options allowedCommandLineOptions =
     {

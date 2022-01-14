@@ -69,9 +69,9 @@ namespace FLIP
 
     static const float ToneMappingCoefficients[3][6] =
     {
-        { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f },  //  Reinhard
-        { 0.6f * 0.6f * 2.51f, 0.6f * 0.03f, 0.0f, 0.6f * 0.6f * 2.43f, 0.6f * 0.59f, 0.14f },  //  Aces, 0.6 is pre-exposure cancellation
-        { 0.231683f, 0.013791f, 0.0f, 0.18f, 0.3f, 0.018f },  //  Hable
+        { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f },                 //  Reinhard.
+        { 0.6f * 0.6f * 2.51f, 0.6f * 0.03f, 0.0f, 0.6f * 0.6f * 2.43f, 0.6f * 0.59f, 0.14f },  // Aces, 0.6 is pre-exposure cancellation.
+        { 0.231683f, 0.013791f, 0.0f, 0.18f, 0.3f, 0.018f },    //  Hable.
     };
 
     enum class CombineOperation
@@ -605,7 +605,7 @@ namespace FLIP
             auto rawImgChn = reinterpret_cast<float**>(exrImage.images);
             bool loaded = false;
 
-            // 1 channel images can be loaded into either scalar or vector formats
+            // 1 channel images can be loaded into either scalar or vector formats.
             if (exrHeader.num_channels == 1)
             {
                 for (int y = 0; y < this->mDim.y; y++)
@@ -619,7 +619,7 @@ namespace FLIP
                 loaded = true;
             }
 
-            // 2 channel images can only be loaded into vector2/3/4 formats
+            // 2 channel images can only be loaded into vector2/3/4 formats.
             if (exrHeader.num_channels == 2)
             {
                 assert(idxR != -1 && idxG != -1);
@@ -639,7 +639,7 @@ namespace FLIP
                 loaded = true;
             }
 
-            // 3 channel images can only be loaded into vector3/4 formats
+            // 3 channel images can only be loaded into vector3/4 formats.
             if (exrHeader.num_channels == 3)
             {
                 assert(idxR != -1 && idxG != -1 && idxB != -1);
@@ -660,7 +660,7 @@ namespace FLIP
                 loaded = true;
             }
 
-            // 4 channel images can only be loaded into vector4 formats
+            // 4 channel images can only be loaded into vector4 formats.
             if (exrHeader.num_channels == 4)
             {
                 assert(idxR != -1 && idxG != -1 && idxB != -1);

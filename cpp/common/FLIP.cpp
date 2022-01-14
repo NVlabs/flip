@@ -61,12 +61,12 @@
 struct
 {
     float PPD = 0;                          // If PPD==0.0, then it will be computed from the parameters below.
-    float monitorDistance = 0.7f;           // Unit: meters
-    float monitorWidth = 0.7f;              // Unit: meters
-    float monitorResolutionX = 3840.0f;     // Unit: pixels
+    float monitorDistance = 0.7f;           // Unit: meters.
+    float monitorWidth = 0.7f;              // Unit: meters.
+    float monitorResolutionX = 3840.0f;     // Unit: pixels.
 } gFLIPOptions;
 
-//  Pixels per degree (PPD)
+//  Pixels per degree (PPD).
 inline float calculatePPD(const float dist, const float resolutionX, const float monitorWidth)
 {
     return dist * (resolutionX / monitorWidth) * (float(FLIP::PI) / 180.0f);
@@ -186,7 +186,7 @@ int main(int argc, char** argv)
     bool bStartexp = commandLine.optionSet("start-exposure");
     bool bStopexp = commandLine.optionSet("stop-exposure");
 
-    //  Set HDR-FLIP parameters
+    //  Set HDR-FLIP parameters.
     std::string optionTonemapper = "aces";
     if (bUseHDR)
     {
@@ -455,9 +455,9 @@ int main(int argc, char** argv)
             if (testQuantity > exitOnTestThresholdValue)
             {
                 std::cout << "Exiting with failure code because the " << exitOnTestQuantity << " of the FLIP error map is " << FIXED_DECIMAL_DIGITS(testQuantity, 6) << ", while the threshold for success is " << FIXED_DECIMAL_DIGITS(exitOnTestThresholdValue, 6) << ".\n";
-                exit(EXIT_FAILURE);     // from stdlib.h: equal to 1
+                exit(EXIT_FAILURE);     // From stdlib.h: equal to 1.
             }
         }
     }
-    exit(EXIT_SUCCESS);                 // from stdlib.h: equal to 0
+    exit(EXIT_SUCCESS);                 // From stdlib.h: equal to 0.
 }

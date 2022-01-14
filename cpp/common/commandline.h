@@ -95,7 +95,7 @@ public:
     iterator begin(size_t begin = 0) const { return iterator(this, begin); }
     iterator end(size_t end = std::string::npos) const { return iterator(this, (end != std::string::npos && end <= mVector.size() ? end : mVector.size())); }
 
-    // conversion to const std::vector
+    // Conversion to const std::vector.
     operator const std::vector<T>() const { return mVector; }
     operator std::vector<T>() { return mVector; }
 };
@@ -104,7 +104,7 @@ typedef struct
 {
     std::string longName;
     std::string shortName;
-    int numArgs;  // -1: '+' if required, '*' if not required
+    int numArgs;  // -1: '+' if required, '*' if not required-
     bool required;
     std::string meta;
     std::string help;
@@ -207,7 +207,7 @@ public:
 
                     if (optionHasArgument)
                     {
-                        //  eat option arguments
+                        //  Eat option arguments.
                         atArg++;
                         while (atArg < argc && numOptionArguments != 0)
                         {
@@ -403,7 +403,5 @@ public:
                 std::cout << "\t\t" << o.help << "\n";
             }
         }
-
-
     }
 };

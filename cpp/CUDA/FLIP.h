@@ -57,8 +57,8 @@
 #include "sharedflip.h"
 
 #include "cudaImage.cuh"
-#include "mapMagma.cuh"
-#include "mapViridis.cuh"
+#include "mapMagma.h"
+#include "mapViridis.h"
 
 #include "commandline.h"
 #include "filename.h"

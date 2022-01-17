@@ -13,6 +13,8 @@
   <ItemGroup>
     <ClInclude Include="..\common\commandline.h" />
     <ClInclude Include="..\common\filename.h" />
+    <ClInclude Include="..\common\mapMagma.h" />
+    <ClInclude Include="..\common\mapViridis.h" />
     <ClInclude Include="..\common\pooling.h" />
     <ClInclude Include="..\common\sharedflip.h" />
     <ClInclude Include="..\common\stb_image.h" />
@@ -23,8 +25,6 @@
     <ClInclude Include="cudaKernels.cuh" />
     <ClInclude Include="cudaTensor.cuh" />
     <ClInclude Include="FLIP.h" />
-    <ClInclude Include="mapMagma.cuh" />
-    <ClInclude Include="mapViridis.cuh" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\common\FLIP.cpp" />

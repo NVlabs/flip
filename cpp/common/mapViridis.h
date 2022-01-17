@@ -48,8 +48,6 @@
 
 // Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
 
-#include "color.h"
-
 namespace FLIP
 {
 

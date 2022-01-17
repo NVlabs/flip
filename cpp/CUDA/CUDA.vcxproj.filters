@@ -1,8 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="mapMagma.cuh" />
-    <ClInclude Include="mapViridis.cuh" />
     <ClInclude Include="color.cuh" />
     <ClInclude Include="cudaImage.cuh" />
     <ClInclude Include="cudaKernels.cuh" />
@@ -27,6 +25,12 @@
       <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="..\common\sharedflip.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\mapMagma.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\mapViridis.h">
       <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>

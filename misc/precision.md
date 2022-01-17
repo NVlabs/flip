@@ -14,7 +14,7 @@ These include:
    operation is also computed at higher precision. Since the CPU implementation may not use FMA, this is another source of difference
    between implementations.
 5. Depending on compiler flags, `sqrt()` may be computed using lower precision on GPUs.
-6. For the C++ and CUDA implementations, we have changed to using separable filters for faster performance.
+6. For the C++ and CUDA implementations, we have changed to using separated filters for faster performance.
    This has given rise to small differences compared to previous versions. For our tests,
    we have therefore updated the `images/correct_{ldr|hdr}flip_{cpp|cuda}.{png|exr}` images.
 

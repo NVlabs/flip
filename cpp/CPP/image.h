@@ -181,7 +181,7 @@ namespace FLIP
                 int xx = x - radius;
 
                 // 0th derivative.
-                float G = Gaussian2D(float(xx), 0, stdDev);
+                float G = StandardGaussian(float(xx), stdDev);
                 weightSum += G;
 
                 // 1st derivative.

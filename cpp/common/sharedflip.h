@@ -28,9 +28,9 @@ namespace FLIP
     } GaussianConstants;  // Constants for Gaussians -- see paper for details.
 
 
-    static inline float Gaussian2D(const float x, const float y, const float sigma) // Standard 2D Gaussian.
+    static inline float StandardGaussian(const float x, const float sigma) // Standard 1D Gaussian (without normalization factor).
     {
-        return std::exp(-(x * x + y * y) / (2.0f * sigma * sigma));
+        return std::exp(-(x * x) / (2.0f * sigma * sigma));
     }
 
     static inline float Gaussian(const float x2, const float a, const float b) // 1D Gaussian in alternative form (see FLIP paper).

@@ -169,36 +169,36 @@ namespace FLIP
             const int radius = int(std::ceil(3.0f * stdDev));
             const int width = 2 * radius + 1;
 
-            float weight1, weight2;
-            float weightSum = 0.0f;
-            float negativeWeightsSum1 = 0.0f;
-            float positiveWeightsSum1 = 0.0f;
-            float negativeWeightsSum2 = 0.0f;
-            float positiveWeightsSum2 = 0.0f;
+            float g, dg, ddg;
+            float gSum = 0.0f;
+            float dgSumNegative = 0.0f;
+            float dgSumPositive = 0.0f;
+            float ddgSumNegative = 0.0f;
+            float ddgSumPositive = 0.0f;
 
             for (int x = 0; x < width; x++)
             {
                 int xx = x - radius;
 
                 // 0th derivative.
-                float G = StandardGaussian(float(xx), stdDev);
-                weightSum += G;
+                g = StandardGaussian(float(xx), stdDev);
+                gSum += g;
 
                 // 1st derivative.
-                weight1 = -float(xx) * G;
-                if (weight1 > 0.0f)
-                    positiveWeightsSum1 += weight1;
+                dg = -float(xx) * g;
+                if (dg > 0.0f)
+                    dgSumPositive += dg;
                 else
-                    negativeWeightsSum1 += -weight1;
+                    dgSumNegative -= dg;
 
                 // 2nd derivative.
-                weight2 = (float(xx) * float(xx) / (stdDev * stdDev) - 1.0f) * G;
-                if (weight2 > 0.0f)
-                    positiveWeightsSum2 += weight2;
+                ddg = (float(xx) * float(xx) / (stdDev * stdDev) - 1.0f) * g;
+                if (ddg > 0.0f)
+                    ddgSumPositive += ddg;
                 else
-                    negativeWeightsSum2 += -weight2;
+                    ddgSumNegative -= ddg;
 
-                filter.set(x, 0, color3(G, weight1, weight2));
+                filter.set(x, 0, color3(g, dg, ddg));
             }
 
             // Normalize weights (0th derivative should sum to 1; postive and negative weights of 1st and 2nd derivative should sum to 1 and -1, respectively).
@@ -206,7 +206,7 @@ namespace FLIP
             {
                 color3 p = filter.get(x, 0);
 
-                filter.set(x, 0, color3(p.x / weightSum, p.y / (p.y > 0.0f ? positiveWeightsSum1 : negativeWeightsSum1), p.z / (p.z > 0.0f ? positiveWeightsSum2 : negativeWeightsSum2)));
+                filter.set(x, 0, color3(p.x / gSum, p.y / (p.y > 0.0f ? dgSumPositive : dgSumNegative), p.z / (p.z > 0.0f ? ddgSumPositive : ddgSumNegative)));
             }
         }
 
@@ -223,7 +223,7 @@ namespace FLIP
             referenceImage.sRGB2YCxCz();
             testImage.sRGB2YCxCz();
 
-            // Prepare spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
+            // Prepare separated spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
             // (ARG for the Achromatic and Red-Green channels and BY for the Blue-Yellow channel).
             int spatialFilterRadius = calculateSpatialFilterRadius(ppd);
             int spatialFilterWidth = 2 * spatialFilterRadius + 1;

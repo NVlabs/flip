@@ -312,14 +312,6 @@ namespace FLIP
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 
-        void YCxCz2CIELab(void)
-        {
-            this->synchronizeDevice();
-            FLIP::kernelYCxCz2CIELab << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
-            checkStatus("kernelYCxCz2CIELab");
-            this->mState = CudaTensorState::DEVICE_ONLY;
-        }
-
         void LinearRGB2sRGB(void)
         {
             this->synchronizeDevice();

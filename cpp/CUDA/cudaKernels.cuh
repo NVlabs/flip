@@ -126,18 +126,6 @@ namespace FLIP
         }
     }
 
-    __global__ static void kernelYCxCz2CIELab(color3* pImage, const int3 dim)
-    {
-        int x = blockIdx.x * blockDim.x + threadIdx.x;
-        int y = blockIdx.y * blockDim.y + threadIdx.y;
-        int z = blockIdx.z * blockDim.z + threadIdx.z;
-        int i = (z * dim.y + y) * dim.x + x;
-
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
-        pImage[i] = color3::XYZ2CIELab(color3::YCxCz2XYZ(pImage[i]));
-    }
-
     __global__ static void kernelsRGB2YCxCz(color3* pImage, const int3 dim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;

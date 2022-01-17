@@ -55,7 +55,6 @@
 
 namespace FLIP
 {
-    FLIPConstants HostFLIPConstants;
 
     template<typename T>
     class image :
@@ -436,7 +435,7 @@ namespace FLIP
 
     static void setFeatureFilter(image<color3>& filter, const float ppd)
     {
-        const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
+        const float stdDev = 0.5f * FLIPConstants.gw * ppd;
         const int radius = int(std::ceil(3.0f * stdDev));
         const int width = 2 * radius + 1;
 
@@ -513,7 +512,7 @@ namespace FLIP
         FLIP::image<color3>::spatialFilterSecondDirAndColorDifference(preprocessedReferenceARG, preprocessedReferenceBY, preprocessedTestARG, preprocessedTestBY, colorFeatureDifference, spatialFilterARG, spatialFilterBY);
 
         //  Feature (point/edge) filtering.
-        const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
+        const float stdDev = 0.5f * FLIPConstants.gw * ppd;
         const int featureFilterRadius = int(std::ceil(3.0f * stdDev));
         int featureFilterWidth = 2 * featureFilterRadius + 1;
         image<color3> featureFilter(featureFilterWidth, 1);

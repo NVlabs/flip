@@ -329,7 +329,6 @@ public:
         std::string command = mCommand.substr(mCommand.find_last_of("/\\") + 1);
 
         size_t numOptionalOptions = 0;
-        size_t longestOption = 0;
         for (auto& o : ao.options)
         {
             if (o.required == false)

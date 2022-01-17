@@ -55,7 +55,6 @@
 
 namespace FLIP
 {
-    FLIPConstants HostFLIPConstants;
 
     template<typename T>
     class image :
@@ -166,7 +165,7 @@ namespace FLIP
 
         static void setFeatureFilter(image<color3>& filter, const float ppd)
         {
-            const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
+            const float stdDev = 0.5f * FLIPConstants.gw * ppd;
             const int radius = int(std::ceil(3.0f * stdDev));
             const int width = 2 * radius + 1;
 
@@ -237,7 +236,7 @@ namespace FLIP
             this->computeColorDifference(referenceImage, testImage, spatialFilterARG, spatialFilterBY);
 
             //  Feature (point/edge) filtering.
-            const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
+            const float stdDev = 0.5f * FLIPConstants.gw * ppd;
             const int featureFilterRadius = int(std::ceil(3.0f * stdDev));
             int featureFilterWidth = 2 * featureFilterRadius + 1;
             image<color3> featureFilter(featureFilterWidth, 1);
@@ -337,7 +336,7 @@ namespace FLIP
                     const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
                     const float pointDifference = std::abs(pointValueRef - pointValueTest);
 
-                    const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), HostFLIPConstants.gqf);
+                    const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), FLIPConstants.gqf);
                     const float colorDifference = this->get(x, y);
 
                     const float errorFLIP = std::pow(colorDifference, 1.0f - featureDifference);
@@ -353,8 +352,8 @@ namespace FLIP
         void computeColorDifference(const FLIP::image<color3>& input1, const FLIP::image<color3>& input2, const FLIP::image<color3>& filterARG, const FLIP::image<color3>& filterBY)
         {
             // Color difference constants
-            const float cmax = color3::computeMaxDistance(HostFLIPConstants.gqc);
-            const float pccmax = HostFLIPConstants.gpc * cmax;
+            const float cmax = color3::computeMaxDistance(FLIPConstants.gqc);
+            const float pccmax = FLIPConstants.gpc * cmax;
 
             const int halfFilterWidth = filterARG.getWidth() / 2; // ARG and BY filters are same size
 
@@ -445,17 +444,17 @@ namespace FLIP
 
                     // Compute color difference
                     float colorDifference = color3::HyAB(color1, color2);
-                    colorDifference = powf(colorDifference, HostFLIPConstants.gqc);
+                    colorDifference = powf(colorDifference, FLIPConstants.gqc);
 
                     // Re-map error to the [0, 1] range. Values between 0 and pccmax are mapped to the range [0, gpt],
                     // while the rest are mapped to the range (gpt, 1].
                     if (colorDifference < pccmax)
                     {
-                        colorDifference *= HostFLIPConstants.gpt / pccmax;
+                        colorDifference *= FLIPConstants.gpt / pccmax;
                     }
                     else
                     {
-                        colorDifference = HostFLIPConstants.gpt + ((colorDifference - pccmax) / (cmax - pccmax)) * (1.0f - HostFLIPConstants.gpt);
+                        colorDifference = FLIPConstants.gpt + ((colorDifference - pccmax) / (cmax - pccmax)) * (1.0f - FLIPConstants.gpt);
                     }
 
                     this->set(x, y, colorDifference);

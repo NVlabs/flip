@@ -58,9 +58,14 @@
 
 namespace FLIP
 {
-
-    __device__ FLIPConstants DeviceFLIPConstants;
-
+    __constant__ struct
+    {
+        float gqc = 0.7f;
+        float gpc = 0.4f;
+        float gpt = 0.95f;
+        float gw = 0.082f;
+        float gqf = 0.5f;
+    } DeviceFLIPConstants;
 
     enum ReduceOperation
     {
@@ -770,8 +775,8 @@ namespace FLIP
     __global__ static void kernelSpatialFilterSecondDirAndColorDifference(color3* dstImage, color3* srcImageARG1, color3* srcImageBY1, color3* srcImageARG2, color3* srcImageBY2, color3* pFilterARG, color3* pFilterBY, const int3 dim, int3 filterDim)
     {
         // Color difference constants.
-        const float cmax = color3::computeMaxDistance(FLIP::DeviceFLIPConstants.gqc);
-        const float pccmax = FLIP::DeviceFLIPConstants.gpc * cmax;
+        const float cmax = color3::computeMaxDistance(DeviceFLIPConstants.gqc);
+        const float pccmax = DeviceFLIPConstants.gpc * cmax;
 
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -825,17 +830,17 @@ namespace FLIP
 
         float colorDifference = color3::HyAB(color1, color2);
 
-        colorDifference = powf(colorDifference, FLIP::DeviceFLIPConstants.gqc);
+        colorDifference = powf(colorDifference, DeviceFLIPConstants.gqc);
 
         // Re-map error to the [0, 1] range. Values between 0 and pccmax are mapped to the range [0, gpt],
         // while the rest are mapped to the range (gpt, 1]
         if (colorDifference < pccmax)
         {
-            colorDifference *= FLIP::DeviceFLIPConstants.gpt / pccmax;
+            colorDifference *= DeviceFLIPConstants.gpt / pccmax;
         }
         else
         {
-            colorDifference = FLIP::DeviceFLIPConstants.gpt + ((colorDifference - pccmax) / (cmax - pccmax)) * (1.0f - FLIP::DeviceFLIPConstants.gpt);
+            colorDifference = DeviceFLIPConstants.gpt + ((colorDifference - pccmax) / (cmax - pccmax)) * (1.0f - DeviceFLIPConstants.gpt);
         }
 
         dstImage[dstIndex] = color3(colorDifference, 0.0f, 0.0f);

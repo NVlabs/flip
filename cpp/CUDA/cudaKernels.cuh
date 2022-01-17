@@ -262,7 +262,7 @@ namespace FLIP
     }
 
     // Convolve in x direction (1st and 2nd derivative for filter in x direction, 0th derivative for filter in y direction).
-    // For details on the convolution, see the note on separable filters in the FLIP repository.
+    // For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
     __global__ static void kernelFeatureFilterFirstDir(color3* dstImage1, color3* srcImage1, color3* dstImage2, color3* srcImage2, color3* pFilter, const int3 dim, int3 filterDim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -307,7 +307,7 @@ namespace FLIP
     }
 
     // Convolve in y direction (1st and 2nd derivative for filter in y direction, 0th derivative for filter in x direction), then compute difference.
-    // For details on the convolution, see the note on separable filters in the FLIP repository.
+    // For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
     __global__ static void kernelFeatureFilterSecondDirAndFeatureDifference(color3* dstImage, color3* srcImage1, color3* srcImage2, color3* pFilter, const int3 dim, int3 filterDim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -360,7 +360,7 @@ namespace FLIP
 
     // Performs spatial filtering in the x direction on both the reference and test image at the same time (for better performance).
     // Filtering has been changed to using separable filtering for better performance.
-    // For details on the convolution, see the note on separable filters in the FLIP repository.
+    // For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
     __global__ static void kernelSpatialFilterFirstDir(color3* dstImageARG1, color3* dstImageBY1, color3* srcImage1, color3* dstImageARG2, color3* dstImageBY2, color3* srcImage2, color3* pFilterARG, color3* pFilterBY, const int3 dim, int3 filterDim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -402,7 +402,7 @@ namespace FLIP
     }
 
     // Performs spatial filtering in the y direction (and clamps the results) on both the reference and test image at the same time (for better performance).
-    // Filtering has been changed to using separable filtering for better performance. For details on the convolution, see the note on separable filters in the FLIP repository.
+    // Filtering has been changed to using separable filtering for better performance. For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
     // After filtering, compute color differences.
     __global__ static void kernelSpatialFilterSecondDirAndColorDifference(color3* dstImage, color3* srcImageARG1, color3* srcImageBY1, color3* srcImageARG2, color3* srcImageBY2, color3* pFilterARG, color3* pFilterBY, const int3 dim, const int3 filterDim, const float cmax, const float pccmax)
     {

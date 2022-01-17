@@ -391,7 +391,7 @@ namespace FLIP
         return true;
     }
 
-    static void setSpatialFilters(image<color3>& filterARG, image<color3>& filterBY, float ppd, int filterRadius) // For details, see the note on separable filters in the FLIP repository.
+    static void setSpatialFilters(image<color3>& filterARG, image<color3>& filterBY, float ppd, int filterRadius) // For details, see separated_convolutions.pdf in the FLIP repository.
     {
         float deltaX = 1.0f / ppd;
         color3 filterSumARG = { 0.0f, 0.0f, 0.0f };
@@ -494,7 +494,7 @@ namespace FLIP
         testImage.sRGB2YCxCz();
 
         // Prepare separated spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
-        // (ARG for the Achromatic and Red-Green channels and BY for the Blue-Yellow channel). For details, see the note on separable filters in the FLIP repository.
+        // (ARG for the Achromatic and Red-Green channels and BY for the Blue-Yellow channel). For details, see separated_convolutions.pdf in the FLIP repository.
         int spatialFilterRadius = calculateSpatialFilterRadius(ppd);
         int spatialFilterWidth = 2 * spatialFilterRadius + 1;
         image<color3> spatialFilterARG(spatialFilterWidth, 1);

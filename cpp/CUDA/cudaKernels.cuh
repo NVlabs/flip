@@ -772,12 +772,8 @@ namespace FLIP
     // Performs spatial filtering in the y direction (and clamps the results) on both the reference and test image at the same time (for better performance).
     // Filtering has been changed to using separable filtering for better performance. For details on the convolution, see the note on separable filters in the FLIP repository.
     // After filtering, compute color differences.
-    __global__ static void kernelSpatialFilterSecondDirAndColorDifference(color3* dstImage, color3* srcImageARG1, color3* srcImageBY1, color3* srcImageARG2, color3* srcImageBY2, color3* pFilterARG, color3* pFilterBY, const int3 dim, int3 filterDim)
+    __global__ static void kernelSpatialFilterSecondDirAndColorDifference(color3* dstImage, color3* srcImageARG1, color3* srcImageBY1, color3* srcImageARG2, color3* srcImageBY2, color3* pFilterARG, color3* pFilterBY, const int3 dim, const int3 filterDim, const float cmax, const float pccmax)
     {
-        // Color difference constants.
-        const float cmax = color3::computeMaxDistance(DeviceFLIPConstants.gqc);
-        const float pccmax = DeviceFLIPConstants.gpc * cmax;
-
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
         int z = blockIdx.z * blockDim.z + threadIdx.z;

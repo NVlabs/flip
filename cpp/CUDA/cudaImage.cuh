@@ -196,7 +196,9 @@ namespace FLIP
             input2BY.synchronizeDevice();
             filterARG.synchronizeDevice();
             filterBY.synchronizeDevice();
-            FLIP::kernelSpatialFilterSecondDirAndColorDifference << <output.getGridDim(), output.getBlockDim() >> > (output.mvpDeviceData, input1ARG.mvpDeviceData, input1BY.mvpDeviceData, input2ARG.mvpDeviceData, input2BY.mvpDeviceData, filterARG.mvpDeviceData, filterBY.mvpDeviceData, output.mDim, filterARG.mDim); // Filter sizes are the same.
+            const float cmax = color3::computeMaxDistance(FLIPConstants.gqc);
+            const float pccmax = FLIPConstants.gpc * cmax;
+            FLIP::kernelSpatialFilterSecondDirAndColorDifference << <output.getGridDim(), output.getBlockDim() >> > (output.mvpDeviceData, input1ARG.mvpDeviceData, input1BY.mvpDeviceData, input2ARG.mvpDeviceData, input2BY.mvpDeviceData, filterARG.mvpDeviceData, filterBY.mvpDeviceData, output.mDim, filterARG.mDim, cmax, pccmax); // Filter sizes are the same.
             checkStatus("kernelSpatialFilterSecondDirAndColorDifference");
             output.setState(CudaTensorState::DEVICE_ONLY);
         }

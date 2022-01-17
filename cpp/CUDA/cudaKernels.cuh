@@ -483,9 +483,9 @@ namespace FLIP
 
     __device__ const float ToneMappingCoefficients[3][6] =
     {
-        { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f },                 //  Reinhard.
-        { 0.6f * 0.6f * 2.51f, 0.6f * 0.03f, 0.0f, 0.6f * 0.6f * 2.43f, 0.6f * 0.59f, 0.14f },  //  Aces, 0.6 is pre-exposure cancellation.
-        { 0.231683f, 0.013791f, 0.0f, 0.18f, 0.3f, 0.018f },    //  Hable.
+        { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f },                                                 // Reinhard.
+        { 0.6f * 0.6f * 2.51f, 0.6f * 0.03f, 0.0f, 0.6f * 0.6f * 2.43f, 0.6f * 0.59f, 0.14f },  // ACES, 0.6 is pre-exposure cancellation.
+        { 0.231683f, 0.013791f, 0.0f, 0.18f, 0.3f, 0.018f },                                    // Hable.
     };
 
 

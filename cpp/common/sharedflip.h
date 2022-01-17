@@ -61,4 +61,15 @@ namespace FLIP
         xMin = d1 - d2;
         xMax = d1 + d2;
     }
+
+    static int calculateSpatialFilterRadius(const float ppd)
+    {
+        const float deltaX = 1.0f / ppd;
+        const float pi_sq = float(PI * PI);
+
+        float maxScaleParameter = std::max(std::max(std::max(GaussianConstants.b1.x, GaussianConstants.b1.y), std::max(GaussianConstants.b1.z, GaussianConstants.b2.x)), std::max(GaussianConstants.b2.y, GaussianConstants.b2.z));
+        int radius = int(std::ceil(3.0f * std::sqrt(maxScaleParameter / (2.0f * pi_sq)) * ppd)); // Set radius based on largest scale parameter.
+
+        return radius;
+    }
 }

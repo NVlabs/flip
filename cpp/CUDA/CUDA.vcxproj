@@ -14,6 +14,7 @@
     <ClInclude Include="..\common\commandline.h" />
     <ClInclude Include="..\common\filename.h" />
     <ClInclude Include="..\common\pooling.h" />
+    <ClInclude Include="..\common\sharedflip.h" />
     <ClInclude Include="..\common\stb_image.h" />
     <ClInclude Include="..\common\stb_image_write.h" />
     <ClInclude Include="..\common\tinyexr.h" />

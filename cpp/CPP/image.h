@@ -127,17 +127,6 @@ namespace FLIP
 
         //////////////////////////////////////////////////////////////////////////////////
 
-        static int calculateSpatialFilterRadius(const float ppd)
-        {
-            const float deltaX = 1.0f / ppd;
-            const float pi_sq = float(PI * PI);
-
-            float maxScaleParameter = std::max(std::max(std::max(FLIP::GaussianConstants.b1.x, FLIP::GaussianConstants.b1.y), std::max(FLIP::GaussianConstants.b1.z, FLIP::GaussianConstants.b2.x)), std::max(FLIP::GaussianConstants.b2.y, FLIP::GaussianConstants.b2.z));
-            int radius = int(std::ceil(3.0f * std::sqrt(maxScaleParameter / (2.0f * pi_sq)) * ppd)); // Set radius based on largest scale parameter.
-
-            return radius;
-        }
-
         static void setSpatialFilters(image<color3>& filterARG, image<color3>& filterBY, float ppd, int filterRadius) // For details, see the note on separable filters in the FLIP repository.
         {
             float deltaX = 1.0f / ppd;

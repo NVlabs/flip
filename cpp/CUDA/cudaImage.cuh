@@ -142,13 +142,6 @@ namespace FLIP
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
 
-        void huntAdjustment(void)
-        {
-            FLIP::kernelHuntAdjustment << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
-            image<T>::checkStatus("kernelHuntAdjustment");
-            this->setState(CudaTensorState::DEVICE_ONLY);
-        }
-
         // Perform the x-component of separable feature detection filtering of both the reference and the test.
         static void featureFilterFirstDir(image& input1, image& output1, image& input2, image& output2, image& featureFilter)
         {

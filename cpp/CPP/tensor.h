@@ -202,58 +202,6 @@ namespace FLIP
             return this->mDim.z;
         }
 
-        enum ReduceOperation
-        {
-            Add,
-            Max,
-            Min
-        };
-
-        template <ReduceOperation op>
-        T reduce(void)
-        {
-            float result = 0.0f;
-            switch (op)
-            {
-            case ReduceOperation::Add:
-                result = 0.0f;
-                break;
-            case ReduceOperation::Max:
-                result = 1e-30f;
-                break;
-            case ReduceOperation::Min:
-                result = 1e30f;
-                break;
-            }
-
-            for (int z = 0; z < this->getDepth(); z++)
-            {
-                for (int y = 0; y < this->getHeight(); y++)
-                {
-                    for (int x = 0; x < this->getWidth(); x++)
-                    {
-                        float value = this->get(x, y, z);
-                        switch (op)
-                        {
-                        default:
-                        case ReduceOperation::Add:
-                            result = result + value;
-                            break;
-                        case ReduceOperation::Max:
-                            result = std::max(result, value);
-                            break;
-                        case ReduceOperation::Min:
-                            result = std::min(result, value);
-                            break;
-                        }
-
-                    }
-                }
-            }
-
-            return result;
-        }
-
         void colorMap(tensor<float>& srcImage, tensor<color3>& colorMap)
         {
             for (int z = 0; z < this->getDepth(); z++)
@@ -299,27 +247,6 @@ namespace FLIP
             }
         }
 
-        void multiplyAndAdd(T m, T a = T(0.0f))
-        {
-            for (int z = 0; z < this->getDepth(); z++)
-            {
-#pragma omp parallel for
-                for (int y = 0; y < this->getHeight(); y++)
-                {
-                    for (int x = 0; x < this->getWidth(); x++)
-                    {
-                        this->set(x, y, z, this->get(x, y, z) * m + a);
-                    }
-                }
-            }
-        }
-
-        void normalize(void)
-        {
-            T sum = this->reduce<ReduceOperation::Add>();
-            this->multiplyAndAdd(T(1.0f) / sum);
-        }
-
         void clear(const T color = T(0.0f))
         {
             for (int z = 0; z < this->getDepth(); z++)
@@ -330,40 +257,6 @@ namespace FLIP
                     for (int x = 0; x < this->getWidth(); x++)
                     {
                         this->set(x, y, z, color);
-                    }
-                }
-            }
-        }
-
-        void convolve(tensor& srcImage, tensor& filter)
-        {
-            const int halfFilterWidth = filter.getWidth() / 2;
-            const int halfFilterHeight = filter.getHeight() / 2;
-
-            for (int z = 0; z < this->getDepth(); z++)
-            {
-#pragma omp parallel for
-                for (int y = 0; y < this->getHeight(); y++)
-                {
-                    for (int x = 0; x < this->getWidth(); x++)
-                    {
-                        color3 colorSum = { 0.0f, 0.0f, 0.0f };
-
-                        for (int iy = -halfFilterHeight; iy <= halfFilterHeight; iy++)
-                        {
-                            int yy = Min(Max(0, y + iy), this->getHeight() - 1);
-                            for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
-                            {
-                                int xx = Min(Max(0, x + ix), this->getWidth() - 1);
-
-                                const color3 weights = filter.get(ix + halfFilterWidth, iy + halfFilterHeight, 0);
-                                const color3 srcColor = srcImage.get(xx, yy, 0);
-
-                                colorSum += weights * srcColor;
-                            }
-                        }
-
-                        this->set(x, y, z, colorSum);
                     }
                 }
             }
@@ -512,7 +405,6 @@ namespace FLIP
 
             return (ok != 0);
         }
-
 
         bool exrLoad(const std::string& fileName, const int z = 0)
         {
@@ -696,5 +588,4 @@ namespace FLIP
         }
 
     };
-
 }

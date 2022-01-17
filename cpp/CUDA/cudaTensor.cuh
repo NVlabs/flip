@@ -308,74 +308,6 @@ namespace FLIP
             }
         }
 
-        template <FLIP::ReduceOperation op>
-        T reduce(void)
-        {
-            this->synchronizeDevice();
-
-            int blockSize = this->mBlockDim.x * this->mBlockDim.y * this->mBlockDim.z;
-            int numBlocks = int(this->mVolume + blockSize - 1) / blockSize;
-            int sharedMemSize = blockSize * sizeof(T);
-
-            T* pBlockResults;
-            cudaError_t cudaError = cudaMalloc((void**)&pBlockResults, (numBlocks + 1) * sizeof(T));
-
-            switch (blockSize)
-            {
-            case 1024:
-                FLIP::kernelReduce<1024, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<1024, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 512:
-                FLIP::kernelReduce<512, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<512, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 256:
-                FLIP::kernelReduce<256, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<256, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 128:
-                FLIP::kernelReduce<128, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<128, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 64:
-                FLIP::kernelReduce<64, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<64, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 32:
-                FLIP::kernelReduce<32, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<32, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 16:
-                FLIP::kernelReduce<16, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<16, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 8:
-                FLIP::kernelReduce<8, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<8, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 4:
-                FLIP::kernelReduce<4, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<4, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 2:
-                FLIP::kernelReduce<2, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<2, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 1:
-                FLIP::kernelReduce<1, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<1, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            }
-
-            T result;
-            cudaError = cudaMemcpy(&result, pBlockResults + numBlocks, sizeof(T), cudaMemcpyDeviceToHost);
-
-            cudaFree(pBlockResults);
-
-            return result;
-        }
-
         void colorMap(tensor<float>& srcImage, tensor<color3>& colorMap)
         {
             srcImage.synchronizeDevice();
@@ -408,20 +340,6 @@ namespace FLIP
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 
-        void multiplyAndAdd(T m, T a = T(0.0f))
-        {
-            this->synchronizeDevice();
-            FLIP::kernelMultiplyAndAdd << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim, m, a);
-            checkStatus("kernelMultiplyAndAdd");
-            this->mState = CudaTensorState::DEVICE_ONLY;
-        }
-
-        void normalize(void)
-        {
-            T sum = this->reduce<FLIP::ReduceOperation::Add>();
-            this->multiplyAndAdd(T(1.0f) / sum);
-        }
-
         static void checkStatus(std::string kernelName)
         {
             cudaError_t cudaError = cudaGetLastError();
@@ -449,29 +367,10 @@ namespace FLIP
             }
         }
 
-
         void clear(const T color = T(0.0f))
         {
             FLIP::kernelClear << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim, color);
             checkStatus("kernelClear");
-            this->mState = CudaTensorState::DEVICE_ONLY;
-        }
-
-        void convolve(tensor& srcImage, tensor& filter)
-        {
-            srcImage.synchronizeDevice();
-            filter.synchronizeDevice();
-            FLIP::kernelConvolve << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, srcImage.mvpDeviceData, filter.mvpDeviceData, this->mDim, filter.mDim.x, filter.mDim.y);
-            checkStatus("kernelConvolve");
-            this->mState = CudaTensorState::DEVICE_ONLY;
-        }
-
-        void combine(tensor& srcImageA, tensor& srcImageB, CombineOperation operation)
-        {
-            srcImageA.synchronizeDevice();
-            srcImageB.synchronizeDevice();
-            FLIP::kernelCombine << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, srcImageA.mvpDeviceData, srcImageB.mvpDeviceData, this->mDim, operation);
-            checkStatus("kernelCombine");
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 

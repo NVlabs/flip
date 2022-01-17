@@ -355,7 +355,7 @@ namespace FLIP
             const float cmax = color3::computeMaxDistance(FLIPConstants.gqc);
             const float pccmax = FLIPConstants.gpc * cmax;
 
-            const int halfFilterWidth = filterARG.getWidth() / 2; // ARG and BY filters are same size
+            const int halfFilterWidth = filterARG.getWidth() / 2; // ARG and BY filters are the same size.
 
             const int w = input1.getWidth();
             const int h = input1.getHeight();
@@ -442,7 +442,7 @@ namespace FLIP
                     color2.y = color3::Hunt(color2.x, color2.y);
                     color2.z = color3::Hunt(color2.x, color2.z);
 
-                    // Compute color difference
+                    // Compute color difference.
                     float colorDifference = color3::HyAB(color1, color2);
                     colorDifference = powf(colorDifference, FLIPConstants.gqc);
 

@@ -215,11 +215,11 @@ namespace FLIP
             int width = reference.getWidth();
             int height = reference.getHeight();
 
-            //  Temporary images.
+            // Temporary images.
             image<color3> referenceImage(reference), testImage(test);
             image<color3> preprocessedReference(width, height), preprocessedTest(width, height);
 
-            //  Transform from sRGB to YCxCz.
+            // Transform from sRGB to YCxCz.
             referenceImage.sRGB2YCxCz();
             testImage.sRGB2YCxCz();
 
@@ -235,7 +235,7 @@ namespace FLIP
             // It then computes the color difference between the images. "this" is an image<float> here, so we store the color difference in that image.
             this->computeColorDifference(referenceImage, testImage, spatialFilterARG, spatialFilterBY);
 
-            //  Feature (point/edge) filtering.
+            // Prepare separated feature (edge/point) detection filters.
             const float stdDev = 0.5f * FLIPConstants.gw * ppd;
             const int featureFilterRadius = int(std::ceil(3.0f * stdDev));
             int featureFilterWidth = 2 * featureFilterRadius + 1;

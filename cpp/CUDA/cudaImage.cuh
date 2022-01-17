@@ -135,36 +135,6 @@ namespace FLIP
 
         void FLIP(image<color3>& reference, image<color3>& test, float ppd);
 
-        void finalError(image<color3>& colorFeatureDifference)
-        {
-            FLIP::kernelFinalError << <this->mGridDim, this->mBlockDim >> > (this->getDeviceData(), colorFeatureDifference.getDeviceData(), this->mDim);
-            image<T>::checkStatus("kernelFinalError");
-            this->setState(CudaTensorState::DEVICE_ONLY);
-        }
-
-        // Perform the x-component of separable feature detection filtering of both the reference and the test.
-        static void featureFilterFirstDir(image& input1, image& output1, image& input2, image& output2, image& featureFilter)
-        {
-            input1.synchronizeDevice();
-            input2.synchronizeDevice();
-            featureFilter.synchronizeDevice();
-            FLIP::kernelFeatureFilterFirstDir << <output1.mGridDim, output1.mBlockDim >> > (output1.mvpDeviceData, input1.mvpDeviceData, output2.mvpDeviceData, input2.mvpDeviceData, featureFilter.mvpDeviceData, output1.mDim, featureFilter.mDim);
-            image<T>::checkStatus("kernelFeatureFilterFirstDir");
-            output1.setState(CudaTensorState::DEVICE_ONLY);
-            output2.setState(CudaTensorState::DEVICE_ONLY);
-        }
-
-        // Perform the y-component of separable feature detection filtering of both the reference and the test.
-        static void featureFilterSecondDirAndFeatureDifference(image& input1, image& input2, image& output1, image& featureFilter)
-        {
-            input1.synchronizeDevice();
-            input2.synchronizeDevice();
-            featureFilter.synchronizeDevice();
-            FLIP::kernelFeatureFilterSecondDirAndFeatureDifference << <output1.mGridDim, output1.mBlockDim >> > (output1.mvpDeviceData, input1.mvpDeviceData, input2.mvpDeviceData, featureFilter.mvpDeviceData, output1.mDim, featureFilter.mDim);
-            image<T>::checkStatus("kernelFeatureFilterSecondDirAndFeatureDifference");
-            output1.setState(CudaTensorState::DEVICE_ONLY);
-        }
-
         // Perform the x-component of separable spatial filtering of both the reference and the test.
         static void spatialFilterFirstDir(image& input1, image& output1ARG, image& output1BY, image& input2, image& output2ARG, image& output2BY, image& filterARG, image& filterBY)
         {
@@ -194,6 +164,36 @@ namespace FLIP
             FLIP::kernelSpatialFilterSecondDirAndColorDifference << <output.getGridDim(), output.getBlockDim() >> > (output.mvpDeviceData, input1ARG.mvpDeviceData, input1BY.mvpDeviceData, input2ARG.mvpDeviceData, input2BY.mvpDeviceData, filterARG.mvpDeviceData, filterBY.mvpDeviceData, output.mDim, filterARG.mDim, cmax, pccmax); // Filter sizes are the same.
             checkStatus("kernelSpatialFilterSecondDirAndColorDifference");
             output.setState(CudaTensorState::DEVICE_ONLY);
+        }
+
+        // Perform the x-component of separable feature detection filtering of both the reference and the test.
+        static void featureFilterFirstDir(image& input1, image& output1, image& input2, image& output2, image& featureFilter)
+        {
+            input1.synchronizeDevice();
+            input2.synchronizeDevice();
+            featureFilter.synchronizeDevice();
+            FLIP::kernelFeatureFilterFirstDir << <output1.mGridDim, output1.mBlockDim >> > (output1.mvpDeviceData, input1.mvpDeviceData, output2.mvpDeviceData, input2.mvpDeviceData, featureFilter.mvpDeviceData, output1.mDim, featureFilter.mDim);
+            image<T>::checkStatus("kernelFeatureFilterFirstDir");
+            output1.setState(CudaTensorState::DEVICE_ONLY);
+            output2.setState(CudaTensorState::DEVICE_ONLY);
+        }
+
+        // Perform the y-component of separable feature detection filtering of both the reference and the test.
+        static void featureFilterSecondDirAndFeatureDifference(image& input1, image& input2, image& output1, image& featureFilter)
+        {
+            input1.synchronizeDevice();
+            input2.synchronizeDevice();
+            featureFilter.synchronizeDevice();
+            FLIP::kernelFeatureFilterSecondDirAndFeatureDifference << <output1.mGridDim, output1.mBlockDim >> > (output1.mvpDeviceData, input1.mvpDeviceData, input2.mvpDeviceData, featureFilter.mvpDeviceData, output1.mDim, featureFilter.mDim);
+            image<T>::checkStatus("kernelFeatureFilterSecondDirAndFeatureDifference");
+            output1.setState(CudaTensorState::DEVICE_ONLY);
+        }
+
+        void finalError(image<color3>& colorFeatureDifference)
+        {
+            FLIP::kernelFinalError << <this->mGridDim, this->mBlockDim >> > (this->getDeviceData(), colorFeatureDifference.getDeviceData(), this->mDim);
+            image<T>::checkStatus("kernelFinalError");
+            this->setState(CudaTensorState::DEVICE_ONLY);
         }
 
         void setMaxExposure(tensor<float>& errorMap, tensor<float>& exposureMap, float exposure)

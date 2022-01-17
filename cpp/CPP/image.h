@@ -247,105 +247,6 @@ namespace FLIP
             this->computeFeatureDifferenceAndFinalError(referenceImage, testImage, featureFilter);
         }
 
-        // This includes convolution (using separable filtering) of grayRefImage and grayTestImage for both edge and point filtering.
-        // In addition, it computes the final FLIP error and stores in "this".
-        void computeFeatureDifferenceAndFinalError(const image<color3>& grayRefImage, const image<color3>& grayTestImage, const image<color3>& featureFilter)
-        {
-            const float normalizationFactor = 1.0f / std::sqrt(2.0f);
-            const int halfFilterWidth = featureFilter.getWidth() / 2;      // The edge and point filters are of the same size.
-            const int w = grayRefImage.getWidth();
-            const int h = grayRefImage.getHeight();
-
-            image<color3> iRefFeatures(w, h);
-            image<color3> iTestFeatures(w, h);
-
-            // Convolve in x direction (1st and 2nd derivative for filter in x direction, 0th derivative for filter in y direction).
-            // For details, see the note on separable filters in the FLIP repository.
-            // We filter both reference and test image simultaneously (for better performance).
-            const float oneOver116 = 1.0f / 116.0f;
-            const float sixteenOver116 = 16.0f / 116.0f;
-#pragma omp parallel for
-            for (int y = 0; y < h; y++)
-            {
-                for (int x = 0; x < w; x++)
-                {
-                    float  iEdgeRefX = 0.0f, iEdgeTestX = 0.0f, iPointRefX = 0.0f, iPointTestX = 0.0f;
-                    float  refGaussianFiltered = 0.0f, testGaussianFiltered = 0.0f;
-
-                    for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
-                    {
-                        int xx = Min(Max(0, x + ix), w - 1);
-
-                        const color3 featureWeights = featureFilter.get(ix + halfFilterWidth, 0);
-                        float grayRef = grayRefImage.get(xx, y).x;
-                        float grayTest = grayTestImage.get(xx, y).x;
-
-                        // Normalize the gray values to [0,1].
-                        grayRef = grayRef * oneOver116 + sixteenOver116;
-                        grayTest = grayTest * oneOver116 + sixteenOver116;
-
-                        iEdgeRefX += featureWeights.y * grayRef;
-                        iEdgeTestX += featureWeights.y * grayTest;
-                        iPointRefX += featureWeights.z * grayRef;
-                        iPointTestX += featureWeights.z * grayTest;
-
-                        refGaussianFiltered += featureWeights.x * grayRef;
-                        testGaussianFiltered += featureWeights.x * grayTest;
-                    }
-
-                    iRefFeatures.set(x, y, color3(iEdgeRefX, iPointRefX, refGaussianFiltered));
-                    iTestFeatures.set(x, y, color3(iEdgeTestX, iPointTestX, testGaussianFiltered));
-                }
-            }
-
-            // Convolve in y direction (1st and 2nd derivative for filter in y direction, 0th derivative for filter in x direction), then compute difference.
-            // For details on the convolution, see the note on separable filters in the FLIP repository.
-            // We filter both reference and test image simultaneously (for better performance).
-#pragma omp parallel for
-            for (int y = 0; y < h; y++)
-            {
-                for (int x = 0; x < w; x++)
-                {
-                    float  edgeRefX = 0.0f, edgeTestX = 0.0f, pointRefX = 0.0f, pointTestX = 0.0f;
-                    float  edgeRefY = 0.0f, edgeTestY = 0.0f, pointRefY = 0.0f, pointTestY = 0.0f;
-
-                    for (int iy = -halfFilterWidth; iy <= halfFilterWidth; iy++)
-                    {
-                        int yy = Min(Max(0, y + iy), h - 1);
-
-                        const color3 featureWeights = featureFilter.get(iy + halfFilterWidth, 0);
-                        const color3 grayRef = iRefFeatures.get(x, yy);
-                        const color3 grayTest = iTestFeatures.get(x, yy);
-
-                        edgeRefX += featureWeights.x * grayRef.x;
-                        edgeTestX += featureWeights.x * grayTest.x;
-                        pointRefX += featureWeights.x * grayRef.y;
-                        pointTestX += featureWeights.x * grayTest.y;
-
-                        edgeRefY += featureWeights.y * grayRef.z;
-                        edgeTestY += featureWeights.y * grayTest.z;
-                        pointRefY += featureWeights.z * grayRef.z;
-                        pointTestY += featureWeights.z * grayTest.z;
-                    }
-
-                    const float edgeValueRef = std::sqrt(edgeRefX * edgeRefX + edgeRefY * edgeRefY);
-                    const float edgeValueTest = std::sqrt(edgeTestX * edgeTestX + edgeTestY * edgeTestY);
-                    const float pointValueRef = std::sqrt(pointRefX * pointRefX + pointRefY * pointRefY);
-                    const float pointValueTest = std::sqrt(pointTestX * pointTestX + pointTestY * pointTestY);
-
-                    const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
-                    const float pointDifference = std::abs(pointValueRef - pointValueTest);
-
-                    const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), FLIPConstants.gqf);
-                    const float colorDifference = this->get(x, y);
-
-                    const float errorFLIP = std::pow(colorDifference, 1.0f - featureDifference);
-
-                    this->set(x, y, errorFLIP);
-                }
-            }
-        }
-
         // Performs spatial filtering (and clamps the results) on both the reference and test image at the same time (for better performance).
         // Filtering has been changed to separable filtering for better performance. For details on the convolution, see the note on separable filters in the FLIP repository.
         // After filtering, compute color differences.
@@ -458,6 +359,105 @@ namespace FLIP
                     }
 
                     this->set(x, y, colorDifference);
+                }
+            }
+        }
+
+        // This includes convolution (using separable filtering) of grayRefImage and grayTestImage for both edge and point filtering.
+        // In addition, it computes the final FLIP error and stores in "this".
+        void computeFeatureDifferenceAndFinalError(const image<color3>& grayRefImage, const image<color3>& grayTestImage, const image<color3>& featureFilter)
+        {
+            const float normalizationFactor = 1.0f / std::sqrt(2.0f);
+            const int halfFilterWidth = featureFilter.getWidth() / 2;      // The edge and point filters are of the same size.
+            const int w = grayRefImage.getWidth();
+            const int h = grayRefImage.getHeight();
+
+            image<color3> iRefFeatures(w, h);
+            image<color3> iTestFeatures(w, h);
+
+            // Convolve in x direction (1st and 2nd derivative for filter in x direction, 0th derivative for filter in y direction).
+            // For details, see the note on separable filters in the FLIP repository.
+            // We filter both reference and test image simultaneously (for better performance).
+            const float oneOver116 = 1.0f / 116.0f;
+            const float sixteenOver116 = 16.0f / 116.0f;
+#pragma omp parallel for
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    float  iEdgeRefX = 0.0f, iEdgeTestX = 0.0f, iPointRefX = 0.0f, iPointTestX = 0.0f;
+                    float  refGaussianFiltered = 0.0f, testGaussianFiltered = 0.0f;
+
+                    for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
+                    {
+                        int xx = Min(Max(0, x + ix), w - 1);
+
+                        const color3 featureWeights = featureFilter.get(ix + halfFilterWidth, 0);
+                        float grayRef = grayRefImage.get(xx, y).x;
+                        float grayTest = grayTestImage.get(xx, y).x;
+
+                        // Normalize the gray values to [0,1].
+                        grayRef = grayRef * oneOver116 + sixteenOver116;
+                        grayTest = grayTest * oneOver116 + sixteenOver116;
+
+                        iEdgeRefX += featureWeights.y * grayRef;
+                        iEdgeTestX += featureWeights.y * grayTest;
+                        iPointRefX += featureWeights.z * grayRef;
+                        iPointTestX += featureWeights.z * grayTest;
+
+                        refGaussianFiltered += featureWeights.x * grayRef;
+                        testGaussianFiltered += featureWeights.x * grayTest;
+                    }
+
+                    iRefFeatures.set(x, y, color3(iEdgeRefX, iPointRefX, refGaussianFiltered));
+                    iTestFeatures.set(x, y, color3(iEdgeTestX, iPointTestX, testGaussianFiltered));
+                }
+            }
+
+            // Convolve in y direction (1st and 2nd derivative for filter in y direction, 0th derivative for filter in x direction), then compute difference.
+            // For details on the convolution, see the note on separable filters in the FLIP repository.
+            // We filter both reference and test image simultaneously (for better performance).
+#pragma omp parallel for
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    float  edgeRefX = 0.0f, edgeTestX = 0.0f, pointRefX = 0.0f, pointTestX = 0.0f;
+                    float  edgeRefY = 0.0f, edgeTestY = 0.0f, pointRefY = 0.0f, pointTestY = 0.0f;
+
+                    for (int iy = -halfFilterWidth; iy <= halfFilterWidth; iy++)
+                    {
+                        int yy = Min(Max(0, y + iy), h - 1);
+
+                        const color3 featureWeights = featureFilter.get(iy + halfFilterWidth, 0);
+                        const color3 grayRef = iRefFeatures.get(x, yy);
+                        const color3 grayTest = iTestFeatures.get(x, yy);
+
+                        edgeRefX += featureWeights.x * grayRef.x;
+                        edgeTestX += featureWeights.x * grayTest.x;
+                        pointRefX += featureWeights.x * grayRef.y;
+                        pointTestX += featureWeights.x * grayTest.y;
+
+                        edgeRefY += featureWeights.y * grayRef.z;
+                        edgeTestY += featureWeights.y * grayTest.z;
+                        pointRefY += featureWeights.z * grayRef.z;
+                        pointTestY += featureWeights.z * grayTest.z;
+                    }
+
+                    const float edgeValueRef = std::sqrt(edgeRefX * edgeRefX + edgeRefY * edgeRefY);
+                    const float edgeValueTest = std::sqrt(edgeTestX * edgeTestX + edgeTestY * edgeTestY);
+                    const float pointValueRef = std::sqrt(pointRefX * pointRefX + pointRefY * pointRefY);
+                    const float pointValueTest = std::sqrt(pointTestX * pointTestX + pointTestY * pointTestY);
+
+                    const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
+                    const float pointDifference = std::abs(pointValueRef - pointValueTest);
+
+                    const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), FLIPConstants.gqf);
+                    const float colorDifference = this->get(x, y);
+
+                    const float errorFLIP = std::pow(colorDifference, 1.0f - featureDifference);
+
+                    this->set(x, y, errorFLIP);
                 }
             }
         }

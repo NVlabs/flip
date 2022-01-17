@@ -104,7 +104,7 @@ typedef struct
 {
     std::string longName;
     std::string shortName;
-    int numArgs;  // -1: '+' if required, '*' if not required-
+    int numArgs;  // -1: '+' if required, '*' if not required.
     bool required;
     std::string meta;
     std::string help;

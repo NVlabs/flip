@@ -448,13 +448,7 @@ namespace FLIP
                     path = path.substr(0, path.find_last_of("."));  // Remove number.
                 }
             }
-
             this->mName = path;
-
-            // To lower case?
-            // std::transform(this->mDirectory.begin(), this->mDirectory.end(), this->mDirectory.begin(), ::tolower);
-            // std::transform(this->mExtension.begin(), this->mExtension.end(), this->mExtension.begin(), ::tolower);
-
             return true;
         }
 

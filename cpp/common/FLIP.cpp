@@ -124,6 +124,7 @@ int main(int argc, char** argv)
         {
             std::cout << commandLine.getErrorString() << "\n";
         }
+        std::cout << "FLIP v" << MajorVersion << "." << MinorVersion << "\n";
         commandLine.print();
         exit(EXIT_FAILURE);
     }

@@ -74,15 +74,6 @@ namespace FLIP
         { 0.231683f, 0.013791f, 0.0f, 0.18f, 0.3f, 0.018f },                                    // Hable.
     };
 
-    enum class CombineOperation
-    {
-        Add,
-        Subtract,
-        Multiply,
-        L1,
-        L2
-    };
-
     union int3
     {
         struct { int x, y, z; };

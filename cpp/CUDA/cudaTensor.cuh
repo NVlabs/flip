@@ -65,18 +65,6 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-namespace FLIP
-{
-    enum class CombineOperation
-    {
-        Add,
-        Subtract,
-        Multiply,
-        L1,
-        L2
-    };
-
-}
 #define USING_CUDA
 #include "sharedflip.h"
 #include "cudaKernels.cuh"
@@ -491,7 +479,6 @@ namespace FLIP
 
             return (ok != 0);
         }
-
 
         bool exrLoad(const std::string& fileName, const int z = 0)
         {

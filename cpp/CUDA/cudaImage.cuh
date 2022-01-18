@@ -487,14 +487,13 @@ namespace FLIP
         int height = reference.getHeight();
 
         // Temporary images (on device).
-        image<color3> referenceImage(reference), testImage(test);
         image<color3> intermediateReferenceYCx(width, height), intermediateReferenceCz(width, height), intermediateTestYCx(width, height), intermediateTestCz(width, height);
         image<color3> intermediateFeaturesReference(width, height), intermediateFeaturesTest(width, height);
         image<color3> colorFeatureDifference(width, height);
 
         // Transform from sRGB to YCxCz.
-        referenceImage.sRGB2YCxCz();
-        testImage.sRGB2YCxCz();
+        reference.sRGB2YCxCz();
+        test.sRGB2YCxCz();
 
         // Prepare separated spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
         // (YCx for the Achromatic and Red-Green channels and Cz for the Blue-Yellow channel). For details, see separated_convolutions.pdf in the FLIP repository.
@@ -506,7 +505,7 @@ namespace FLIP
         
         // The next two calls perform separable spatial filtering on both the reference and test image at the same time (for better performance).
         // The second call also computes the color difference between the images.
-        FLIP::image<color3>::spatialFilterFirstDir(referenceImage, intermediateReferenceYCx, intermediateReferenceCz, testImage, intermediateTestYCx, intermediateTestCz, spatialFilterYCx, spatialFilterCz);
+        FLIP::image<color3>::spatialFilterFirstDir(reference, intermediateReferenceYCx, intermediateReferenceCz, test, intermediateTestYCx, intermediateTestCz, spatialFilterYCx, spatialFilterCz);
         FLIP::image<color3>::spatialFilterSecondDirAndColorDifference(intermediateReferenceYCx, intermediateReferenceCz, intermediateTestYCx, intermediateTestCz, colorFeatureDifference, spatialFilterYCx, spatialFilterCz);
 
         // Prepare separated feature (edge/point) detection filters.
@@ -517,7 +516,7 @@ namespace FLIP
         setFeatureFilter(featureFilter, ppd);
 
         // The following two calls convolve (separably) referenceImage and testImage with the edge and point detection filters and performs additional computations for the feature differences.
-        FLIP::image<color3>::featureFilterFirstDir(referenceImage, intermediateFeaturesReference, testImage, intermediateFeaturesTest, featureFilter);
+        FLIP::image<color3>::featureFilterFirstDir(reference, intermediateFeaturesReference, test, intermediateFeaturesTest, featureFilter);
         FLIP::image<color3>::featureFilterSecondDirAndFeatureDifference(intermediateFeaturesReference, intermediateFeaturesTest, colorFeatureDifference, featureFilter);
 
         this->finalError(colorFeatureDifference);

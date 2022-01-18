@@ -136,6 +136,7 @@ namespace FLIP
         void FLIP(image<color3>& reference, image<color3>& test, float ppd);
 
         // Perform the x-component of separable spatial filtering of both the reference and the test.
+        // referenceImage and testImage are expected to be in YCxCz space.
         static void spatialFilterFirstDir(image& referenceImage, image& intermediateYCxImageReference, image& intermediateCzImageReference, image& testImage, image& intermediateYCxImageTest, image& intermediateCzImageTest, image& filterYCx, image& filterCz)
         {
             referenceImage.synchronizeDevice();
@@ -170,6 +171,7 @@ namespace FLIP
         }
 
         // Perform the x-component of separable feature detection filtering of both the reference and the test.
+        // referenceImage and testImage are expected to be in YCxCz space.
         static void featureFilterFirstDir(image& referenceImage, image& intermediateFeaturesImageReference, image& testImage, image& intermediateFeaturesImageTest, image& featureFilter)
         {
             referenceImage.synchronizeDevice();
@@ -437,7 +439,6 @@ namespace FLIP
         const int radius = int(std::ceil(3.0f * stdDev));
         const int width = 2 * radius + 1;
 
-        float g, dg, ddg;
         float gSum = 0.0f;
         float dgSumNegative = 0.0f;
         float dgSumPositive = 0.0f;
@@ -448,19 +449,18 @@ namespace FLIP
         {
             int xx = x - radius;
 
-            // 0th derivative.
-            g = Gaussian(float(xx), stdDev);
+            float g = Gaussian(float(xx), stdDev);
             gSum += g;
 
             // 1st derivative.
-            dg = -float(xx) * g;
+            float dg = -float(xx) * g;
             if (dg > 0.0f)
                 dgSumPositive += dg;
             else
                 dgSumNegative -= dg;
 
             // 2nd derivative.
-            ddg = (float(xx) * float(xx) / (stdDev * stdDev) - 1.0f) * g;
+            float ddg = (float(xx) * float(xx) / (stdDev * stdDev) - 1.0f) * g;
             if (ddg > 0.0f)
                 ddgSumPositive += ddg;
             else
@@ -469,7 +469,7 @@ namespace FLIP
             filter.set(x, 0, color3(g, dg, ddg));
         }
 
-        // Normalize weights (0th derivative should sum to 1; postive and negative weights of 1st and 2nd derivative should sum to 1 and -1, respectively).
+        // Normalize weights (Gaussian weights should sum to 1; postive and negative weights of 1st and 2nd derivative should sum to 1 and -1, respectively).
         for (int x = 0; x < width; x++)
         {
             color3 p = filter.get(x, 0);

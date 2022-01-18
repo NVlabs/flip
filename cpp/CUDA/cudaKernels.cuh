@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED Cz THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
@@ -261,9 +261,10 @@ namespace FLIP
         pImage[i] = color3::clamp(pImage[i], low, high);
     }
 
-    // Convolve in x direction (1st and 2nd derivative for filter in x direction, 0th derivative for filter in y direction).
+    // Convolve in x direction (1st and 2nd derivative for filter in x direction, Gaussian in y direction).
     // For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
     // We filter both reference and test image simultaneously (for better performance).
+    // referenceImage and testImage are expected to be in YCxCz space.
     __global__ static void kernelFeatureFilterFirstDir(color3* intermediateFeaturesImageReference, color3* referenceImage, color3* intermediateFeaturesImageTest, color3* testImage, color3* pFilter, const int3 dim, const int3 filterDim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -294,13 +295,13 @@ namespace FLIP
             float yReferenceNormalized = yReference * oneOver116 + sixteenOver116;
             float yTestNormalized = yTest * oneOver116 + sixteenOver116;
 
-            // Image multiplied by 1st and 2nd x-derivatives.
+            // Image multiplied by 1st and 2nd x-derivatives of Gaussian.
             dxReference += featureWeights.y * yReferenceNormalized;
             dxTest += featureWeights.y * yTestNormalized;
             ddxReference += featureWeights.z * yReferenceNormalized;
             ddxTest += featureWeights.z * yTestNormalized;
 
-            // Image multiplied by 0th derivative.
+            // Image multiplied by Gaussian.
             gaussianFilteredReference += featureWeights.x * yReferenceNormalized;
             gaussianFilteredTest += featureWeights.x * yTestNormalized;
         }
@@ -309,7 +310,7 @@ namespace FLIP
         intermediateFeaturesImageTest[dstIndex] = color3(dxTest, ddxTest, gaussianFilteredTest);
     }
 
-    // Convolve in y direction (1st and 2nd derivative for filter in y direction, 0th derivative for filter in x direction), then compute difference.
+    // Convolve in y direction (1st and 2nd derivative for filter in y direction, Gaussian in x direction), then compute difference.
     // For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
     // We filter both reference and test image simultaneously (for better performance).
     __global__ static void kernelFeatureFilterSecondDirAndFeatureDifference(color3* featureDifferenceImage, color3* intermediateFeaturesImageReference, color3* intermediateFeaturesImageTest, color3* pFilter, const int3 dim, const int3 filterDim)
@@ -338,13 +339,13 @@ namespace FLIP
             const color3 intermediateFeaturesReference = intermediateFeaturesImageReference[srcIndex];
             const color3 intermediateFeatureTest = intermediateFeaturesImageTest[srcIndex];
 
-            // Intermediate images (1st and 2nd derivative in x) multiplied by 0th derivative.
+            // Intermediate images (1st and 2nd derivative in x) multiplied by Gaussian.
             dxReference += featureWeights.x * intermediateFeaturesReference.x;
             dxTest += featureWeights.x * intermediateFeatureTest.x;
             ddxReference += featureWeights.x * intermediateFeaturesReference.y;
             ddxTest += featureWeights.x * intermediateFeatureTest.y;
 
-            // Intermediate image (0th derivative) multiplied by 1st and 2nd y-derivatives.
+            // Intermediate image (Gaussian) multiplied by 1st and 2nd y-derivatives of Gaussian.
             dyReference += featureWeights.y * intermediateFeaturesReference.z;
             dyTest += featureWeights.y * intermediateFeatureTest.z;
             ddyReference += featureWeights.z * intermediateFeaturesReference.z;
@@ -367,6 +368,7 @@ namespace FLIP
     // Performs spatial filtering in the x direction on both the reference and test image at the same time (for better performance).
     // Filtering has been changed to using separable filtering for better performance.
     // For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
+    // referenceImage and testImage are expected to be in YCxCz space.
     __global__ static void kernelSpatialFilterFirstDir(color3* intermediateYCxImageReference, color3* intermediateCzImageReference, color3* referenceImage, color3* intermediateYCxImageTest, color3* intermediateCzImageTest, color3* testImage, color3* pFilterYCx, color3* pFilterCz, const int3 dim, const int3 filterDim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;

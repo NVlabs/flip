@@ -264,7 +264,7 @@ namespace FLIP
     // Convolve in x direction (1st and 2nd derivative for filter in x direction, 0th derivative for filter in y direction).
     // For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
     // We filter both reference and test image simultaneously (for better performance).
-    __global__ static void kernelFeatureFilterFirstDir(color3* intermediateFeaturesImageReference, color3* referenceImage, color3* intermediateFeaturesImageTest, color3* testImage, color3* pFilter, const int3 dim, int3 filterDim)
+    __global__ static void kernelFeatureFilterFirstDir(color3* intermediateFeaturesImageReference, color3* referenceImage, color3* intermediateFeaturesImageTest, color3* testImage, color3* pFilter, const int3 dim, const int3 filterDim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -312,7 +312,7 @@ namespace FLIP
     // Convolve in y direction (1st and 2nd derivative for filter in y direction, 0th derivative for filter in x direction), then compute difference.
     // For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
     // We filter both reference and test image simultaneously (for better performance).
-    __global__ static void kernelFeatureFilterSecondDirAndFeatureDifference(color3* featureDifferenceImage, color3* intermediateFeaturesImageReference, color3* intermediateFeaturesImageTest, color3* pFilter, const int3 dim, int3 filterDim)
+    __global__ static void kernelFeatureFilterSecondDirAndFeatureDifference(color3* featureDifferenceImage, color3* intermediateFeaturesImageReference, color3* intermediateFeaturesImageTest, color3* pFilter, const int3 dim, const int3 filterDim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -367,7 +367,7 @@ namespace FLIP
     // Performs spatial filtering in the x direction on both the reference and test image at the same time (for better performance).
     // Filtering has been changed to using separable filtering for better performance.
     // For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
-    __global__ static void kernelSpatialFilterFirstDir(color3* intermediateYCxImageReference, color3* intermediateCzImageReference, color3* referenceImage, color3* intermediateYCxImageTest, color3* intermediateCzImageTest, color3* testImage, color3* pFilterYCx, color3* pFilterCz, const int3 dim, int3 filterDim)
+    __global__ static void kernelSpatialFilterFirstDir(color3* intermediateYCxImageReference, color3* intermediateCzImageReference, color3* referenceImage, color3* intermediateYCxImageTest, color3* intermediateCzImageTest, color3* testImage, color3* pFilterYCx, color3* pFilterCz, const int3 dim, const int3 filterDim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;

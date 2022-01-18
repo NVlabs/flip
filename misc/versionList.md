@@ -13,12 +13,12 @@ changed for the different versions of ꟻLIP:
     - Uses OpenMP for the CPU.
     - Results (not incuding file load/save):
         - 90-100x faster for LDR/HDR CPU (depends on CPU setup, though).
-        - 2.1-2.4x faster LDR/HDR CUDA (depends on CPU/GPU setup)
+        - 2.4-2.8x faster LDR/HDR CUDA (depends on CPU/GPU setup)
 		- Timings for 1920x1080 images:
 			- CPP/LDR: 75 ms
 			- CPP/HDR: 1260 ms
-			- CUDA/LDR: 15 ms
-			- CUDA/HDR: 160 ms
+			- CUDA/LDR: 13 ms
+			- CUDA/HDR: 136 ms
 
 # Version 1.1 (commit 4ed59e9)
 - NVIDIA Source Code License changed to a 3-Clause BSD License

@@ -12,11 +12,11 @@ changed for the different versions of ꟻLIP:
     - Merges several functions/kernels into fewer.
     - Uses OpenMP for the CPU.
     - Results (not incuding file load/save):
-        - 90-100x faster for LDR/HDR CPU (depends on CPU setup, though).
+        - 111-124x faster for LDR/HDR CPU (depends on CPU setup, though).
         - 2.4-2.8x faster LDR/HDR CUDA (depends on CPU/GPU setup)
 		- Timings for 1920x1080 images:
-			- CPP/LDR: 75 ms
-			- CPP/HDR: 1260 ms
+			- CPP/LDR: 63 ms
+			- CPP/HDR: 1050 ms
 			- CUDA/LDR: 13 ms
 			- CUDA/HDR: 136 ms
 

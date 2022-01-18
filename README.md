@@ -1,6 +1,6 @@
 ![Teaser image](images/teaser.png "Teaser image")
 
-# ꟻLIP: A Tool for Visualizing and Communicating Errors in Rendered Images
+# ꟻLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.2)
 By
 [Pontus Andersson](https://research.nvidia.com/person/pontus-andersson),
 [Jim Nilsson](https://research.nvidia.com/person/jim-nilsson),

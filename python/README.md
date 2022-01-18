@@ -1,4 +1,4 @@
-# ꟻLIP: A Tool for Visualizing and Communicating Errors in Rendered Images
+# ꟻLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.2)
 By
 [Pontus Andersson](https://research.nvidia.com/person/pontus-andersson),
 [Jim Nilsson](https://research.nvidia.com/person/jim-nilsson),
@@ -41,7 +41,7 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
 - Tested with Conda 4.10.0, Python 3.8.3, NumPy 1.19.0, OpenCV 4.0.1, and OpenEXR b1.3.2.
 - The ꟻLIP tool is provided in `flip.py`, which also contains several tool-specific utility functions.
   The API is provided in `flip-api.py` and image loading/saving/manipulation functions in `data.py`.
-  `../tests/test_python.py` contains simple tests used to test whether code updates alter results.
+  `../tests/test.py` contains simple tests used to test whether code updates alter results.
 - The naming convention used for the ꟻLIP tool's output is as follows (where `ppd` is the assumed number of pixels per degree,
   `tm` is the tone mapper assumed by HDR-ꟻLIP, `cstart` and `cstop` are the shortest and longest exposures, respectively, assumed by HDR-ꟻLIP,
   with `p` indicating a positive value and `m` indicating a negative value,

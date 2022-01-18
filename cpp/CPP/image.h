@@ -169,7 +169,6 @@ namespace FLIP
             const int radius = int(std::ceil(3.0f * stdDev));
             const int width = 2 * radius + 1;
 
-            float g, dg, ddg;
             float gSum = 0.0f;
             float dgSumNegative = 0.0f;
             float dgSumPositive = 0.0f;
@@ -180,19 +179,18 @@ namespace FLIP
             {
                 int xx = x - radius;
 
-                // 0th derivative.
-                g = Gaussian(float(xx), stdDev);
+                float g = Gaussian(float(xx), stdDev);
                 gSum += g;
 
                 // 1st derivative.
-                dg = -float(xx) * g;
+                float dg = -float(xx) * g;
                 if (dg > 0.0f)
                     dgSumPositive += dg;
                 else
                     dgSumNegative -= dg;
 
                 // 2nd derivative.
-                ddg = (float(xx) * float(xx) / (stdDev * stdDev) - 1.0f) * g;
+                float ddg = (float(xx) * float(xx) / (stdDev * stdDev) - 1.0f) * g;
                 if (ddg > 0.0f)
                     ddgSumPositive += ddg;
                 else
@@ -201,7 +199,7 @@ namespace FLIP
                 filter.set(x, 0, color3(g, dg, ddg));
             }
 
-            // Normalize weights (0th derivative should sum to 1; postive and negative weights of 1st and 2nd derivative should sum to 1 and -1, respectively).
+            // Normalize weights (Gaussian weights should sum to 1; postive and negative weights of 1st and 2nd derivative should sum to 1 and -1, respectively).
             for (int x = 0; x < width; x++)
             {
                 color3 p = filter.get(x, 0);
@@ -245,7 +243,7 @@ namespace FLIP
 
         // Performs spatial filtering (and clamps the results) on both the reference and test image at the same time (for better performance).
         // Filtering has been changed to separable filtering for better performance. For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
-        // After filtering, compute color differences.
+        // After filtering, compute color differences. referenceImage and testImage are expected to be in YCxCz space.
         void computeColorDifference(const FLIP::image<color3>& referenceImage, const FLIP::image<color3>& testImage, const FLIP::image<color3>& filterYCx, const FLIP::image<color3>& filterCz)
         {
             // Color difference constants
@@ -360,7 +358,7 @@ namespace FLIP
         }
 
         // This includes convolution (using separable filtering) of grayRefImage and grayTestImage for both edge and point filtering.
-        // In addition, it computes the final FLIP error and stores in "this".
+        // In addition, it computes the final FLIP error and stores in "this". referenceImage and testImage are expected to be in YCxCz space.
         void computeFeatureDifferenceAndFinalError(const image<color3>& referenceImage, const image<color3>& testImage, const image<color3>& featureFilter)
         {
             const float normalizationFactor = 1.0f / std::sqrt(2.0f);
@@ -371,7 +369,7 @@ namespace FLIP
             image<color3> intermediateFeaturesImageReference(w, h);
             image<color3> intermediateFeaturesImageTest(w, h);
 
-            // Convolve in x direction (1st and 2nd derivative for filter in x direction, 0th derivative for filter in y direction).
+            // Convolve in x direction (1st and 2nd derivative for filter in x direction, Gaussian in y direction).
             // For details, see separated_convolutions.pdf in the FLIP repository.
             // We filter both reference and test image simultaneously (for better performance).
             const float oneOver116 = 1.0f / 116.0f;
@@ -396,13 +394,13 @@ namespace FLIP
                         float yReferenceNormalized = yReference * oneOver116 + sixteenOver116;
                         float yTestNormalized = yTest * oneOver116 + sixteenOver116;
 
-                        // Image multiplied by 1st and 2nd x-derivatives.
+                        // Image multiplied by 1st and 2nd x-derivatives of Gaussian.
                         dxReference += featureWeights.y * yReferenceNormalized;
                         dxTest += featureWeights.y * yTestNormalized;
                         ddxReference += featureWeights.z * yReferenceNormalized;
                         ddxTest += featureWeights.z * yTestNormalized;
 
-                        // Image multiplied by 0th derivative.
+                        // Image multiplied by Gaussian.
                         gaussianFilteredReference += featureWeights.x * yReferenceNormalized;
                         gaussianFilteredTest += featureWeights.x * yTestNormalized;
                     }
@@ -412,7 +410,7 @@ namespace FLIP
                 }
             }
 
-            // Convolve in y direction (1st and 2nd derivative for filter in y direction, 0th derivative for filter in x direction), then compute difference.
+            // Convolve in y direction (1st and 2nd derivative for filter in y direction, Gaussian in x direction), then compute difference.
             // For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
             // We filter both reference and test image simultaneously (for better performance).
 #pragma omp parallel for
@@ -431,13 +429,13 @@ namespace FLIP
                         const color3 intermediateFeaturesReference = intermediateFeaturesImageReference.get(x, yy);
                         const color3 intermediateFeatureTest = intermediateFeaturesImageTest.get(x, yy);
 
-                        // Intermediate images (1st and 2nd derivative in x) multiplied by 0th derivative.
+                        // Intermediate images (1st and 2nd derivative in x) multiplied by Gaussian.
                         dxReference += featureWeights.x * intermediateFeaturesReference.x;
                         dxTest += featureWeights.x * intermediateFeatureTest.x;
                         ddxReference += featureWeights.x * intermediateFeaturesReference.y;
                         ddxTest += featureWeights.x * intermediateFeatureTest.y;
 
-                        // Intermediate image (0th derivative) multiplied by 1st and 2nd y-derivatives.
+                        // Intermediate image (Gaussian) multiplied by 1st and 2nd y-derivatives of Gaussian.
                         dyReference += featureWeights.y * intermediateFeaturesReference.z;
                         dyTest += featureWeights.y * intermediateFeatureTest.z;
                         ddyReference += featureWeights.z * intermediateFeaturesReference.z;

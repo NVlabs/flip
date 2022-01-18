@@ -414,7 +414,6 @@ def check_larger_than_one(value):
 if __name__ == '__main__':
 	major_version = 1
 	minor_version = 2
-	print("FLIP v%d.%d." % (major_version, minor_version))
 	parser = argparse.ArgumentParser(description=("Compute FLIP between reference.<png|exr> and test.<png|exr>.\n"
 												  "Reference and test(s) must have same resolution and format.\n"
 												  "If pngs are entered, LDR-FLIP will be evaluated. If exrs are entered, HDR-FLIP will be evaluated.\n"
@@ -455,6 +454,7 @@ if __name__ == '__main__':
 
 	# Print help string if flip.py is run without arguments
 	if len(sys.argv) == 1:
+		print("FLIP v%d.%d." % (major_version, minor_version))
 		parser.print_help()
 		sys.exit(1)
 

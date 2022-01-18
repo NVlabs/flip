@@ -68,24 +68,24 @@ if __name__ == '__main__':
 	# Parse command line argument.
 	if(sys.argv[1] == "--cuda" or sys.argv[1] == "cuda" or sys.argv[1] == "-cuda"):
 		test_str = "CUDA"
-		correct_ldr_image_filename = "correct_ldrflip_cuda.png";
-		correct_hdr_image_filename = "correct_hdrflip_cuda.png";
+		correct_ldr_image_filename = "correct_ldrflip_cuda.png"
+		correct_hdr_image_filename = "correct_hdrflip_cuda.png"
 		ldr_cmd = "../cpp/x64/release/flip-cuda.exe --reference ../images/reference.png --test ../images/test.png"
 		hdr_cmd = "../cpp/x64/release/flip-cuda.exe --reference ../images/reference.exr --test ../images/test.exr --no-exposure-map"
 		expected_ldr_mean = 0.159691
 		expected_hdr_mean = 0.283478
 	elif(sys.argv[1] == "--cpp" or sys.argv[1] == "cpp" or sys.argv[1] == "-cpp"):
 		test_str = "CPP"
-		correct_ldr_image_filename = "correct_ldrflip_cpp.png";
-		correct_hdr_image_filename = "correct_hdrflip_cpp.png";
+		correct_ldr_image_filename = "correct_ldrflip_cpp.png"
+		correct_hdr_image_filename = "correct_hdrflip_cpp.png"
 		ldr_cmd = "../cpp/x64/release/flip.exe --reference ../images/reference.png --test ../images/test.png"
 		hdr_cmd = "../cpp/x64/release/flip.exe --reference ../images/reference.exr --test ../images/test.exr --no-exposure-map"
 		expected_ldr_mean = 0.159691
 		expected_hdr_mean = 0.283478
 	elif(sys.argv[1] == "--python" or sys.argv[1] == "python" or sys.argv[1] == "-python"):
 		test_str = "PYTHON"
-		correct_ldr_image_filename = "correct_ldrflip_python.png";
-		correct_hdr_image_filename = "correct_hdrflip_python.png";
+		correct_ldr_image_filename = "correct_ldrflip_python.png"
+		correct_hdr_image_filename = "correct_hdrflip_python.png"
 		ldr_cmd = "python ../python/flip.py --reference ../images/reference.png --test ../images/test.png"
 		hdr_cmd = "python ../python/flip.py --reference ../images/reference.exr --test ../images/test.exr --no_exposure_map"
 		expected_ldr_mean = 0.159693
@@ -94,7 +94,7 @@ if __name__ == '__main__':
 		print("Error: the argument should be one of --cuda, --cpp, and --python.")
 		sys.exit()
 
-	print("Running " + test_str + " tests...");
+	print("Running " + test_str + " tests...")
 	print("========================")
 
 	# Load correct LDR/HDR FLIP images in the tests directory.

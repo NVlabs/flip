@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * THIS SOFTWARE IS PROVIDED Cz THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
@@ -263,7 +263,8 @@ namespace FLIP
 
     // Convolve in x direction (1st and 2nd derivative for filter in x direction, 0th derivative for filter in y direction).
     // For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
-    __global__ static void kernelFeatureFilterFirstDir(color3* dstImage1, color3* srcImage1, color3* dstImage2, color3* srcImage2, color3* pFilter, const int3 dim, int3 filterDim)
+    // We filter both reference and test image simultaneously (for better performance).
+    __global__ static void kernelFeatureFilterFirstDir(color3* intermediateFeaturesImageReference, color3* referenceImage, color3* intermediateFeaturesImageTest, color3* testImage, color3* pFilter, const int3 dim, int3 filterDim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -274,8 +275,8 @@ namespace FLIP
 
         const float halfFilterWidth = filterDim.x / 2;
 
-        float  edge1X = 0.0f, edge2X = 0.0f, point1X = 0.0f, point2X = 0.0f;
-        float  gaussianFiltered1 = 0.0f, gaussianFiltered2 = 0.0f;
+        float dxReference = 0.0f, dxTest = 0.0f, ddxReference = 0.0f, ddxTest = 0.0f;
+        float gaussianFilteredReference = 0.0f, gaussianFilteredTest = 0.0f;
 
         const float oneOver116 = 1.0f / 116.0f;
         const float sixteenOver116 = 16.0f / 116.0f;
@@ -286,29 +287,32 @@ namespace FLIP
             int filterIndex = ix + halfFilterWidth;
             int srcIndex = y * dim.x + xx;
             const color3 featureWeights = pFilter[filterIndex];
-            float src1 = srcImage1[srcIndex].x;
-            float src2 = srcImage2[srcIndex].x;
+            float yReference = referenceImage[srcIndex].x;
+            float yTest = testImage[srcIndex].x;
 
-            // Normalize the gray values to [0,1].
-            src1 = src1 * oneOver116 + sixteenOver116;
-            src2 = src2 * oneOver116 + sixteenOver116;
+            // Normalize the Y values to [0,1].
+            float yReferenceNormalized = yReference * oneOver116 + sixteenOver116;
+            float yTestNormalized = yTest * oneOver116 + sixteenOver116;
 
-            edge1X += featureWeights.y * src1;
-            edge2X += featureWeights.y * src2;
-            point1X += featureWeights.z * src1;
-            point2X += featureWeights.z * src2;
+            // Image multiplied by 1st and 2nd x-derivatives.
+            dxReference += featureWeights.y * yReferenceNormalized;
+            dxTest += featureWeights.y * yTestNormalized;
+            ddxReference += featureWeights.z * yReferenceNormalized;
+            ddxTest += featureWeights.z * yTestNormalized;
 
-            gaussianFiltered1 += featureWeights.x * src1;
-            gaussianFiltered2 += featureWeights.x * src2;
+            // Image multiplied by 0th derivative.
+            gaussianFilteredReference += featureWeights.x * yReferenceNormalized;
+            gaussianFilteredTest += featureWeights.x * yTestNormalized;
         }
 
-        dstImage1[dstIndex] = color3(edge1X, point1X, gaussianFiltered1);
-        dstImage2[dstIndex] = color3(edge2X, point2X, gaussianFiltered2);
+        intermediateFeaturesImageReference[dstIndex] = color3(dxReference, ddxReference, gaussianFilteredReference);
+        intermediateFeaturesImageTest[dstIndex] = color3(dxTest, ddxTest, gaussianFilteredTest);
     }
 
     // Convolve in y direction (1st and 2nd derivative for filter in y direction, 0th derivative for filter in x direction), then compute difference.
     // For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
-    __global__ static void kernelFeatureFilterSecondDirAndFeatureDifference(color3* dstImage, color3* srcImage1, color3* srcImage2, color3* pFilter, const int3 dim, int3 filterDim)
+    // We filter both reference and test image simultaneously (for better performance).
+    __global__ static void kernelFeatureFilterSecondDirAndFeatureDifference(color3* featureDifferenceImage, color3* intermediateFeaturesImageReference, color3* intermediateFeaturesImageTest, color3* pFilter, const int3 dim, int3 filterDim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -321,8 +325,8 @@ namespace FLIP
 
         const float halfFilterWidth = filterDim.x / 2;
 
-        float  edge1X = 0.0f, edge2X = 0.0f, point1X = 0.0f, point2X = 0.0f;
-        float  edge1Y = 0.0f, edge2Y = 0.0f, point1Y = 0.0f, point2Y = 0.0f;
+        float dxReference = 0.0f, dxTest = 0.0f, ddxReference = 0.0f, ddxTest = 0.0f;
+        float dyReference = 0.0f, dyTest = 0.0f, ddyReference = 0.0f, ddyTest = 0.0f;
 
         for (int iy = -halfFilterWidth; iy <= halfFilterWidth; iy++)
         {
@@ -331,37 +335,39 @@ namespace FLIP
             int filterIndex = iy + halfFilterWidth;
             int srcIndex = yy * dim.x + x;
             const color3 featureWeights = pFilter[filterIndex];
-            const color3 src1 = srcImage1[srcIndex];
-            const color3 src2 = srcImage2[srcIndex];
+            const color3 intermediateFeaturesReference = intermediateFeaturesImageReference[srcIndex];
+            const color3 intermediateFeatureTest = intermediateFeaturesImageTest[srcIndex];
 
-            edge1X += featureWeights.x * src1.x;
-            edge2X += featureWeights.x * src2.x;
-            point1X += featureWeights.x * src1.y;
-            point2X += featureWeights.x * src2.y;
+            // Intermediate images (1st and 2nd derivative in x) multiplied by 0th derivative.
+            dxReference += featureWeights.x * intermediateFeaturesReference.x;
+            dxTest += featureWeights.x * intermediateFeatureTest.x;
+            ddxReference += featureWeights.x * intermediateFeaturesReference.y;
+            ddxTest += featureWeights.x * intermediateFeatureTest.y;
 
-            edge1Y += featureWeights.y * src1.z;
-            edge2Y += featureWeights.y * src2.z;
-            point1Y += featureWeights.z * src1.z;
-            point2Y += featureWeights.z * src2.z;
+            // Intermediate image (0th derivative) multiplied by 1st and 2nd y-derivatives.
+            dyReference += featureWeights.y * intermediateFeaturesReference.z;
+            dyTest += featureWeights.y * intermediateFeatureTest.z;
+            ddyReference += featureWeights.z * intermediateFeaturesReference.z;
+            ddyTest += featureWeights.z * intermediateFeatureTest.z;
         }
 
-        const float edgeValueRef = std::sqrt(edge1X * edge1X + edge1Y * edge1Y);
-        const float edgeValueTest = std::sqrt(edge2X * edge2X + edge2Y * edge2Y);
-        const float pointValueRef = std::sqrt(point1X * point1X + point1Y * point1Y);
-        const float pointValueTest = std::sqrt(point2X * point2X + point2Y * point2Y);
+        const float edgeValueRef = std::sqrt(dxReference * dxReference + dyReference * dyReference);
+        const float edgeValueTest = std::sqrt(dxTest * dxTest + dyTest * dyTest);
+        const float pointValueRef = std::sqrt(ddxReference * ddxReference + ddyReference * ddyReference);
+        const float pointValueTest = std::sqrt(ddxTest * ddxTest + ddyTest * ddyTest);
 
         const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
         const float pointDifference = std::abs(pointValueRef - pointValueTest);
 
         const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), DeviceFLIPConstants.gqf);
 
-        dstImage[dstIndex].y = featureDifference;
+        featureDifferenceImage[dstIndex].y = featureDifference;
     }
 
     // Performs spatial filtering in the x direction on both the reference and test image at the same time (for better performance).
     // Filtering has been changed to using separable filtering for better performance.
     // For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
-    __global__ static void kernelSpatialFilterFirstDir(color3* dstImageARG1, color3* dstImageBY1, color3* srcImage1, color3* dstImageARG2, color3* dstImageBY2, color3* srcImage2, color3* pFilterARG, color3* pFilterBY, const int3 dim, int3 filterDim)
+    __global__ static void kernelSpatialFilterFirstDir(color3* intermediateYCxImageReference, color3* intermediateCzImageReference, color3* referenceImage, color3* intermediateYCxImageTest, color3* intermediateCzImageTest, color3* testImage, color3* pFilterYCx, color3* pFilterCz, const int3 dim, int3 filterDim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -373,10 +379,10 @@ namespace FLIP
         const float halfFilterWidth = filterDim.x / 2;
 
         // Filter in x direction.
-        color3 colorSumARG1 = { 0.0f, 0.0f, 0.0f };
-        color3 colorSumBY1 = { 0.0f, 0.0f, 0.0f };
-        color3 colorSumARG2 = { 0.0f, 0.0f, 0.0f };
-        color3 colorSumBY2 = { 0.0f, 0.0f, 0.0f };
+        color3 intermediateYCxReference = { 0.0f, 0.0f, 0.0f };
+        color3 intermediateYCxTest = { 0.0f, 0.0f, 0.0f };
+        color3 intermediateCzReference = { 0.0f, 0.0f, 0.0f };
+        color3 intermediateCzTest = { 0.0f, 0.0f, 0.0f };
 
         for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
         {
@@ -384,27 +390,27 @@ namespace FLIP
 
             int filterIndex = ix + halfFilterWidth;
             int srcIndex = y * dim.x + xx;
-            const color3 weightsARG = pFilterARG[filterIndex];
-            const color3 weightsBY = pFilterBY[filterIndex];
-            const color3 srcColor1 = srcImage1[srcIndex];
-            const color3 srcColor2 = srcImage2[srcIndex];
+            const color3 weightsYCx = pFilterYCx[filterIndex];
+            const color3 weightsCz = pFilterCz[filterIndex];
+            const color3 referenceColor = referenceImage[srcIndex];
+            const color3 testColor = testImage[srcIndex];
 
-            colorSumARG1 += color3(weightsARG.x * srcColor1.x, weightsARG.y * srcColor1.y, 0.0f);
-            colorSumARG2 += color3(weightsARG.x * srcColor2.x, weightsARG.y * srcColor2.y, 0.0f);
-            colorSumBY1 += color3(weightsBY.x * srcColor1.z, weightsBY.y * srcColor1.z, 0.0f);
-            colorSumBY2 += color3(weightsBY.x * srcColor2.z, weightsBY.y * srcColor2.z, 0.0f);
+            intermediateYCxReference += color3(weightsYCx.x * referenceColor.x, weightsYCx.y * referenceColor.y, 0.0f);
+            intermediateYCxTest += color3(weightsYCx.x * testColor.x, weightsYCx.y * testColor.y, 0.0f);
+            intermediateCzReference += color3(weightsCz.x * referenceColor.z, weightsCz.y * referenceColor.z, 0.0f);
+            intermediateCzTest += color3(weightsCz.x * testColor.z, weightsCz.y * testColor.z, 0.0f);
         }
 
-        dstImageARG1[dstIndex] = color3(colorSumARG1.x, colorSumARG1.y, 0.0f);
-        dstImageBY1[dstIndex] = color3(colorSumBY1.x, colorSumBY1.y, 0.0f);
-        dstImageARG2[dstIndex] = color3(colorSumARG2.x, colorSumARG2.y, 0.0f);
-        dstImageBY2[dstIndex] = color3(colorSumBY2.x, colorSumBY2.y, 0.0f);
+        intermediateYCxImageReference[dstIndex] = color3(intermediateYCxReference.x, intermediateYCxReference.y, 0.0f);
+        intermediateYCxImageTest[dstIndex] = color3(intermediateYCxTest.x, intermediateYCxTest.y, 0.0f);
+        intermediateCzImageReference[dstIndex] = color3(intermediateCzReference.x, intermediateCzReference.y, 0.0f);
+        intermediateCzImageTest[dstIndex] = color3(intermediateCzTest.x, intermediateCzTest.y, 0.0f);
     }
 
     // Performs spatial filtering in the y direction (and clamps the results) on both the reference and test image at the same time (for better performance).
     // Filtering has been changed to using separable filtering for better performance. For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
     // After filtering, compute color differences.
-    __global__ static void kernelSpatialFilterSecondDirAndColorDifference(color3* dstImage, color3* srcImageARG1, color3* srcImageBY1, color3* srcImageARG2, color3* srcImageBY2, color3* pFilterARG, color3* pFilterBY, const int3 dim, const int3 filterDim, const float cmax, const float pccmax)
+    __global__ static void kernelSpatialFilterSecondDirAndColorDifference(color3* colorDifferenceImage, color3* intermediateYCxImageReference, color3* intermediateCzImageReference, color3* intermediateYCxImageTest, color3* intermediateCzImageTest, color3* pFilterYCx, color3* pFilterCz, const int3 dim, const int3 filterDim, const float cmax, const float pccmax)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -416,10 +422,10 @@ namespace FLIP
         const float halfFilterWidth = filterDim.x / 2;
 
         // Filter in y direction.
-        color3 colorSumARG1 = { 0.0f, 0.0f, 0.0f };
-        color3 colorSumBY1 = { 0.0f, 0.0f, 0.0f };
-        color3 colorSumARG2 = { 0.0f, 0.0f, 0.0f };
-        color3 colorSumBY2 = { 0.0f, 0.0f, 0.0f };
+        color3 filteredYCxReference = { 0.0f, 0.0f, 0.0f };
+        color3 filteredYCxTest = { 0.0f, 0.0f, 0.0f };
+        color3 filteredCzReference = { 0.0f, 0.0f, 0.0f };
+        color3 filteredCzTest = { 0.0f, 0.0f, 0.0f };
 
         for (int iy = -halfFilterWidth; iy <= halfFilterWidth; iy++)
         {
@@ -427,41 +433,41 @@ namespace FLIP
 
             int filterIndex = iy + halfFilterWidth;
             int srcIndex = yy * dim.x + x;
-            const color3 weightsARG = pFilterARG[filterIndex];
-            const color3 weightsBY = pFilterBY[filterIndex];
-            const color3 srcColorARG1 = srcImageARG1[srcIndex];
-            const color3 srcColorBY1 = srcImageBY1[srcIndex];
-            const color3 srcColorARG2 = srcImageARG2[srcIndex];
-            const color3 srcColorBY2 = srcImageBY2[srcIndex];
+            const color3 weightsYCx = pFilterYCx[filterIndex];
+            const color3 weightsCz = pFilterCz[filterIndex];
+            const color3 intermediateYCxReference = intermediateYCxImageReference[srcIndex];
+            const color3 intermediateYCxTest = intermediateYCxImageTest[srcIndex];
+            const color3 intermediateCzReference = intermediateCzImageReference[srcIndex];
+            const color3 intermediateCzTest = intermediateCzImageTest[srcIndex];
 
-            colorSumARG1 += color3(weightsARG.x * srcColorARG1.x, weightsARG.y * srcColorARG1.y, 0.0f);
-            colorSumARG2 += color3(weightsARG.x * srcColorARG2.x, weightsARG.y * srcColorARG2.y, 0.0f);
-            colorSumBY1 += color3(weightsBY.x * srcColorBY1.x, weightsBY.y * srcColorBY1.y, 0.0f);
-            colorSumBY2 += color3(weightsBY.x * srcColorBY2.x, weightsBY.y * srcColorBY2.y, 0.0f);
+            filteredYCxReference += color3(weightsYCx.x * intermediateYCxReference.x, weightsYCx.y * intermediateYCxReference.y, 0.0f);
+            filteredYCxTest += color3(weightsYCx.x * intermediateYCxTest.x, weightsYCx.y * intermediateYCxTest.y, 0.0f);
+            filteredCzReference += color3(weightsCz.x * intermediateCzReference.x, weightsCz.y * intermediateCzReference.y, 0.0f);
+            filteredCzTest += color3(weightsCz.x * intermediateCzTest.x, weightsCz.y * intermediateCzTest.y, 0.0f);
         }
 
         // Clamp to [0,1] in linear RGB.
-        color3 color1 = color3(colorSumARG1.x, colorSumARG1.y, colorSumBY1.x + colorSumBY1.y);
-        color3 color2 = color3(colorSumARG2.x, colorSumARG2.y, colorSumBY2.x + colorSumBY2.y);
-        color1 = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(color1)));
-        color2 = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(color2)));
+        color3 filteredYCxCzReference = color3(filteredYCxReference.x, filteredYCxReference.y, filteredCzReference.x + filteredCzReference.y);
+        color3 filteredYCxCzTest = color3(filteredYCxTest.x, filteredYCxTest.y, filteredCzTest.x + filteredCzTest.y);
+        filteredYCxCzReference = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(filteredYCxCzReference)));
+        filteredYCxCzTest = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(filteredYCxCzTest)));
 
         // Move from linear RGB to CIELab.
-        color1 = color3::XYZ2CIELab(color3::LinearRGB2XYZ(color1));
-        color2 = color3::XYZ2CIELab(color3::LinearRGB2XYZ(color2));
+        filteredYCxCzReference = color3::XYZ2CIELab(color3::LinearRGB2XYZ(filteredYCxCzReference));
+        filteredYCxCzTest = color3::XYZ2CIELab(color3::LinearRGB2XYZ(filteredYCxCzTest));
 
         // Apply Hunt adjustment.
-        color1.y = color3::Hunt(color1.x, color1.y);
-        color1.z = color3::Hunt(color1.x, color1.z);
-        color2.y = color3::Hunt(color2.x, color2.y);
-        color2.z = color3::Hunt(color2.x, color2.z);
+        filteredYCxCzReference.y = color3::Hunt(filteredYCxCzReference.x, filteredYCxCzReference.y);
+        filteredYCxCzReference.z = color3::Hunt(filteredYCxCzReference.x, filteredYCxCzReference.z);
+        filteredYCxCzTest.y = color3::Hunt(filteredYCxCzTest.x, filteredYCxCzTest.y);
+        filteredYCxCzTest.z = color3::Hunt(filteredYCxCzTest.x, filteredYCxCzTest.z);
 
-        float colorDifference = color3::HyAB(color1, color2);
+        float colorDifference = color3::HyAB(filteredYCxCzReference, filteredYCxCzTest);
 
         colorDifference = powf(colorDifference, DeviceFLIPConstants.gqc);
 
         // Re-map error to the [0, 1] range. Values between 0 and pccmax are mapped to the range [0, gpt],
-        // while the rest are mapped to the range (gpt, 1]
+        // while the rest are mapped to the range (gpt, 1].
         if (colorDifference < pccmax)
         {
             colorDifference *= DeviceFLIPConstants.gpt / pccmax;
@@ -471,6 +477,6 @@ namespace FLIP
             colorDifference = DeviceFLIPConstants.gpt + ((colorDifference - pccmax) / (cmax - pccmax)) * (1.0f - DeviceFLIPConstants.gpt);
         }
 
-        dstImage[dstIndex] = color3(colorDifference, 0.0f, 0.0f);
+        colorDifferenceImage[dstIndex] = color3(colorDifference, 0.0f, 0.0f);
     }
 }

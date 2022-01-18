@@ -56,7 +56,7 @@ from data import *
 
 if __name__ == '__main__':
 	"""
-	Test script. Runs flip.exe from the cpp/x64/release/-directory for both LDR and HDR.
+	Test script. Runs FLIP for both LDR and HDR using one of CUDA/CPP/PYTHON based on the commandline argument.
     Both the mean FLIP is tested and the pixel values from the resulting FLIP images.
 	"""
 

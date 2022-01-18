@@ -26,6 +26,9 @@ The changes made for the different versions of ꟻLIP are summarized in the [ver
 [An image gallery](https://research.nvidia.com/node/3525) displaying a large quantity of reference/test images and corresponding error maps from
 different metrics.
 
+Version 1.2. implemented separated convolutions for the C++ and CUDA versions of ꟻLIP. A note explaining those
+can be found [here](misc/separatedConvolutions.pdf).
+
 # License
 
 Copyright © 2020-2022, NVIDIA Corporation & Affiliates. All rights reserved.

@@ -126,7 +126,7 @@ namespace FLIP
 
         //////////////////////////////////////////////////////////////////////////////////
 
-        static void setSpatialFilters(image<color3>& filterYCx, image<color3>& filterCz, float ppd, int filterRadius) // For details, see separated_convolutions.pdf in the FLIP repository.
+        static void setSpatialFilters(image<color3>& filterYCx, image<color3>& filterCz, float ppd, int filterRadius) // For details, see separatedConvolutions.pdf in the FLIP repository.
         {
             float deltaX = 1.0f / ppd;
             color3 filterSumYCx = { 0.0f, 0.0f, 0.0f };
@@ -163,7 +163,7 @@ namespace FLIP
             }
         }
 
-        static void setFeatureFilter(image<color3>& filter, const float ppd) // For details, see separated_convolutions.pdf in the FLIP repository.
+        static void setFeatureFilter(image<color3>& filter, const float ppd) // For details, see separatedConvolutions.pdf in the FLIP repository.
         {
             const float stdDev = 0.5f * FLIPConstants.gw * ppd;
             const int radius = int(std::ceil(3.0f * stdDev));
@@ -242,7 +242,7 @@ namespace FLIP
         }
 
         // Performs spatial filtering (and clamps the results) on both the reference and test image at the same time (for better performance).
-        // Filtering has been changed to separable filtering for better performance. For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
+        // Filtering has been changed to separable filtering for better performance. For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
         // After filtering, compute color differences. referenceImage and testImage are expected to be in YCxCz space.
         void computeColorDifference(const FLIP::image<color3>& referenceImage, const FLIP::image<color3>& testImage, const FLIP::image<color3>& filterYCx, const FLIP::image<color3>& filterCz)
         {
@@ -370,7 +370,7 @@ namespace FLIP
             image<color3> intermediateFeaturesImageTest(w, h);
 
             // Convolve in x direction (1st and 2nd derivative for filter in x direction, Gaussian in y direction).
-            // For details, see separated_convolutions.pdf in the FLIP repository.
+            // For details, see separatedConvolutions.pdf in the FLIP repository.
             // We filter both reference and test image simultaneously (for better performance).
             const float oneOver116 = 1.0f / 116.0f;
             const float sixteenOver116 = 16.0f / 116.0f;
@@ -411,7 +411,7 @@ namespace FLIP
             }
 
             // Convolve in y direction (1st and 2nd derivative for filter in y direction, Gaussian in x direction), then compute difference.
-            // For details on the convolution, see separated_convolutions.pdf in the FLIP repository.
+            // For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
             // We filter both reference and test image simultaneously (for better performance).
 #pragma omp parallel for
             for (int y = 0; y < h; y++)

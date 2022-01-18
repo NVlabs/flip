@@ -40,7 +40,7 @@ namespace FLIP
         return a * std::sqrt(pi / b) * std::exp(-pi_sq * x2 / b);
     }
 
-    static inline float GaussianSqrt(const float x2, const float a, const float b) // Needed to separate sum of Gaussians filters (see separated_convolutions.pdf in the FLIP repository).
+    static inline float GaussianSqrt(const float x2, const float a, const float b) // Needed to separate sum of Gaussians filters (see separatedConvolutions.pdf in the FLIP repository).
     {
         const float pi = float(PI);
         const float pi_sq = float(PI * PI);

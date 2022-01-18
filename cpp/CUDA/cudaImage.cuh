@@ -449,7 +449,7 @@ namespace FLIP
             int xx = x - radius;
 
             // 0th derivative.
-            g = StandardGaussian(float(xx), stdDev);
+            g = Gaussian(float(xx), stdDev);
             gSum += g;
 
             // 1st derivative.

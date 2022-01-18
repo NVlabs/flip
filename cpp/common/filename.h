@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,7 +26,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * SPDX-FileCopyrightText: Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
@@ -108,14 +108,14 @@ namespace FLIP
 
         inline void setDirectory(const std::string directory)
         {
-            // remove trailing slashes
+            // Remove trailing slashes.
             this->mDirectory = std::regex_replace(directory, std::regex("[\\\\/]+$"), "");
         }
         inline const std::string& getDirectory(void) const { return this->mDirectory; }
 
         inline void setName(std::string name)
         {
-            // remove forbidden characters from the name
+            // Remove forbidden characters from the name.
             this->mName = std::regex_replace(name, std::regex("\\\\|/|:|\\*|\\?|\\||\"|<|>"), "_");
         }
         inline const std::string& getName(void) const { return this->mName; }
@@ -171,7 +171,7 @@ namespace FLIP
 
             if (totalLength > maxLen)
             {
-                //  first shorten the directory
+                //  First shorten the directory.
                 int overflow = totalLength - int(maxLen);
 
                 if (directoryStringLength > overflow)
@@ -180,7 +180,7 @@ namespace FLIP
                 }
                 else
                 {
-                    //  we can't keep any of the directory
+                    //  We can't keep any of the directory.
                     if (maxLen == 0)
                     {
                         directoryString = "";
@@ -206,7 +206,7 @@ namespace FLIP
 
                 if (overflow > 0)
                 {
-                    //  we can't keep the whole filename
+                    //  We can't keep the whole filename.
                     if (maxLen < 4)
                     {
                         fileNameString = "";
@@ -246,12 +246,12 @@ namespace FLIP
 
         // Returns a relative path to the file by attempting to remove basePath part.
         // Unlike PathRelativePathTo function provided by Windows, this function will
-        // give up and return an empty string if current file is not in basePath
+        // give up and return an empty string if current file is not in basePath.
         std::string getRelativePath(std::string const& basePath, bool caseInsensitive = false) const
         {
             uint32_t relativePathStart = 0;
             auto basePathLength = basePath.size();
-            // remove trailing slashes
+            // Remove trailing slashes.
             while (basePath[basePathLength - 1] == '\\' || basePath[basePathLength - 1] == '/')
                 --basePathLength;
 
@@ -412,27 +412,27 @@ namespace FLIP
         {
             init();
 
-            //  must be at least one slash to contain a directory
+            // Must be at least one slash to contain a directory.
             size_t iLastSlash = path.find_last_of("\\/");
             if (iLastSlash != std::string::npos)
             {
                 this->mDirectory = path.substr(0, iLastSlash);
                 this->mDirectory = this->mDirectory.substr(0, this->mDirectory.find_last_not_of("\\/") + 1);
 
-                //  no wildcards allowed in the directory
+                // No wildcards allowed in the directory.
                 if (this->mDirectory.find_first_of("*?[]{}") != std::string::npos)
                     return false;
             }
 
-            //  period, plus no later slash, constitutes an extension
+            // Period, plus no later slash, constitutes an extension.
             size_t iLastPeriod = path.find_last_of(".");
             if (iLastPeriod != std::string::npos && (iLastSlash == std::string::npos || iLastPeriod > iLastSlash))
             {
                 this->mExtension = path.substr(path.find_last_of(".") + 1);
             }
 
-            path = path.substr(0, iLastPeriod);  //  remove extension
-            path = path.substr(path.find_last_of("\\/") + 1);  //  remove directory
+            path = path.substr(0, iLastPeriod);  // Remove extension.
+            path = path.substr(path.find_last_of("\\/") + 1);  // Remove directory.
 
             this->mIsNumbered = false;
 
@@ -445,16 +445,10 @@ namespace FLIP
                     this->mIsNumbered = true;
                     this->mNumber = atoi(numberString.c_str());
                     this->mNumberWidth = numberString.size();
-                    path = path.substr(0, path.find_last_of("."));  //  remove number
+                    path = path.substr(0, path.find_last_of("."));  // Remove number.
                 }
             }
-
             this->mName = path;
-
-            //  to lower case?
-    //            std::transform(this->mDirectory.begin(), this->mDirectory.end(), this->mDirectory.begin(), ::tolower);
-    //            std::transform(this->mExtension.begin(), this->mExtension.end(), this->mExtension.begin(), ::tolower);
-
             return true;
         }
 
@@ -473,7 +467,7 @@ namespace FLIP
                 this->mDirectory = tmpFilename.getDirectory();
             }
 
-            //  remove common preamble, delimited by periods
+            // Remove common preamble, delimited by periods.
             size_t last = 0;
             size_t lastPeriod = 0;
             std::string name0 = fn0.getName();
@@ -522,7 +516,7 @@ namespace FLIP
             std::sort(filenames.begin(), filenames.end(),
                 [](std::string s0, std::string s1)
                 {
-                    // favor short strings, e.g., img_2.png will come before img_10.png
+                    // Favor short strings, e.g., img_2.png will come before img_10.png.
                     // -- not the ideal solution, but some people really wanted this. (TAM)
                     return s0.length() == s1.length() ? s0 < s1 : s0.length() < s1.length();
                     //return s0 < s1;

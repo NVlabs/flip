@@ -87,15 +87,16 @@
   <ItemGroup>
     <ClInclude Include="..\common\commandline.h" />
     <ClInclude Include="..\common\filename.h" />
+    <ClInclude Include="..\common\mapMagma.h" />
+    <ClInclude Include="..\common\mapViridis.h" />
     <ClInclude Include="..\common\pooling.h" />
+    <ClInclude Include="..\common\sharedflip.h" />
     <ClInclude Include="..\common\stb_image.h" />
     <ClInclude Include="..\common\stb_image_write.h" />
     <ClInclude Include="..\common\tinyexr.h" />
     <ClInclude Include="color.h" />
     <ClInclude Include="FLIP.h" />
     <ClInclude Include="image.h" />
-    <ClInclude Include="mapMagma.h" />
-    <ClInclude Include="mapViridis.h" />
     <ClInclude Include="tensor.h" />
   </ItemGroup>
   <ItemGroup>

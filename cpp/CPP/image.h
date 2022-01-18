@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,7 +26,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * SPDX-FileCopyrightText: Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
@@ -50,19 +50,11 @@
 
 #pragma once
 
+#include "sharedflip.h"
 #include "tensor.h"
 
 namespace FLIP
 {
-    FLIPConstants HostFLIPConstants;
-
-    static const struct
-    {
-        color3 a1 = { 1.0f, 1.0f, 34.1f };
-        color3 b1 = { 0.0047f, 0.0053f, 0.04f };
-        color3 a2 = { 0.0f, 0.0f, 13.5f };
-        color3 b2 = { 1.0e-5f, 1.0e-5f, 0.025f };
-    } GaussianConstants;  // constants for Gaussians -- see paper for details.
 
     template<typename T>
     class image :
@@ -134,108 +126,85 @@ namespace FLIP
 
         //////////////////////////////////////////////////////////////////////////////////
 
-        static float GaussSum(const float x2, const float a1, const float b1, const float a2, const float b2)
-        {
-            const float pi = float(PI);
-            const float pi_sq = float(PI * PI);
-            return a1 * std::sqrt(pi / b1) * std::exp(-pi_sq * x2 / b1) + a2 * std::sqrt(pi / b2) * std::exp(-pi_sq * x2 / b2);
-        }
-
-        static float Gaussian(const float x, const float y, const float sigma)
-        {
-            return std::exp(-(x * x + y * y) / (2.0f * sigma * sigma));
-        }
-
-        static int calculateSpatialFilterRadius(const float ppd)
-        {
-            const float deltaX = 1.0f / ppd;
-            const float pi_sq = float(PI * PI);
-
-            float maxScaleParameter = std::max(std::max(std::max(GaussianConstants.b1.x, GaussianConstants.b1.y), std::max(GaussianConstants.b1.z, GaussianConstants.b2.x)), std::max(GaussianConstants.b2.y, GaussianConstants.b2.z));
-            int radius = int(std::ceil(3.0f * std::sqrt(maxScaleParameter / (2.0f * pi_sq)) * ppd)); // Set radius based on largest scale parameter
-
-            return radius;
-        }
-
-        static void setSpatialFilter(image<color3>& filter, float ppd, int filterRadius)
+        static void setSpatialFilters(image<color3>& filterYCx, image<color3>& filterCz, float ppd, int filterRadius) // For details, see separatedConvolutions.pdf in the FLIP repository.
         {
             float deltaX = 1.0f / ppd;
-            color3 filterSum = { 0.0f, 0.0f, 0.0f };
+            color3 filterSumYCx = { 0.0f, 0.0f, 0.0f };
+            color3 filterSumCz = { 0.0f, 0.0f, 0.0f };
             int filterWidth = 2 * filterRadius + 1;
 
-            for (int y = 0; y < filterWidth; y++)
+            for (int x = 0; x < filterWidth; x++)
             {
-                float iy = (y - filterRadius) * deltaX;
-                for (int x = 0; x < filterWidth; x++)
-                {
-                    float ix = (x - filterRadius) * deltaX;
+                float ix = (x - filterRadius) * deltaX;
 
-                    float dist2 = ix * ix + iy * iy;
-                    float gx = GaussSum(dist2, GaussianConstants.a1.x, GaussianConstants.b1.x, GaussianConstants.a2.x, GaussianConstants.b2.x);
-                    float gy = GaussSum(dist2, GaussianConstants.a1.y, GaussianConstants.b1.y, GaussianConstants.a2.y, GaussianConstants.b2.y);
-                    float gz = GaussSum(dist2, GaussianConstants.a1.z, GaussianConstants.b1.z, GaussianConstants.a2.z, GaussianConstants.b2.z);
-                    color3 value = color3(gx, gy, gz);
-                    filter.set(x, y, value);
-                    filterSum += value;
-                }
+                float ix2 = ix * ix;
+                float gY = Gaussian(ix2, GaussianConstants.a1.x, GaussianConstants.b1.x);
+                float gCx = Gaussian(ix2, GaussianConstants.a1.y, GaussianConstants.b1.y);
+                float gCz1 = GaussianSqrt(ix2, GaussianConstants.a1.z, GaussianConstants.b1.z);
+                float gCz2 = GaussianSqrt(ix2, GaussianConstants.a2.z, GaussianConstants.b2.z);
+                color3 valueYCx = color3(gY, gCx, 0.0f);
+                color3 valueCz = color3(gCz1, gCz2, 0.0f);
+                filterYCx.set(x, 0, valueYCx);
+                filterCz.set(x, 0, valueCz);
+                filterSumYCx += valueYCx;
+                filterSumCz += valueCz;
             }
 
-            // normalize weights
-            filter.multiplyAndAdd(color3(1.0f) / filterSum);
+            // Normalize weights.
+            color3 normFactorYCx = { 1.0f / filterSumYCx.x, 1.0f / filterSumYCx.y, 1.0f };
+            float normFactorCz = 1.0f / std::sqrt(filterSumCz.x * filterSumCz.x + filterSumCz.y * filterSumCz.y);
+            for (int x = 0; x < filterWidth; x++)
+            {
+                color3 pYCx = filterYCx.get(x, 0);
+                color3 pCz = filterCz.get(x, 0);
+
+                filterYCx.set(x, 0, color3(pYCx.x * normFactorYCx.x, pYCx.y * normFactorYCx.y, 0.0f));
+                filterCz.set(x, 0, color3(pCz.x * normFactorCz, pCz.y * normFactorCz, 0.0f));
+            }
         }
 
-        static void setFeatureFilter(image<color3>& filter, const float ppd, const bool pointDetector)
+        static void setFeatureFilter(image<color3>& filter, const float ppd) // For details, see separatedConvolutions.pdf in the FLIP repository.
         {
-            const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
+            const float stdDev = 0.5f * FLIPConstants.gw * ppd;
             const int radius = int(std::ceil(3.0f * stdDev));
             const int width = 2 * radius + 1;
 
-            float weightX, weightY;
-            float negativeWeightsSumX = 0.0f;
-            float positiveWeightsSumX = 0.0f;
-            float negativeWeightsSumY = 0.0f;
-            float positiveWeightsSumY = 0.0f;
+            float gSum = 0.0f;
+            float dgSumNegative = 0.0f;
+            float dgSumPositive = 0.0f;
+            float ddgSumNegative = 0.0f;
+            float ddgSumPositive = 0.0f;
 
-            for (int y = 0; y < width; y++)
+            for (int x = 0; x < width; x++)
             {
-                int yy = y - radius;
-                for (int x = 0; x < width; x++)
-                {
-                    int xx = x - radius;
-                    float G = Gaussian(float(xx), float(yy), stdDev);
-                    if (pointDetector)
-                    {
-                        weightX = (float(xx) * float(xx) / (stdDev * stdDev) - 1.0f) * G;
-                        weightY = (float(yy) * float(yy) / (stdDev * stdDev) - 1.0f) * G;
-                    }
-                    else
-                    {
-                        weightX = -float(xx) * G;
-                        weightY = -float(yy) * G;
-                    }
-                    filter.set(x, y, color3(weightX, weightY, 0.0f));
+                int xx = x - radius;
 
-                    if (weightX > 0.0f)
-                        positiveWeightsSumX += weightX;
-                    else
-                        negativeWeightsSumX += -weightX;
+                float g = Gaussian(float(xx), stdDev);
+                gSum += g;
 
-                    if (weightY > 0.0f)
-                        positiveWeightsSumY += weightY;
-                    else
-                        negativeWeightsSumY += -weightY;
-                }
+                // 1st derivative.
+                float dg = -float(xx) * g;
+                if (dg > 0.0f)
+                    dgSumPositive += dg;
+                else
+                    dgSumNegative -= dg;
+
+                // 2nd derivative.
+                float ddg = (float(xx) * float(xx) / (stdDev * stdDev) - 1.0f) * g;
+                if (ddg > 0.0f)
+                    ddgSumPositive += ddg;
+                else
+                    ddgSumNegative -= ddg;
+
+                filter.set(x, 0, color3(g, dg, ddg));
             }
 
-            // Normalize positive weights to sum to 1 and negative weights to sum to -1
-            for (int y = 0; y < width; y++)
+            // Normalize weights (Gaussian weights should sum to 1; postive and negative weights of 1st and 2nd derivative should sum to 1 and -1, respectively).
+            for (int x = 0; x < width; x++)
             {
-                for (int x = 0; x < width; x++)
-                {
-                    color3 p = filter.get(x, y);
+                color3 p = filter.get(x, 0);
 
-                    filter.set(x, y, color3(p.x / (p.x > 0.0f ? positiveWeightsSumX : negativeWeightsSumX), p.y / (p.y > 0.0f ? positiveWeightsSumY : negativeWeightsSumY), 0.0f));
-                }
+                filter.set(x, 0, color3(p.x / gSum, p.y / (p.y > 0.0f ? dgSumPositive : dgSumNegative), p.z / (p.z > 0.0f ? ddgSumPositive : ddgSumNegative)));
             }
         }
 
@@ -244,166 +213,249 @@ namespace FLIP
             int width = reference.getWidth();
             int height = reference.getHeight();
 
-            //  temporary images (on device)
-            image<color3> referenceImage(reference), testImage(test);
-            image<color3> preprocessedReference(width, height), preprocessedTest(width, height);
-            image<color3> colorDifference(width, height);
-            image<color3> featureDifference(width, height);
+            // Transform from sRGB to YCxCz.
+            reference.sRGB2YCxCz();
+            test.sRGB2YCxCz();
 
-            //  move from sRGB to YCxCz
-            referenceImage.sRGB2YCxCz();
-            testImage.sRGB2YCxCz();
-
-            //  spatial filtering
+            // Prepare separated spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
+            // (YCx for the Achromatic and Red-Green channels and Cz for the Blue-Yellow channel).
             int spatialFilterRadius = calculateSpatialFilterRadius(ppd);
             int spatialFilterWidth = 2 * spatialFilterRadius + 1;
-            image<color3> spatialFilter(spatialFilterWidth, spatialFilterWidth);
-            setSpatialFilter(spatialFilter, ppd, spatialFilterRadius);
-            preprocessedReference.convolve(referenceImage, spatialFilter);
-            preprocessedTest.convolve(testImage, spatialFilter);
+            image<color3> spatialFilterYCx(spatialFilterWidth, 1);
+            image<color3> spatialFilterCz(spatialFilterWidth, 1);
+            setSpatialFilters(spatialFilterYCx, spatialFilterCz, ppd, spatialFilterRadius);
 
-            //  move from YCxCz to CIELab
-            preprocessedReference.YCxCz2CIELab();
-            preprocessedTest.YCxCz2CIELab();
+            // The next call performs spatial filtering on both the reference and test image at the same time (for better performance).
+            // It then computes the color difference between the images. "this" is an image<float> here, so we store the color difference in that image.
+            this->computeColorDifference(reference, test, spatialFilterYCx, spatialFilterCz);
 
-            //  Hunt adjustment
-            preprocessedReference.huntAdjustment();
-            preprocessedTest.huntAdjustment();
-
-            //  color difference
-            colorDifference.computeColorDifference(preprocessedReference, preprocessedTest);
-
-            //  feature (point/edge) filtering
-            const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
+            // Prepare separated feature (edge/point) detection filters.
+            const float stdDev = 0.5f * FLIPConstants.gw * ppd;
             const int featureFilterRadius = int(std::ceil(3.0f * stdDev));
             int featureFilterWidth = 2 * featureFilterRadius + 1;
-            image<color3> pointFilter(featureFilterWidth, featureFilterWidth);
-            image<color3> edgeFilter(featureFilterWidth, featureFilterWidth);
-            setFeatureFilter(pointFilter, ppd, true);
-            setFeatureFilter(edgeFilter, ppd, false);
+            image<color3> featureFilter(featureFilterWidth, 1);
+            setFeatureFilter(featureFilter, ppd);
 
-            //  grayscale images needed for feature detection
-            image<color3> grayReference(width, height), grayTest(width, height);
-            grayReference.YCxCz2Gray(referenceImage);
-            grayTest.YCxCz2Gray(testImage);
-
-            featureDifference.computeFeatureDifference(grayReference, grayTest, edgeFilter, pointFilter);
-
-            this->finalError(colorDifference, featureDifference);
+            // The following call convolves referenceImage and testImage with the edge and point detection filters and performs additional
+            // computations for the final feature differences, and then computes the final FLIP error and stores in "this".
+            this->computeFeatureDifferenceAndFinalError(reference, test, featureFilter);
         }
 
-        void computeFeatureDifference(const image<color3>& grayRefImage, const image<color3>& grayTestImage, const image<color3>& edgeFilter, const image<color3>& pointFilter)
+        // Performs spatial filtering (and clamps the results) on both the reference and test image at the same time (for better performance).
+        // Filtering has been changed to separable filtering for better performance. For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
+        // After filtering, compute color differences. referenceImage and testImage are expected to be in YCxCz space.
+        void computeColorDifference(const FLIP::image<color3>& referenceImage, const FLIP::image<color3>& testImage, const FLIP::image<color3>& filterYCx, const FLIP::image<color3>& filterCz)
         {
-            const float normalizationFactor = 1.0f / std::sqrt(2.0f);
-            const int halfFilterWidth = edgeFilter.getWidth() / 2;      // The edge and point filters are of the same size.
-            const int halfFilterHeight = edgeFilter.getHeight() / 2;
-            const int w = grayRefImage.getWidth();
-            const int h = grayRefImage.getHeight();
+            // Color difference constants
+            const float cmax = color3::computeMaxDistance(FLIPConstants.gqc);
+            const float pccmax = FLIPConstants.gpc * cmax;
+
+            const int halfFilterWidth = filterYCx.getWidth() / 2; // YCx and Cz filters are the same size.
+
+            const int w = referenceImage.getWidth();
+            const int h = referenceImage.getHeight();
+
+            image<color3> intermediateYCxImageReference(w, h);
+            image<color3> intermediateYCxImageTest(w, h);
+            image<color3> intermediateCzImageReference(w, h);
+            image<color3> intermediateCzImageTest(w, h);
+
+            // Filter in x direction.
 #pragma omp parallel for
             for (int y = 0; y < h; y++)
             {
                 for (int x = 0; x < w; x++)
                 {
-                    float  edgeRefX = 0.0f, edgeTestX = 0.0f, pointRefX = 0.0f, pointTestX = 0.0f;
-                    float  edgeRefY = 0.0f, edgeTestY = 0.0f, pointRefY = 0.0f, pointTestY = 0.0f;
+                    color3 intermediateYCxReference = { 0.0f, 0.0f, 0.0f };
+                    color3 intermediateYCxTest = { 0.0f, 0.0f, 0.0f };
+                    color3 intermediateCzReference = { 0.0f, 0.0f, 0.0f };
+                    color3 intermediateCzTest = { 0.0f, 0.0f, 0.0f };
 
-                    for (int iy = -halfFilterHeight; iy <= halfFilterHeight; iy++)
+                    for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
                     {
-                        int yy = Min(Max(0, y + iy), this->getHeight() - 1);
-                        for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
-                        {
-                            int xx = Min(Max(0, x + ix), this->getWidth() - 1);
+                        int xx = Min(Max(0, x + ix), w - 1);
 
-                            const color3 edgeWeights = edgeFilter.get(ix + halfFilterWidth, iy + halfFilterHeight);
-                            const color3 pointWeights = pointFilter.get(ix + halfFilterWidth, iy + halfFilterHeight);
-                            const float grayRef = grayRefImage.get(xx, yy).x;
-                            const float grayTest = grayTestImage.get(xx, yy).x;
+                        const color3 weightsYCx = filterYCx.get(ix + halfFilterWidth, 0);
+                        const color3 weightsCz = filterCz.get(ix + halfFilterWidth, 0);
+                        const color3 referenceColor = referenceImage.get(xx, y);
+                        const color3 testColor = testImage.get(xx, y);
 
-                            edgeRefX += edgeWeights.x * grayRef;
-                            edgeRefY += edgeWeights.y * grayRef;
-                            edgeTestX += edgeWeights.x * grayTest;
-                            edgeTestY += edgeWeights.y * grayTest;
-                            pointRefX += pointWeights.x * grayRef;
-                            pointRefY += pointWeights.y * grayRef;
-                            pointTestX += pointWeights.x * grayTest;
-                            pointTestY += pointWeights.y * grayTest;
-                        }
+                        intermediateYCxReference += color3(weightsYCx.x * referenceColor.x, weightsYCx.y * referenceColor.y, 0.0f);
+                        intermediateYCxTest += color3(weightsYCx.x * testColor.x, weightsYCx.y * testColor.y, 0.0f);
+                        intermediateCzReference += color3(weightsCz.x * referenceColor.z, weightsCz.y * referenceColor.z, 0.0f);
+                        intermediateCzTest += color3(weightsCz.x * testColor.z, weightsCz.y * testColor.z, 0.0f);
                     }
 
-                    const float edgeValueRef = std::sqrt(edgeRefX * edgeRefX + edgeRefY * edgeRefY);
-                    const float edgeValueTest = std::sqrt(edgeTestX * edgeTestX + edgeTestY * edgeTestY);
-                    const float pointValueRef = std::sqrt(pointRefX * pointRefX + pointRefY * pointRefY);
-                    const float pointValueTest = std::sqrt(pointTestX * pointTestX + pointTestY * pointTestY);
+                    intermediateYCxImageReference.set(x, y, intermediateYCxReference);
+                    intermediateYCxImageTest.set(x, y, intermediateYCxTest);
+                    intermediateCzImageReference.set(x, y, intermediateCzReference);
+                    intermediateCzImageTest.set(x, y, intermediateCzTest);
+                }
+            }
+
+            // Filter in y direction.
+#pragma omp parallel for
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    color3 filteredYCxReference = { 0.0f, 0.0f, 0.0f };
+                    color3 filteredYCxTest = { 0.0f, 0.0f, 0.0f };
+                    color3 filteredCzReference = { 0.0f, 0.0f, 0.0f };
+                    color3 filteredCzTest = { 0.0f, 0.0f, 0.0f };
+
+                    for (int iy = -halfFilterWidth; iy <= halfFilterWidth; iy++)
+                    {
+                        int yy = Min(Max(0, y + iy), h - 1);
+
+                        const color3 weightsYCx = filterYCx.get(iy + halfFilterWidth, 0);
+                        const color3 weightsCz = filterCz.get(iy + halfFilterWidth, 0);
+                        const color3 intermediateYCxReference = intermediateYCxImageReference.get(x, yy);
+                        const color3 intermediateYCxTest = intermediateYCxImageTest.get(x, yy);
+                        const color3 intermediateCzReference = intermediateCzImageReference.get(x, yy);
+                        const color3 intermediateCzTest = intermediateCzImageTest.get(x, yy);
+
+                        filteredYCxReference += color3(weightsYCx.x * intermediateYCxReference.x, weightsYCx.y * intermediateYCxReference.y, 0.0f);
+                        filteredYCxTest += color3(weightsYCx.x * intermediateYCxTest.x, weightsYCx.y * intermediateYCxTest.y, 0.0f);
+                        filteredCzReference += color3(weightsCz.x * intermediateCzReference.x, weightsCz.y * intermediateCzReference.y, 0.0f);
+                        filteredCzTest += color3(weightsCz.x * intermediateCzTest.x, weightsCz.y * intermediateCzTest.y, 0.0f);
+                    }
+
+                    // Clamp to [0,1] in linear RGB.
+                    color3 filteredYCxCzReference = color3(filteredYCxReference.x, filteredYCxReference.y, filteredCzReference.x + filteredCzReference.y);
+                    color3 filteredYCxCzTest = color3(filteredYCxTest.x, filteredYCxTest.y, filteredCzTest.x + filteredCzTest.y);
+                    filteredYCxCzReference = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(filteredYCxCzReference)));
+                    filteredYCxCzTest = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(filteredYCxCzTest)));
+
+                    // Move from linear RGB to CIELab.
+                    filteredYCxCzReference = color3::XYZ2CIELab(color3::LinearRGB2XYZ(filteredYCxCzReference));
+                    filteredYCxCzTest = color3::XYZ2CIELab(color3::LinearRGB2XYZ(filteredYCxCzTest));
+
+                    // Apply Hunt adjustment.
+                    filteredYCxCzReference.y = color3::Hunt(filteredYCxCzReference.x, filteredYCxCzReference.y);
+                    filteredYCxCzReference.z = color3::Hunt(filteredYCxCzReference.x, filteredYCxCzReference.z);
+                    filteredYCxCzTest.y = color3::Hunt(filteredYCxCzTest.x, filteredYCxCzTest.y);
+                    filteredYCxCzTest.z = color3::Hunt(filteredYCxCzTest.x, filteredYCxCzTest.z);
+
+                    float colorDifference = color3::HyAB(filteredYCxCzReference, filteredYCxCzTest);
+
+                    colorDifference = powf(colorDifference, FLIPConstants.gqc);
+
+                    // Re-map error to the [0, 1] range. Values between 0 and pccmax are mapped to the range [0, gpt],
+                    // while the rest are mapped to the range (gpt, 1].
+                    if (colorDifference < pccmax)
+                    {
+                        colorDifference *= FLIPConstants.gpt / pccmax;
+                    }
+                    else
+                    {
+                        colorDifference = FLIPConstants.gpt + ((colorDifference - pccmax) / (cmax - pccmax)) * (1.0f - FLIPConstants.gpt);
+                    }
+
+                    this->set(x, y, colorDifference);
+                }
+            }
+        }
+
+        // This includes convolution (using separable filtering) of grayRefImage and grayTestImage for both edge and point filtering.
+        // In addition, it computes the final FLIP error and stores in "this". referenceImage and testImage are expected to be in YCxCz space.
+        void computeFeatureDifferenceAndFinalError(const image<color3>& referenceImage, const image<color3>& testImage, const image<color3>& featureFilter)
+        {
+            const float normalizationFactor = 1.0f / std::sqrt(2.0f);
+            const int halfFilterWidth = featureFilter.getWidth() / 2;      // The edge and point filters are of the same size.
+            const int w = referenceImage.getWidth();
+            const int h = referenceImage.getHeight();
+
+            image<color3> intermediateFeaturesImageReference(w, h);
+            image<color3> intermediateFeaturesImageTest(w, h);
+
+            // Convolve in x direction (1st and 2nd derivative for filter in x direction, Gaussian in y direction).
+            // For details, see separatedConvolutions.pdf in the FLIP repository.
+            // We filter both reference and test image simultaneously (for better performance).
+            const float oneOver116 = 1.0f / 116.0f;
+            const float sixteenOver116 = 16.0f / 116.0f;
+#pragma omp parallel for
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    float dxReference = 0.0f, dxTest = 0.0f, ddxReference = 0.0f, ddxTest = 0.0f;
+                    float gaussianFilteredReference = 0.0f, gaussianFilteredTest = 0.0f;
+
+                    for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
+                    {
+                        int xx = Min(Max(0, x + ix), w - 1);
+
+                        const color3 featureWeights = featureFilter.get(ix + halfFilterWidth, 0);
+                        float yReference = referenceImage.get(xx, y).x;
+                        float yTest = testImage.get(xx, y).x;
+
+                        // Normalize the Y values to [0,1].
+                        float yReferenceNormalized = yReference * oneOver116 + sixteenOver116;
+                        float yTestNormalized = yTest * oneOver116 + sixteenOver116;
+
+                        // Image multiplied by 1st and 2nd x-derivatives of Gaussian.
+                        dxReference += featureWeights.y * yReferenceNormalized;
+                        dxTest += featureWeights.y * yTestNormalized;
+                        ddxReference += featureWeights.z * yReferenceNormalized;
+                        ddxTest += featureWeights.z * yTestNormalized;
+
+                        // Image multiplied by Gaussian.
+                        gaussianFilteredReference += featureWeights.x * yReferenceNormalized;
+                        gaussianFilteredTest += featureWeights.x * yTestNormalized;
+                    }
+
+                    intermediateFeaturesImageReference.set(x, y, color3(dxReference, ddxReference, gaussianFilteredReference));
+                    intermediateFeaturesImageTest.set(x, y, color3(dxTest, ddxTest, gaussianFilteredTest));
+                }
+            }
+
+            // Convolve in y direction (1st and 2nd derivative for filter in y direction, Gaussian in x direction), then compute difference.
+            // For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
+            // We filter both reference and test image simultaneously (for better performance).
+#pragma omp parallel for
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    float dxReference = 0.0f, dxTest = 0.0f, ddxReference = 0.0f, ddxTest = 0.0f;
+                    float dyReference = 0.0f, dyTest = 0.0f, ddyReference = 0.0f, ddyTest = 0.0f;
+
+                    for (int iy = -halfFilterWidth; iy <= halfFilterWidth; iy++)
+                    {
+                        int yy = Min(Max(0, y + iy), h - 1);
+
+                        const color3 featureWeights = featureFilter.get(iy + halfFilterWidth, 0);
+                        const color3 intermediateFeaturesReference = intermediateFeaturesImageReference.get(x, yy);
+                        const color3 intermediateFeatureTest = intermediateFeaturesImageTest.get(x, yy);
+
+                        // Intermediate images (1st and 2nd derivative in x) multiplied by Gaussian.
+                        dxReference += featureWeights.x * intermediateFeaturesReference.x;
+                        dxTest += featureWeights.x * intermediateFeatureTest.x;
+                        ddxReference += featureWeights.x * intermediateFeaturesReference.y;
+                        ddxTest += featureWeights.x * intermediateFeatureTest.y;
+
+                        // Intermediate image (Gaussian) multiplied by 1st and 2nd y-derivatives of Gaussian.
+                        dyReference += featureWeights.y * intermediateFeaturesReference.z;
+                        dyTest += featureWeights.y * intermediateFeatureTest.z;
+                        ddyReference += featureWeights.z * intermediateFeaturesReference.z;
+                        ddyTest += featureWeights.z * intermediateFeatureTest.z;
+                    }
+
+                    const float edgeValueRef = std::sqrt(dxReference * dxReference + dyReference * dyReference);
+                    const float edgeValueTest = std::sqrt(dxTest * dxTest + dyTest * dyTest);
+                    const float pointValueRef = std::sqrt(ddxReference * ddxReference + ddyReference * ddyReference);
+                    const float pointValueTest = std::sqrt(ddxTest * ddxTest + ddyTest * ddyTest);
 
                     const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
                     const float pointDifference = std::abs(pointValueRef - pointValueTest);
 
-                    const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), HostFLIPConstants.gqf);
+                    const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), FLIPConstants.gqf);
+                    const float colorDifference = this->get(x, y);
 
-                    this->set(x, y, color3(featureDifference, 0.0f, 0.0f));
-                }
-            }
-        }
-
-        void finalError(image<color3>& colorDifference, image<color3>& featureDifference)
-        {
-#pragma omp parallel for
-            for (int y = 0; y < this->getHeight(); y++)
-            {
-                for (int x = 0; x < this->getWidth(); x++)
-                {
-                    const float cdiff = colorDifference.get(x, y).x;
-                    const float fdiff = featureDifference.get(x, y).x;
-                    const float errorFLIP = std::pow(cdiff, 1.0f - fdiff);
+                    const float errorFLIP = std::pow(colorDifference, 1.0f - featureDifference);
 
                     this->set(x, y, errorFLIP);
-                }
-            }
-        }
-
-        void computeColorDifference(image& reference, image& test)
-        {
-            const float cmax = color3::computeMaxDistance(HostFLIPConstants.gqc);
-            const float pccmax = HostFLIPConstants.gpc * cmax;
-#pragma omp parallel for
-            for (int y = 0; y < this->getHeight(); y++)
-            {
-                for (int x = 0; x < this->getWidth(); x++)
-                {
-                    color3 refPixel = reference.get(x, y);
-                    color3 testPixel = test.get(x, y);
-
-                    float colorDifference = color3::HyAB(refPixel, testPixel);
-
-                    colorDifference = powf(colorDifference, HostFLIPConstants.gqc);
-
-                    // Re-map error to the [0, 1] range. Values between 0 and pccmax are mapped to the range [0, gpt],
-                    // while the rest are mapped to the range (gpt, 1]
-                    if (colorDifference < pccmax)
-                    {
-                        colorDifference *= HostFLIPConstants.gpt / pccmax;
-                    }
-                    else
-                    {
-                        colorDifference = HostFLIPConstants.gpt + ((colorDifference - pccmax) / (cmax - pccmax)) * (1.0f - HostFLIPConstants.gpt);
-                    }
-
-                    this->set(x, y, color3(colorDifference, 0.0f, 0.0f));
-                }
-            }
-        }
-
-        void huntAdjustment(void)
-        {
-#pragma omp parallel for
-            for (int y = 0; y < this->getHeight(); y++)
-            {
-                for (int x = 0; x < this->getWidth(); x++)
-                {
-                    color3 pixel = this->get(x, y);
-                    pixel.y = color3::Hunt(pixel.x, pixel.y);
-                    pixel.z = color3::Hunt(pixel.x, pixel.z);
-                    this->set(x , y, pixel);
                 }
             }
         }
@@ -438,21 +490,6 @@ namespace FLIP
                     this->set(x, y, this->get(x, y) * m);
                 }
             }
-        }
-
-        void solveSecondDegree(float& xMin, float& xMax, float a, float b, float c)
-        {
-            //  a * x^2 + b * x + c = 0
-            if (a == 0.0f)
-            {
-                xMin = xMax = -c / b;
-                return;
-            }
-
-            float d1 = -0.5f * (b / a);
-            float d2 = sqrtf((d1 * d1) - (c / a));
-            xMin = d1 - d2;
-            xMax = d1 + d2;
         }
 
         void computeExposures(std::string tm, float& startExposure, float& stopExposure)

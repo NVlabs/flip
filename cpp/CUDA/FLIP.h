@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,7 +26,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * SPDX-FileCopyrightText: Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
@@ -53,10 +53,12 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-#include "color.cuh"
+#define USING_CUDA
+#include "sharedflip.h"
+
 #include "cudaImage.cuh"
-#include "mapMagma.cuh"
-#include "mapViridis.cuh"
+#include "mapMagma.h"
+#include "mapViridis.h"
 
 #include "commandline.h"
 #include "filename.h"

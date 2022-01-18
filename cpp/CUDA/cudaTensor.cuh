@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,7 +26,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * SPDX-FileCopyrightText: Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
@@ -61,37 +61,16 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-namespace FLIP
-{
-    enum class CombineOperation
-    {
-        Add,
-        Subtract,
-        Multiply,
-        L1,
-        L2
-    };
-
-    struct FLIPConstants
-    {
-        float gqc = 0.7f;
-        float gpc = 0.4f;
-        float gpt = 0.95f;
-        float gw = 0.082f;
-        float gqf = 0.5f;
-    };
-}
-
-#include "color.cuh"
+#define USING_CUDA
+#include "sharedflip.h"
 #include "cudaKernels.cuh"
 
 namespace FLIP
 {
-    const float PI = 3.14159265358979f;
-
     const dim3 DEFAULT_KERNEL_BLOCK_DIM = { 32, 32, 1 };  //  1.2s
 
     enum class CudaTensorState
@@ -236,6 +215,16 @@ namespace FLIP
             return this->mvpDeviceData + z * this->mArea;
         }
 
+        inline dim3 getBlockDim() const 
+        {
+            return mBlockDim;
+        }
+
+        inline dim3 getGridDim() const
+        {
+            return mGridDim;
+        }
+
         inline int index(int x, int y = 0, int z = 0)
         {
             return (z * this->mDim.y + y) * mDim.x + x;
@@ -307,74 +296,6 @@ namespace FLIP
             }
         }
 
-        template <FLIP::ReduceOperation op>
-        T reduce(void)
-        {
-            this->synchronizeDevice();
-
-            int blockSize = this->mBlockDim.x * this->mBlockDim.y * this->mBlockDim.z;
-            int numBlocks = int(this->mVolume + blockSize - 1) / blockSize;
-            int sharedMemSize = blockSize * sizeof(T);
-
-            T* pBlockResults;
-            cudaError_t cudaError = cudaMalloc((void**)&pBlockResults, (numBlocks + 1) * sizeof(T));
-
-            switch (blockSize)
-            {
-            case 1024:
-                FLIP::kernelReduce<1024, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<1024, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 512:
-                FLIP::kernelReduce<512, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<512, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 256:
-                FLIP::kernelReduce<256, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<256, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 128:
-                FLIP::kernelReduce<128, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<128, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 64:
-                FLIP::kernelReduce<64, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<64, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 32:
-                FLIP::kernelReduce<32, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<32, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 16:
-                FLIP::kernelReduce<16, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<16, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 8:
-                FLIP::kernelReduce<8, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<8, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 4:
-                FLIP::kernelReduce<4, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<4, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 2:
-                FLIP::kernelReduce<2, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<2, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            case 1:
-                FLIP::kernelReduce<1, op> << <numBlocks, blockSize, sharedMemSize >> > (pBlockResults, this->mvpDeviceData, this->mVolume);
-                FLIP::kernelReduce<1, op> << <1, blockSize, sharedMemSize >> > (pBlockResults + numBlocks, pBlockResults, numBlocks);
-                break;
-            }
-
-            T result;
-            cudaError = cudaMemcpy(&result, pBlockResults + numBlocks, sizeof(T), cudaMemcpyDeviceToHost);
-
-            cudaFree(pBlockResults);
-
-            return result;
-        }
-
         void colorMap(tensor<float>& srcImage, tensor<color3>& colorMap)
         {
             srcImage.synchronizeDevice();
@@ -391,22 +312,6 @@ namespace FLIP
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 
-        void YCxCz2CIELab(void)
-        {
-            this->synchronizeDevice();
-            FLIP::kernelYCxCz2CIELab << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
-            checkStatus("kernelYCxCz2CIELab");
-            this->mState = CudaTensorState::DEVICE_ONLY;
-        }
-
-        void YCxCz2Gray(tensor<color3>& srcImage)
-        {
-            this->synchronizeDevice();
-            FLIP::kernelYCxCz2Gray << <this->mGridDim, this->mBlockDim >> > (this->getDeviceData(), srcImage.getDeviceData(), this->mDim);
-            checkStatus("kernelYCxCz2Gray");
-            this->mState = CudaTensorState::DEVICE_ONLY;
-        }
-
         void LinearRGB2sRGB(void)
         {
             this->synchronizeDevice();
@@ -415,21 +320,7 @@ namespace FLIP
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 
-        void multiplyAndAdd(T m, T a = T(0.0f))
-        {
-            this->synchronizeDevice();
-            FLIP::kernelMultiplyAndAdd << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim, m, a);
-            checkStatus("kernelMultiplyAndAdd");
-            this->mState = CudaTensorState::DEVICE_ONLY;
-        }
-
-        void normalize(void)
-        {
-            T sum = this->reduce<FLIP::ReduceOperation::Add>();
-            this->multiplyAndAdd(T(1.0f) / sum);
-        }
-
-        void checkStatus(std::string kernelName)
+        static void checkStatus(std::string kernelName)
         {
             cudaError_t cudaError = cudaGetLastError();
             if (cudaError != cudaSuccess)
@@ -438,15 +329,15 @@ namespace FLIP
                 exit(-1);
             }
 
-            //  used if debugging
+            // Used if debugging.
             if (true)
             {
                 deviceSynchronize(kernelName);
             }
         }
 
-        //  used if debugging
-        void deviceSynchronize(std::string kernelName)
+        // Used if debugging.
+        static void deviceSynchronize(std::string kernelName)
         {
             cudaError_t cudaError = cudaDeviceSynchronize();
             if (cudaError != cudaSuccess)
@@ -456,29 +347,10 @@ namespace FLIP
             }
         }
 
-
         void clear(const T color = T(0.0f))
         {
             FLIP::kernelClear << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim, color);
             checkStatus("kernelClear");
-            this->mState = CudaTensorState::DEVICE_ONLY;
-        }
-
-        void convolve(tensor& srcImage, tensor& filter)
-        {
-            srcImage.synchronizeDevice();
-            filter.synchronizeDevice();
-            FLIP::kernelConvolve << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, srcImage.mvpDeviceData, filter.mvpDeviceData, this->mDim, filter.mDim.x, filter.mDim.y);
-            checkStatus("kernelConvolve");
-            this->mState = CudaTensorState::DEVICE_ONLY;
-        }
-
-        void combine(tensor& srcImageA, tensor& srcImageB, CombineOperation operation)
-        {
-            srcImageA.synchronizeDevice();
-            srcImageB.synchronizeDevice();
-            FLIP::kernelCombine << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, srcImageA.mvpDeviceData, srcImageB.mvpDeviceData, this->mDim, operation);
-            checkStatus("kernelCombine");
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 
@@ -600,7 +472,6 @@ namespace FLIP
             return (ok != 0);
         }
 
-
         bool exrLoad(const std::string& fileName, const int z = 0)
         {
             EXRVersion exrVersion;
@@ -696,7 +567,7 @@ namespace FLIP
             auto rawImgChn = reinterpret_cast<float**>(exrImage.images);
             bool loaded = false;
 
-            // 1 channel images can be loaded into either scalar or vector formats
+            // 1 channel images can be loaded into either scalar or vector formats.
             if (exrHeader.num_channels == 1)
             {
                 for (int y = 0; y < this->mDim.y; y++)
@@ -710,7 +581,7 @@ namespace FLIP
                 loaded = true;
             }
 
-            // 2 channel images can only be loaded into vector2/3/4 formats
+            // 2 channel images can only be loaded into vector2/3/4 formats.
             if (exrHeader.num_channels == 2)
             {
                 assert(idxR != -1 && idxG != -1);
@@ -729,7 +600,7 @@ namespace FLIP
                 loaded = true;
             }
 
-            // 3 channel images can only be loaded into vector3/4 formats
+            // 3 channel images can only be loaded into vector3/4 formats.
             if (exrHeader.num_channels == 3)
             {
                 assert(idxR != -1 && idxG != -1 && idxB != -1);
@@ -749,7 +620,7 @@ namespace FLIP
                 loaded = true;
             }
 
-            // 4 channel images can only be loaded into vector4 formats
+            // 4 channel images can only be loaded into vector4 formats.
             if (exrHeader.num_channels == 4)
             {
                 assert(idxR != -1 && idxG != -1 && idxB != -1);
@@ -782,7 +653,5 @@ namespace FLIP
                 return true;
             }
         }
-
     };
-
 }

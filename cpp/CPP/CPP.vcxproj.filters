@@ -10,8 +10,6 @@
     <ClInclude Include="FLIP.h" />
     <ClInclude Include="image.h" />
     <ClInclude Include="tensor.h" />
-    <ClInclude Include="mapMagma.h" />
-    <ClInclude Include="mapViridis.h" />
     <ClInclude Include="..\common\commandline.h">
       <Filter>common</Filter>
     </ClInclude>
@@ -28,6 +26,15 @@
       <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="..\common\tinyexr.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\sharedflip.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\mapMagma.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\mapViridis.h">
       <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>

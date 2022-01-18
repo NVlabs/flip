@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,7 +26,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * SPDX-FileCopyrightText: Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
@@ -50,19 +50,11 @@
 
 #pragma once
 
+#include "sharedflip.h"
 #include "cudaTensor.cuh"
 
 namespace FLIP
 {
-    FLIPConstants HostFLIPConstants;
-
-    static const struct
-    {
-        float3 a1 = { 1.0f, 1.0f, 34.1f };
-        float3 b1 = { 0.0047f, 0.0053f, 0.04f };
-        float3 a2 = { 0.0f, 0.0f, 13.5f };
-        float3 b2 = { 1.0e-5f, 1.0e-5f, 0.025f };
-    } GaussianConstants;  // constants for Gaussians -- see paper for details.
 
     template<typename T>
     class image :
@@ -143,31 +135,69 @@ namespace FLIP
 
         void FLIP(image<color3>& reference, image<color3>& test, float ppd);
 
-        void finalError(image<color3>& colorDifference, image<color3>& featureDifference)
+        // Perform the x-component of separable spatial filtering of both the reference and the test.
+        // referenceImage and testImage are expected to be in YCxCz space.
+        static void spatialFilterFirstDir(image& referenceImage, image& intermediateYCxImageReference, image& intermediateCzImageReference, image& testImage, image& intermediateYCxImageTest, image& intermediateCzImageTest, image& filterYCx, image& filterCz)
         {
-            FLIP::kernelFinalError << <this->mGridDim, this->mBlockDim >> > (this->getDeviceData(), colorDifference.getDeviceData(), featureDifference.getDeviceData(), this->mDim);
+            referenceImage.synchronizeDevice();
+            testImage.synchronizeDevice();
+            filterYCx.synchronizeDevice();
+            filterCz.synchronizeDevice();
+            FLIP::kernelSpatialFilterFirstDir << <intermediateYCxImageReference.getGridDim(), intermediateYCxImageReference.getBlockDim() >> > (intermediateYCxImageReference.mvpDeviceData, intermediateCzImageReference.mvpDeviceData, referenceImage.mvpDeviceData, intermediateYCxImageTest.mvpDeviceData, intermediateCzImageTest.mvpDeviceData, testImage.mvpDeviceData, filterYCx.mvpDeviceData, filterCz.mvpDeviceData, intermediateYCxImageReference.mDim, filterYCx.mDim); // Filter sizes are the same.
+            checkStatus("kernelSpatialFilterFirstDir");
+            intermediateYCxImageReference.setState(CudaTensorState::DEVICE_ONLY);
+            intermediateCzImageReference.setState(CudaTensorState::DEVICE_ONLY);
+            intermediateYCxImageTest.setState(CudaTensorState::DEVICE_ONLY);
+            intermediateCzImageTest.setState(CudaTensorState::DEVICE_ONLY);
+        }
+
+        // Perform the y-component of separable spatial filtering of both the reference and the test and compute color difference.
+        static void spatialFilterSecondDirAndColorDifference(image& intermediateYCxImageReference, image& intermediateCzImageReference, image& intermediateYCxImageTest, image& intermediateCzImageTest, image& colorDifferenceImage, image& filterYCx, image& filterCz)
+        {
+            intermediateYCxImageReference.synchronizeDevice();
+            intermediateCzImageReference.synchronizeDevice();
+            intermediateYCxImageTest.synchronizeDevice();
+            intermediateCzImageTest.synchronizeDevice();
+            filterYCx.synchronizeDevice();
+            filterCz.synchronizeDevice();
+
+            // Set color difference constants.
+            const float cmax = color3::computeMaxDistance(FLIPConstants.gqc);
+            const float pccmax = FLIPConstants.gpc * cmax;
+
+            FLIP::kernelSpatialFilterSecondDirAndColorDifference << <colorDifferenceImage.getGridDim(), colorDifferenceImage.getBlockDim() >> > (colorDifferenceImage.mvpDeviceData, intermediateYCxImageReference.mvpDeviceData, intermediateCzImageReference.mvpDeviceData, intermediateYCxImageTest.mvpDeviceData, intermediateCzImageTest.mvpDeviceData, filterYCx.mvpDeviceData, filterCz.mvpDeviceData, colorDifferenceImage.mDim, filterYCx.mDim, cmax, pccmax); // Filter sizes are the same.
+            checkStatus("kernelSpatialFilterSecondDirAndColorDifference");
+            colorDifferenceImage.setState(CudaTensorState::DEVICE_ONLY);
+        }
+
+        // Perform the x-component of separable feature detection filtering of both the reference and the test.
+        // referenceImage and testImage are expected to be in YCxCz space.
+        static void featureFilterFirstDir(image& referenceImage, image& intermediateFeaturesImageReference, image& testImage, image& intermediateFeaturesImageTest, image& featureFilter)
+        {
+            referenceImage.synchronizeDevice();
+            testImage.synchronizeDevice();
+            featureFilter.synchronizeDevice();
+            FLIP::kernelFeatureFilterFirstDir << <intermediateFeaturesImageReference.mGridDim, intermediateFeaturesImageReference.mBlockDim >> > (intermediateFeaturesImageReference.mvpDeviceData, referenceImage.mvpDeviceData, intermediateFeaturesImageTest.mvpDeviceData, testImage.mvpDeviceData, featureFilter.mvpDeviceData, intermediateFeaturesImageReference.mDim, featureFilter.mDim);
+            image<T>::checkStatus("kernelFeatureFilterFirstDir");
+            intermediateFeaturesImageReference.setState(CudaTensorState::DEVICE_ONLY);
+            intermediateFeaturesImageTest.setState(CudaTensorState::DEVICE_ONLY);
+        }
+
+        // Perform the y-component of separable feature detection filtering of both the reference and the test and compute feature difference.
+        static void featureFilterSecondDirAndFeatureDifference(image& intermediateFeaturesImageReference, image& intermediateFeaturesImageTest, image& featureDifferenceImage, image& featureFilter)
+        {
+            intermediateFeaturesImageReference.synchronizeDevice();
+            intermediateFeaturesImageTest.synchronizeDevice();
+            featureFilter.synchronizeDevice();
+            FLIP::kernelFeatureFilterSecondDirAndFeatureDifference << <featureDifferenceImage.mGridDim, featureDifferenceImage.mBlockDim >> > (featureDifferenceImage.mvpDeviceData, intermediateFeaturesImageReference.mvpDeviceData, intermediateFeaturesImageTest.mvpDeviceData, featureFilter.mvpDeviceData, featureDifferenceImage.mDim, featureFilter.mDim);
+            image<T>::checkStatus("kernelFeatureFilterSecondDirAndFeatureDifference");
+            featureDifferenceImage.setState(CudaTensorState::DEVICE_ONLY);
+        }
+
+        void finalError(image<color3>& colorFeatureDifference)
+        {
+            FLIP::kernelFinalError << <this->mGridDim, this->mBlockDim >> > (this->getDeviceData(), colorFeatureDifference.getDeviceData(), this->mDim);
             image<T>::checkStatus("kernelFinalError");
-            this->setState(CudaTensorState::DEVICE_ONLY);
-        }
-
-        void computeColorDifference(image& reference, image& test)
-        {
-            FLIP::kernelColorDifference << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, reference.mvpDeviceData, test.mvpDeviceData, this->mDim);
-            image<T>::checkStatus("kernelColorDifference");
-            this->setState(CudaTensorState::DEVICE_ONLY);
-        }
-
-        void huntAdjustment(void)
-        {
-            FLIP::kernelHuntAdjustment << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
-            image<T>::checkStatus("kernelHuntAdjustment");
-            this->setState(CudaTensorState::DEVICE_ONLY);
-        }
-
-        void computeFeatureDifference(image& pointReference, image& pointTest, image& edgeReference, image& edgeTest)
-        {
-            FLIP::kernelFeatureDifference << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, pointReference.mvpDeviceData, pointTest.mvpDeviceData, edgeReference.mvpDeviceData, edgeTest.mvpDeviceData, this->mDim);
-            image<T>::checkStatus("kernelFeatureDifference");
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
 
@@ -211,21 +241,6 @@ namespace FLIP
             FLIP::kernelMultiplyAndAdd << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim, m, 0.0f);
             image<T>::checkStatus("kernelExpose");
             this->setState(CudaTensorState::DEVICE_ONLY);
-        }
-
-        void solveSecondDegree(float& xMin, float& xMax, float a, float b, float c)
-        {
-            //  a * x^2 + b * x + c = 0
-            if (a == 0.0f)
-            {
-                xMin = xMax = -c / b;
-                return;
-            }
-
-            float d1 = -0.5f * (b / a);
-            float d2 = sqrtf((d1 * d1) - (c / a));
-            xMin = d1 - d2;
-            xMax = d1 + d2;
         }
 
         void computeExposures(std::string tm, float& startExposure, float& stopExposure)
@@ -381,109 +396,85 @@ namespace FLIP
         return true;
     }
 
-
-    static int calculateSpatialFilterRadius(const float ppd)
-    {
-        const float deltaX = 1.0f / ppd;
-        const float pi_sq = float(PI * PI);
-
-        float maxScaleParameter = std::max(std::max(std::max(GaussianConstants.b1.x, GaussianConstants.b1.y), std::max(GaussianConstants.b1.z, GaussianConstants.b2.x)), std::max(GaussianConstants.b2.y, GaussianConstants.b2.z));
-        int radius = int(std::ceil(3.0f * std::sqrt(maxScaleParameter / (2.0f * pi_sq)) * ppd)); // Set radius based on largest scale parameter
-
-        return radius;
-    }
-
-    static float GaussSum(const float x2, const float a1, const float b1, const float a2, const float b2)
-    {
-        const float pi = float(PI);
-        const float pi_sq = float(PI * PI);
-        return a1 * std::sqrt(pi / b1) * std::exp(-pi_sq * x2 / b1) + a2 * std::sqrt(pi / b2) * std::exp(-pi_sq * x2 / b2);
-    }
-
-    static float Gaussian(const float x, const float y, const float sigma)
-    {
-        return std::exp(-(x * x + y * y) / (2.0f * sigma * sigma));
-    }
-
-    static void setSpatialFilter(image<color3>& filter, float ppd, int filterRadius)
+    static void setSpatialFilters(image<color3>& filterYCx, image<color3>& filterCz, float ppd, int filterRadius) // For details, see separatedConvolutions.pdf in the FLIP repository.
     {
         float deltaX = 1.0f / ppd;
-        color3 filterSum = { 0.0f, 0.0f, 0.0f };
+        color3 filterSumYCx = { 0.0f, 0.0f, 0.0f };
+        color3 filterSumCz = { 0.0f, 0.0f, 0.0f };
         int filterWidth = 2 * filterRadius + 1;
 
-        for (int y = 0; y < filterWidth; y++)
+        for (int x = 0; x < filterWidth; x++)
         {
-            float iy = (y - filterRadius) * deltaX;
-            for (int x = 0; x < filterWidth; x++)
-            {
-                float ix = (x - filterRadius) * deltaX;
+            float ix = (x - filterRadius) * deltaX;
 
-                float dist2 = ix * ix + iy * iy;
-                float gx = GaussSum(dist2, GaussianConstants.a1.x, GaussianConstants.b1.x, GaussianConstants.a2.x, GaussianConstants.b2.x);
-                float gy = GaussSum(dist2, GaussianConstants.a1.y, GaussianConstants.b1.y, GaussianConstants.a2.y, GaussianConstants.b2.y);
-                float gz = GaussSum(dist2, GaussianConstants.a1.z, GaussianConstants.b1.z, GaussianConstants.a2.z, GaussianConstants.b2.z);
-                color3 value = color3(gx, gy, gz);
-                filter.set(x, y, value);
-                filterSum += value;
-            }
+            float ix2 = ix * ix;
+            float gY = Gaussian(ix2, GaussianConstants.a1.x, GaussianConstants.b1.x);
+            float gCx = Gaussian(ix2, GaussianConstants.a1.y, GaussianConstants.b1.y);
+            float gCz1 = GaussianSqrt(ix2, GaussianConstants.a1.z, GaussianConstants.b1.z);
+            float gCz2 = GaussianSqrt(ix2, GaussianConstants.a2.z, GaussianConstants.b2.z);
+            color3 valueYCx = color3(gY, gCx, 0.0f);
+            color3 valueCz = color3(gCz1, gCz2, 0.0f);
+            filterYCx.set(x, 0, valueYCx);
+            filterCz.set(x, 0, valueCz);
+            filterSumYCx += valueYCx;
+            filterSumCz += valueCz;
         }
 
-        // normalize weights
-        filter.multiplyAndAdd(color3(1.0f) / filterSum);
+        // Normalize weights.
+        color3 normFactorYCx = { 1.0f / filterSumYCx.x, 1.0f / filterSumYCx.y, 1.0f };
+        float normFactorCz = 1.0f / std::sqrt(filterSumCz.x * filterSumCz.x + filterSumCz.y * filterSumCz.y);
+        for (int x = 0; x < filterWidth; x++)
+        {
+            color3 pYCx = filterYCx.get(x, 0);
+            color3 pCz = filterCz.get(x, 0);
+
+            filterYCx.set(x, 0, color3(pYCx.x * normFactorYCx.x, pYCx.y * normFactorYCx.y, 0.0f));
+            filterCz.set(x, 0, color3(pCz.x * normFactorCz, pCz.y * normFactorCz, 0.0f));
+        }
     }
 
-    static void setFeatureFilter(image<color3>& filter, const float ppd, const bool pointDetector)
+    static void setFeatureFilter(image<color3>& filter, const float ppd) // For details, see separatedConvolutions.pdf in the FLIP repository.
     {
-        const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
+        const float stdDev = 0.5f * FLIPConstants.gw * ppd;
         const int radius = int(std::ceil(3.0f * stdDev));
         const int width = 2 * radius + 1;
 
-        float weightX, weightY;
-        float negativeWeightsSumX = 0.0f;
-        float positiveWeightsSumX = 0.0f;
-        float negativeWeightsSumY = 0.0f;
-        float positiveWeightsSumY = 0.0f;
+        float gSum = 0.0f;
+        float dgSumNegative = 0.0f;
+        float dgSumPositive = 0.0f;
+        float ddgSumNegative = 0.0f;
+        float ddgSumPositive = 0.0f;
 
-        for (int y = 0; y < width; y++)
+        for (int x = 0; x < width; x++)
         {
-            int yy = y - radius;
-            for (int x = 0; x < width; x++)
-            {
-                int xx = x - radius;
-                float G = Gaussian(float(xx), float(yy), stdDev);
-                if (pointDetector)
-                {
-                    weightX = (float(xx) * float(xx) / (stdDev * stdDev) - 1.0f) * G;
-                    weightY = (float(yy) * float(yy) / (stdDev * stdDev) - 1.0f) * G;
-                }
-                else
-                {
-                    weightX = -float(xx) * G;
-                    weightY = -float(yy) * G;
-                }
-                filter.set(x, y, color3(weightX, weightY, 0.0f));
+            int xx = x - radius;
 
-                if (weightX > 0.0f)
-                    positiveWeightsSumX += weightX;
-                else
-                    negativeWeightsSumX += -weightX;
+            float g = Gaussian(float(xx), stdDev);
+            gSum += g;
 
-                if (weightY > 0.0f)
-                    positiveWeightsSumY += weightY;
-                else
-                    negativeWeightsSumY += -weightY;
-            }
+            // 1st derivative.
+            float dg = -float(xx) * g;
+            if (dg > 0.0f)
+                dgSumPositive += dg;
+            else
+                dgSumNegative -= dg;
+
+            // 2nd derivative.
+            float ddg = (float(xx) * float(xx) / (stdDev * stdDev) - 1.0f) * g;
+            if (ddg > 0.0f)
+                ddgSumPositive += ddg;
+            else
+                ddgSumNegative -= ddg;
+
+            filter.set(x, 0, color3(g, dg, ddg));
         }
 
-        // Normalize positive weights to sum to 1 and negative weights to sum to -1
-        for (int y = 0; y < width; y++)
+        // Normalize weights (Gaussian weights should sum to 1; postive and negative weights of 1st and 2nd derivative should sum to 1 and -1, respectively).
+        for (int x = 0; x < width; x++)
         {
-            for (int x = 0; x < width; x++)
-            {
-                color3 p = filter.get(x, y);
+            color3 p = filter.get(x, 0);
 
-                filter.set(x, y, color3(p.x / (p.x > 0.0f ? positiveWeightsSumX : negativeWeightsSumX), p.y / (p.y > 0.0f ? positiveWeightsSumY : negativeWeightsSumY), 0.0f));
-            }
+            filter.set(x, 0, color3(p.x / gSum, p.y / (p.y > 0.0f ? dgSumPositive : dgSumNegative), p.z / (p.z > 0.0f ? ddgSumPositive : ddgSumNegative)));
         }
     }
 
@@ -495,61 +486,39 @@ namespace FLIP
         int width = reference.getWidth();
         int height = reference.getHeight();
 
-        //  temporary images (on device)
-        image<color3> referenceImage(reference), testImage(test);
-        image<color3> preprocessedReference(width, height), preprocessedTest(width, height);
-        image<color3> colorDifference(width, height);
-        image<color3> pointReference(width, height), pointTest(width, height);
-        image<color3> edgeReference(width, height), edgeTest(width, height);
-        image<color3> featureDifference(width, height);
+        // Temporary images (on device).
+        image<color3> intermediateReferenceYCx(width, height), intermediateReferenceCz(width, height), intermediateTestYCx(width, height), intermediateTestCz(width, height);
+        image<color3> intermediateFeaturesReference(width, height), intermediateFeaturesTest(width, height);
+        image<color3> colorFeatureDifference(width, height);
 
-        //  move from sRGB to YCxCz
-        referenceImage.sRGB2YCxCz();
-        testImage.sRGB2YCxCz();
+        // Transform from sRGB to YCxCz.
+        reference.sRGB2YCxCz();
+        test.sRGB2YCxCz();
 
-        //  spatial filtering
+        // Prepare separated spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
+        // (YCx for the Achromatic and Red-Green channels and Cz for the Blue-Yellow channel). For details, see separatedConvolutions.pdf in the FLIP repository.
         int spatialFilterRadius = calculateSpatialFilterRadius(ppd);
         int spatialFilterWidth = 2 * spatialFilterRadius + 1;
-        image<color3> spatialFilter(spatialFilterWidth, spatialFilterWidth);
-        setSpatialFilter(spatialFilter, ppd, spatialFilterRadius);
-        preprocessedReference.convolve(referenceImage, spatialFilter);
-        preprocessedTest.convolve(testImage, spatialFilter);
+        image<color3> spatialFilterYCx(spatialFilterWidth, 1);
+        image<color3> spatialFilterCz(spatialFilterWidth, 1);
+        setSpatialFilters(spatialFilterYCx, spatialFilterCz, ppd, spatialFilterRadius);
+        
+        // The next two calls perform separable spatial filtering on both the reference and test image at the same time (for better performance).
+        // The second call also computes the color difference between the images.
+        FLIP::image<color3>::spatialFilterFirstDir(reference, intermediateReferenceYCx, intermediateReferenceCz, test, intermediateTestYCx, intermediateTestCz, spatialFilterYCx, spatialFilterCz);
+        FLIP::image<color3>::spatialFilterSecondDirAndColorDifference(intermediateReferenceYCx, intermediateReferenceCz, intermediateTestYCx, intermediateTestCz, colorFeatureDifference, spatialFilterYCx, spatialFilterCz);
 
-        //  move from YCxCz to CIELab
-        preprocessedReference.YCxCz2CIELab();
-        preprocessedTest.YCxCz2CIELab();
-
-        //  Hunt adjustment
-        preprocessedReference.huntAdjustment();
-        preprocessedTest.huntAdjustment();
-
-        //  color difference
-        colorDifference.computeColorDifference(preprocessedReference, preprocessedTest);
-
-        //  feature (point/edge) filtering
-        const float stdDev = 0.5f * HostFLIPConstants.gw * ppd;
+        // Prepare separated feature (edge/point) detection filters.
+        const float stdDev = 0.5f * FLIPConstants.gw * ppd;
         const int featureFilterRadius = int(std::ceil(3.0f * stdDev));
         int featureFilterWidth = 2 * featureFilterRadius + 1;
-        image<color3> pointFilter(featureFilterWidth, featureFilterWidth);
-        image<color3> edgeFilter(featureFilterWidth, featureFilterWidth);
-        setFeatureFilter(pointFilter, ppd, true);
-        setFeatureFilter(edgeFilter, ppd, false);
+        image<color3> featureFilter(featureFilterWidth, 1);
+        setFeatureFilter(featureFilter, ppd);
 
-        //  grayscale images needed for feature detection
-        image<color3> grayReference(width, height), grayTest(width, height);
-        grayReference.YCxCz2Gray(referenceImage);
-        grayTest.YCxCz2Gray(testImage);
+        // The following two calls convolve (separably) referenceImage and testImage with the edge and point detection filters and performs additional computations for the feature differences.
+        FLIP::image<color3>::featureFilterFirstDir(reference, intermediateFeaturesReference, test, intermediateFeaturesTest, featureFilter);
+        FLIP::image<color3>::featureFilterSecondDirAndFeatureDifference(intermediateFeaturesReference, intermediateFeaturesTest, colorFeatureDifference, featureFilter);
 
-        //  feature filtering
-        pointReference.convolve(grayReference, pointFilter);
-        pointTest.convolve(grayTest, pointFilter);
-        edgeReference.convolve(grayReference, edgeFilter);
-        edgeTest.convolve(grayTest, edgeFilter);
-
-        //  feature difference
-        featureDifference.computeFeatureDifference(pointReference, pointTest, edgeReference, edgeTest);
-
-        this->finalError(colorDifference, featureDifference);
+        this->finalError(colorFeatureDifference);
     }
-
 }

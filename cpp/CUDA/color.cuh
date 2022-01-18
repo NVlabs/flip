@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,7 +26,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * SPDX-FileCopyrightText: Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
@@ -261,7 +261,7 @@ namespace FLIP
         __host__ __device__ static inline color3 LinearRGB2XYZ(color3 RGB)
         {
             // Source: https://www.image-engineering.de/library/technotes/958-how-to-convert-between-srgb-and-ciexyz
-            // Assumes D65 standard illuminant
+            // Assumes D65 standard illuminant.
             const float a11 = 10135552.0f / 24577794.0f;
             const float a12 = 8788810.0f / 24577794.0f;
             const float a13 = 4435075.0f / 24577794.0f;
@@ -282,7 +282,7 @@ namespace FLIP
 
         __host__ __device__ static inline color3 XYZ2LinearRGB(color3 XYZ)
         {
-            // Return values in linear RGB, assuming D65 standard illuminant
+            // Return values in linear RGB, assuming D65 standard illuminant.
             const float a11 = 3.241003275f;
             const float a12 = -1.537398934f;
             const float a13 = -0.498615861f;
@@ -309,7 +309,7 @@ namespace FLIP
             const float factor = 1.0f / (3.0f * deltaSquare);
             const float term = 4.0f / 29.0f;
 
-            // the default illuminant is D65
+            // The default illuminant is D65.
             XYZ = XYZ * invReferenceIlluminant;
             XYZ.x = (XYZ.x > deltaCube ? powf(XYZ.x, 1.0f / 3.0f) : factor * XYZ.x + term);
             XYZ.y = (XYZ.y > deltaCube ? powf(XYZ.y, 1.0f / 3.0f) : factor * XYZ.y + term);
@@ -327,7 +327,7 @@ namespace FLIP
             const float factor = 3.0f * delta * delta;
             const float term = 4.0f / 29.0f;
 
-            // the default illuminant is D65
+            // The default illuminant is D65.
             float Y = (Lab.x + 16.0f) / 116.0f;
             float X = Lab.y / 500.0f + Y;
             float Z = Y - Lab.z / 200.0f;
@@ -340,7 +340,7 @@ namespace FLIP
 
         __host__ __device__ static inline color3 XYZ2YCxCz(color3 XYZ, const color3 invReferenceIlluminant = INV_DEFAULT_ILLUMINANT)
         {
-            // the default illuminant is D65
+            // The default illuminant is D65.
             XYZ = XYZ * invReferenceIlluminant;
             float Y = 116.0f * XYZ.y - 16.0f;
             float Cx = 500.0f * (XYZ.x - XYZ.y);
@@ -351,7 +351,7 @@ namespace FLIP
 
         __host__ __device__ static inline color3 YCxCz2XYZ(color3 YCxCz, const color3 referenceIlluminant = DEFAULT_ILLUMINANT)
         {
-            // the default illuminant is D65
+            // The default illuminant is D65.
             const float Y = (YCxCz.x + 16.0f) / 116.0f;
             const float Cx = YCxCz.y / 500.0f;
             const float Cz = YCxCz.z / 200.0f;
@@ -361,12 +361,7 @@ namespace FLIP
             return color3(X, Y, Z) * referenceIlluminant;
         }
 
-        __host__ __device__ static inline float YCxCz2Gray(color3 YCxCz)
-        {
-            return (YCxCz.x + 16.0f) / 116.0f; //  make it [0,1]
-        }
-
-        //  FLIP-specific functions below
+        // FLIP-specific functions below.
 
         __host__ __device__ static inline float Hunt(const float luminance, const float chrominance)
         {

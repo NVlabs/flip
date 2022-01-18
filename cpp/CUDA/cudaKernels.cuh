@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,7 +26,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * SPDX-FileCopyrightText: Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
@@ -58,201 +58,14 @@
 
 namespace FLIP
 {
-
-    __device__ FLIPConstants DeviceFLIPConstants;
-
-
-    enum ReduceOperation
+    __constant__ struct
     {
-        Add,
-        Max,
-        Min
-    };
-
-    template <ReduceOperation op>
-    inline __device__ float reduce(volatile float a, volatile float b)
-    {
-        switch (op)
-        {
-        default:
-        case ReduceOperation::Add:
-            return a + b;
-            break;
-        case ReduceOperation::Max:
-            return Max(a, b);
-            break;
-        case ReduceOperation::Min:
-            return Min(a, b);
-            break;
-        }
-    }
-
-    template <ReduceOperation op>
-    inline __device__ color3 reduce(const color3& a, const color3& b)
-    {
-        switch (op)
-        {
-        default:
-        case ReduceOperation::Add:
-            return a + b;
-            break;
-        case ReduceOperation::Max:
-            return color3::max(a, b);
-            break;
-        case ReduceOperation::Min:
-            return color3::min(a, b);
-            break;
-        }
-    }
-
-    template <unsigned int blockSize, ReduceOperation op>
-    __device__ void warpReduce(volatile float* pData, int tId)
-    {
-        if (blockSize >= 64) pData[tId] = reduce<op>(pData[tId], pData[tId + 32]);
-        if (blockSize >= 32) pData[tId] = reduce<op>(pData[tId], pData[tId + 16]);
-        if (blockSize >= 16) pData[tId] = reduce<op>(pData[tId], pData[tId + 8]);
-        if (blockSize >= 8) pData[tId] = reduce<op>(pData[tId], pData[tId + 4]);
-        if (blockSize >= 4) pData[tId] = reduce<op>(pData[tId], pData[tId + 2]);
-        if (blockSize >= 2) pData[tId] = reduce<op>(pData[tId], pData[tId + 1]);
-    }
-
-    template <unsigned int blockSize, ReduceOperation op>
-    __device__ void warpReduce(color3* pData, int tId)
-    {
-        if (blockSize >= 64) pData[tId] = reduce<op>(pData[tId], pData[tId + 32]);
-        if (blockSize >= 32) pData[tId] = reduce<op>(pData[tId], pData[tId + 16]);
-        if (blockSize >= 16) pData[tId] = reduce<op>(pData[tId], pData[tId + 8]);
-        if (blockSize >= 8) pData[tId] = reduce<op>(pData[tId], pData[tId + 4]);
-        if (blockSize >= 4) pData[tId] = reduce<op>(pData[tId], pData[tId + 2]);
-        if (blockSize >= 2) pData[tId] = reduce<op>(pData[tId], pData[tId + 1]);
-    }
-
-    template <unsigned int blockSize, ReduceOperation op>
-    __global__ void kernelReduce(float* pDstData, float* pSrcData, const int dim)
-    {
-        extern __shared__ float vpSharedData[];
-
-        int tId = threadIdx.x;
-        int i = blockIdx.x * (blockSize * 2) + threadIdx.x;
-        int index = blockIdx.x * blockDim.x + threadIdx.x;
-        unsigned int gridSize = blockSize * 2 * gridDim.x;
-
-        switch (op)
-        {
-        case ReduceOperation::Add:
-            vpSharedData[tId] = 0.0f;
-            break;
-        case ReduceOperation::Max:
-            vpSharedData[tId] = 1e-30f;
-            break;
-        case ReduceOperation::Min:
-            vpSharedData[tId] = 1e30f;
-            break;
-        }
-
-        if (index >= dim)
-            return;
-
-        while (i < dim)
-        {
-            if (i + blockSize < dim)
-            {
-                vpSharedData[tId] = reduce<op>(pSrcData[i], pSrcData[i + blockSize]);
-            }
-            else
-            {
-                vpSharedData[tId] = pSrcData[i];
-            }
-            i += gridSize;
-        }
-        __syncthreads();
-
-        if (blockSize >= 1024) { if (tId < 512) { vpSharedData[tId] = reduce<op>(vpSharedData[tId], vpSharedData[tId + 512]); } __syncthreads(); }
-        if (blockSize >= 512) { if (tId < 256) { vpSharedData[tId] = reduce<op>(vpSharedData[tId], vpSharedData[tId + 256]); } __syncthreads(); }
-        if (blockSize >= 256) { if (tId < 128) { vpSharedData[tId] = reduce<op>(vpSharedData[tId], vpSharedData[tId + 128]); } __syncthreads(); }
-        if (blockSize >= 128) { if (tId < 64) { vpSharedData[tId] = reduce<op>(vpSharedData[tId], vpSharedData[tId + 64]); } __syncthreads(); }
-
-        if (tId < 32)
-        {
-            warpReduce<blockSize, op>(vpSharedData, tId);
-        }
-
-        if (tId == 0)
-        {
-            pDstData[blockIdx.x] = vpSharedData[0];
-        }
-    }
-
-
-    template <unsigned int blockSize, ReduceOperation op>
-    __global__ void kernelReduce(color3* pDstData, color3* pSrcData, const int dim)
-    {
-        extern __shared__ color3 vpSharedDataC[];
-
-        int tId = threadIdx.x;
-        int i = blockIdx.x * (blockSize * 2) + threadIdx.x;
-        int index = blockIdx.x * blockDim.x + threadIdx.x;
-        unsigned int gridSize = blockSize * 2 * gridDim.x;
-
-        switch (op)
-        {
-        case ReduceOperation::Add:
-            vpSharedDataC[tId] = color3(0.0f);
-            break;
-        case ReduceOperation::Max:
-            vpSharedDataC[tId] = color3(1e-30f);
-            break;
-        case ReduceOperation::Min:
-            vpSharedDataC[tId] = color3(1e30f);
-            break;
-        }
-
-        if (index >= dim)
-            return;
-
-        while (i < dim)
-        {
-            if (i + blockSize < dim)
-            {
-                vpSharedDataC[tId] = reduce<op>(pSrcData[i], pSrcData[i + blockSize]);
-            }
-            else
-            {
-                vpSharedDataC[tId] = pSrcData[i];
-            }
-            i += gridSize;
-        }
-        __syncthreads();
-
-        if (blockSize >= 1024) { if (tId < 512) { vpSharedDataC[tId] = reduce<op>(vpSharedDataC[tId], vpSharedDataC[tId + 512]); } __syncthreads(); }
-        if (blockSize >= 512) { if (tId < 256) { vpSharedDataC[tId] = reduce<op>(vpSharedDataC[tId], vpSharedDataC[tId + 256]); } __syncthreads(); }
-        if (blockSize >= 256) { if (tId < 128) { vpSharedDataC[tId] = reduce<op>(vpSharedDataC[tId], vpSharedDataC[tId + 128]); } __syncthreads(); }
-        if (blockSize >= 128) { if (tId < 64) { vpSharedDataC[tId] = reduce<op>(vpSharedDataC[tId], vpSharedDataC[tId + 64]); } __syncthreads(); }
-
-        if (tId < 32)
-        {
-            warpReduce<blockSize, op>(vpSharedDataC, tId);
-        }
-
-        if (tId == 0)
-        {
-            pDstData[blockIdx.x] = vpSharedDataC[0];
-        }
-    }
-
-
-    __global__ static void kernelLab2Gray(color3* pDstImage, const color3* pSrcImage, const int3 dim)
-    {
-        int x = blockIdx.x * blockDim.x + threadIdx.x;
-        int y = blockIdx.y * blockDim.y + threadIdx.y;
-        int z = blockIdx.z * blockDim.z + threadIdx.z;
-        int i = (z * dim.y + y) * dim.x + x;
-
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
-        float l = (pSrcImage[i].x + 16.0f) / 116.0f;  // make it [0,1]
-        pDstImage[i] = color3(l, l, 0.0f);  // luminance [0,1] stored in both x and y since we apply both horizontal and verticals filters at the same time
-    }
+        float gqc = 0.7f;
+        float gpc = 0.4f;
+        float gpt = 0.95f;
+        float gw = 0.082f;
+        float gqf = 0.5f;
+    } DeviceFLIPConstants;
 
     __global__ static void kernelColorMap(color3* pDstImage, const float* pSrcImage, const color3* pColorMap, const int3 dim, const int mapSize)
     {
@@ -278,7 +91,7 @@ namespace FLIP
         pDstImage[i] = color3(pSrcImage[i]);
     }
 
-    __global__ static void kernelComputeFeatureDifference(color3* pDstImage, color3* pEdgeReference, color3* pEdgeTest, color3* pPointReference, color3* pPointTest, const int3 dim, const float ppd)
+    __global__ static void kernelFinalError(float* pDstImage, color3* pColorFeatureDifference, const int3 dim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -287,37 +100,8 @@ namespace FLIP
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
 
-        const float normalizationFactor = 1.0f / std::sqrt(2.0f);
-
-        color3 er = pEdgeReference[i];
-        color3 et = pEdgeTest[i];
-        color3 pr = pPointReference[i];
-        color3 pt = pPointTest[i];
-
-        const float edgeValueRef = std::sqrt(er.x * er.x + er.y * er.y);
-        const float edgeValueTest = std::sqrt(et.x * et.x + et.y * et.y);
-        const float pointValueRef = std::sqrt(pr.x * pr.x + pr.y * pr.y);
-        const float pointValueTest = std::sqrt(pt.x * pt.x + pt.y * pt.y);
-
-        const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
-        const float pointDifference = std::abs(pointValueRef - pointValueTest);
-
-        const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), DeviceFLIPConstants.gqf);
-
-        pDstImage[i] = color3(featureDifference, 0.0f, 0.0f);
-    }
-
-    __global__ static void kernelFinalError(float* pDstImage, color3* pColorDifference, color3* pFeatureDifference, const int3 dim)
-    {
-        int x = blockIdx.x * blockDim.x + threadIdx.x;
-        int y = blockIdx.y * blockDim.y + threadIdx.y;
-        int z = blockIdx.z * blockDim.z + threadIdx.z;
-        int i = (z * dim.y + y) * dim.x + x;
-
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
-        const float cdiff = pColorDifference[i].x;
-        const float fdiff = pFeatureDifference[i].x;
+        const float cdiff = pColorFeatureDifference[i].x;
+        const float fdiff = pColorFeatureDifference[i].y;
         const float errorFLIP = std::pow(cdiff, 1.0f - fdiff);
 
         pDstImage[i] = errorFLIP;
@@ -342,153 +126,6 @@ namespace FLIP
         }
     }
 
-    __global__ static void kernelCombine(float* pDstImage, float* pSrcImageA, float* pSrcImageB, const int3 dim, CombineOperation operation)
-    {
-        int x = blockIdx.x * blockDim.x + threadIdx.x;
-        int y = blockIdx.y * blockDim.y + threadIdx.y;
-        int z = blockIdx.z * blockDim.z + threadIdx.z;
-        int i = (z * dim.y + y) * dim.x + x;
-
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
-        switch (operation)
-        {
-        case CombineOperation::Add:
-            pDstImage[i] = pSrcImageA[i] + pSrcImageB[i];
-            break;
-        case CombineOperation::Subtract:
-            pDstImage[i] = pSrcImageA[i] - pSrcImageB[i];
-            break;
-        case CombineOperation::Multiply:
-            pDstImage[i] = pSrcImageA[i] * pSrcImageB[i];
-            break;
-        case CombineOperation::L1:
-            pDstImage[i] = abs(pSrcImageA[i] - pSrcImageB[i]);
-            break;
-        case CombineOperation::L2:
-            pDstImage[i] = sqrt(pSrcImageA[i] * pSrcImageA[i] + pSrcImageB[i] * pSrcImageB[i]);
-            break;
-        }
-    }
-
-    __global__ static void kernelCombine(color3* pDstImage, color3* pSrcImageA, color3* pSrcImageB, const int3 dim, CombineOperation operation)
-    {
-        int x = blockIdx.x * blockDim.x + threadIdx.x;
-        int y = blockIdx.y * blockDim.y + threadIdx.y;
-        int z = blockIdx.z * blockDim.z + threadIdx.z;
-        int i = (z * dim.y + y) * dim.x + x;
-
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
-        switch (operation)
-        {
-        case CombineOperation::Add:
-            pDstImage[i] = pSrcImageA[i] + pSrcImageB[i];
-            break;
-        case CombineOperation::Subtract:
-            pDstImage[i] = pSrcImageA[i] - pSrcImageB[i];
-            break;
-        case CombineOperation::Multiply:
-            pDstImage[i] = pSrcImageA[i] * pSrcImageB[i];
-            break;
-        case CombineOperation::L1:
-            pDstImage[i] = color3::abs(pSrcImageA[i] - pSrcImageB[i]);
-            break;
-        case CombineOperation::L2:
-            pDstImage[i] = color3::sqrt(pSrcImageA[i] * pSrcImageA[i] + pSrcImageB[i] * pSrcImageB[i]);
-            break;
-        }
-    }
-
-    __global__ static void kernelColorDifference(color3* pDstImage, color3* pSrcReferenceImage, color3* pSrcTestImage, const int3 dim)
-    {
-        int x = blockIdx.x * blockDim.x + threadIdx.x;
-        int y = blockIdx.y * blockDim.y + threadIdx.y;
-        int z = blockIdx.z * blockDim.z + threadIdx.z;
-        int i = (z * dim.y + y) * dim.x + x;
-
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
-        const float cmax = color3::computeMaxDistance(FLIP::DeviceFLIPConstants.gqc);
-        const float pccmax = FLIP::DeviceFLIPConstants.gpc * cmax;
-
-        color3 refPixel = pSrcReferenceImage[i];
-        color3 testPixel = pSrcTestImage[i];
-
-        float colorDifference = color3::HyAB(refPixel, testPixel);
-
-        colorDifference = powf(colorDifference, FLIP::DeviceFLIPConstants.gqc);
-
-        // Re-map error to the [0, 1] range. Values between 0 and pccmax are mapped to the range [0, gpt],
-        // while the rest are mapped to the range (gpt, 1]
-        if (colorDifference < pccmax)
-        {
-            colorDifference *= FLIP::DeviceFLIPConstants.gpt / pccmax;
-        }
-        else
-        {
-            colorDifference = FLIP::DeviceFLIPConstants.gpt + ((colorDifference - pccmax) / (cmax - pccmax)) * (1.0f - FLIP::DeviceFLIPConstants.gpt);
-        }
-
-        pDstImage[i] = color3(colorDifference, 0.0f, 0.0f);
-    }
-
-    __global__ static void kernelFeatureDifference(color3* pDstImage, color3* pPointReference, color3* pPointTest, color3* pEdgeReference, color3* pEdgeTest, const int3 dim)
-    {
-        int x = blockIdx.x * blockDim.x + threadIdx.x;
-        int y = blockIdx.y * blockDim.y + threadIdx.y;
-        int z = blockIdx.z * blockDim.z + threadIdx.z;
-        int i = (z * dim.y + y) * dim.x + x;
-
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
-        const float normalizationFactor = 1.0f / std::sqrt(2.0f);
-
-        color3 er = pEdgeReference[i];
-        color3 et = pEdgeTest[i];
-        color3 pr = pPointReference[i];
-        color3 pt = pPointTest[i];
-
-        const float edgeValueRef = std::sqrt(er.x * er.x + er.y * er.y);
-        const float edgeValueTest = std::sqrt(et.x * et.x + et.y * et.y);
-        const float pointValueRef = std::sqrt(pr.x * pr.x + pr.y * pr.y);
-        const float pointValueTest = std::sqrt(pt.x * pt.x + pt.y * pt.y);
-
-        const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
-        const float pointDifference = std::abs(pointValueRef - pointValueTest);
-
-        const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), DeviceFLIPConstants.gqf);
-
-        pDstImage[i] = color3(featureDifference, 0.0f, 0.0f);
-    }
-
-    __global__ static void kernelHuntAdjustment(color3* pImage, const int3 dim)
-    {
-        int x = blockIdx.x * blockDim.x + threadIdx.x;
-        int y = blockIdx.y * blockDim.y + threadIdx.y;
-        int z = blockIdx.z * blockDim.z + threadIdx.z;
-        int i = (z * dim.y + y) * dim.x + x;
-
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
-        color3 pixel = pImage[i];
-        pixel.y = color3::Hunt(pixel.x, pixel.y);
-        pixel.z = color3::Hunt(pixel.x, pixel.z);
-        pImage[i] = pixel;
-    }
-
-    __global__ static void kernelYCxCz2CIELab(color3* pImage, const int3 dim)
-    {
-        int x = blockIdx.x * blockDim.x + threadIdx.x;
-        int y = blockIdx.y * blockDim.y + threadIdx.y;
-        int z = blockIdx.z * blockDim.z + threadIdx.z;
-        int i = (z * dim.y + y) * dim.x + x;
-
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
-        pImage[i] = color3::XYZ2CIELab(color3::LinearRGB2XYZ(color3::clamp(color3::XYZ2LinearRGB(color3::YCxCz2XYZ(pImage[i])))));
-    }
-
     __global__ static void kernelsRGB2YCxCz(color3* pImage, const int3 dim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -499,30 +136,6 @@ namespace FLIP
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
 
         pImage[i] = color3::XYZ2YCxCz(color3::LinearRGB2XYZ(color3::sRGB2LinearRGB(pImage[i])));
-    }
-
-    __global__ static void kernelYCxCz2Gray(float* dstImage, color3* srcImage, const int3 dim)
-    {
-        int x = blockIdx.x * blockDim.x + threadIdx.x;
-        int y = blockIdx.y * blockDim.y + threadIdx.y;
-        int i = y * dim.x + x;
-
-        if (x >= dim.x || y >= dim.y) return;
-
-        dstImage[i] = color3::YCxCz2Gray(srcImage[i]);
-    }
-
-    __global__ static void kernelYCxCz2Gray(color3* dstImage, color3* srcImage, const int3 dim)
-    {
-        int x = blockIdx.x * blockDim.x + threadIdx.x;
-        int y = blockIdx.y * blockDim.y + threadIdx.y;
-        int z = blockIdx.z * blockDim.z + threadIdx.z;
-        int i = (z * dim.y + y) * dim.x + x;
-
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
-        float gray = color3::YCxCz2Gray(srcImage[i]);
-        dstImage[i] = color3(gray);
     }
 
     __global__ static void kernelLinearRGB2sRGB(color3* pImage, const int3 dim)
@@ -607,9 +220,9 @@ namespace FLIP
 
     __device__ const float ToneMappingCoefficients[3][6] =
     {
-        { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f },  //  Reinhard
-        { 0.6f * 0.6f * 2.51f, 0.6f * 0.03f, 0.0f, 0.6f * 0.6f * 2.43f, 0.6f * 0.59f, 0.14f },  //  Aces, 0.6 is pre-exposure cancellation
-        { 0.231683f, 0.013791f, 0.0f, 0.18f, 0.3f, 0.018f },  //  Hable
+        { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f },                                                 // Reinhard.
+        { 0.6f * 0.6f * 2.51f, 0.6f * 0.03f, 0.0f, 0.6f * 0.6f * 2.43f, 0.6f * 0.59f, 0.14f },  // ACES, 0.6 is pre-exposure cancellation.
+        { 0.231683f, 0.013791f, 0.0f, 0.18f, 0.3f, 0.018f },                                    // Hable.
     };
 
 
@@ -648,115 +261,224 @@ namespace FLIP
         pImage[i] = color3::clamp(pImage[i], low, high);
     }
 
-
-    __global__ static void kernelConvolve(color3* dstImage, color3* srcImage, color3* pFilter, const int3 dim, int filterWidth, int filterHeight)
+    // Convolve in x direction (1st and 2nd derivative for filter in x direction, Gaussian in y direction).
+    // For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
+    // We filter both reference and test image simultaneously (for better performance).
+    // referenceImage and testImage are expected to be in YCxCz space.
+    __global__ static void kernelFeatureFilterFirstDir(color3* intermediateFeaturesImageReference, color3* referenceImage, color3* intermediateFeaturesImageTest, color3* testImage, color3* pFilter, const int3 dim, const int3 filterDim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
         int z = blockIdx.z * blockDim.z + threadIdx.z;
         int dstIndex = (z * dim.y + y) * dim.x + x;
 
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+        if (x >= dim.x || y >= dim.y) return;
 
-        const int halfFilterWidth = filterWidth / 2;
-        const int halfFilterHeight = filterHeight / 2;
+        const float halfFilterWidth = filterDim.x / 2;
 
-        color3 colorSum = { 0.0f, 0.0f, 0.0f };
+        float dxReference = 0.0f, dxTest = 0.0f, ddxReference = 0.0f, ddxTest = 0.0f;
+        float gaussianFilteredReference = 0.0f, gaussianFilteredTest = 0.0f;
 
-        for (int iy = -halfFilterHeight; iy <= halfFilterHeight; iy++)
+        const float oneOver116 = 1.0f / 116.0f;
+        const float sixteenOver116 = 16.0f / 116.0f;
+        for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
+        {
+            int xx = Min(Max(0, x + ix), dim.x - 1);
+
+            int filterIndex = ix + halfFilterWidth;
+            int srcIndex = y * dim.x + xx;
+            const color3 featureWeights = pFilter[filterIndex];
+            float yReference = referenceImage[srcIndex].x;
+            float yTest = testImage[srcIndex].x;
+
+            // Normalize the Y values to [0,1].
+            float yReferenceNormalized = yReference * oneOver116 + sixteenOver116;
+            float yTestNormalized = yTest * oneOver116 + sixteenOver116;
+
+            // Image multiplied by 1st and 2nd x-derivatives of Gaussian.
+            dxReference += featureWeights.y * yReferenceNormalized;
+            dxTest += featureWeights.y * yTestNormalized;
+            ddxReference += featureWeights.z * yReferenceNormalized;
+            ddxTest += featureWeights.z * yTestNormalized;
+
+            // Image multiplied by Gaussian.
+            gaussianFilteredReference += featureWeights.x * yReferenceNormalized;
+            gaussianFilteredTest += featureWeights.x * yTestNormalized;
+        }
+
+        intermediateFeaturesImageReference[dstIndex] = color3(dxReference, ddxReference, gaussianFilteredReference);
+        intermediateFeaturesImageTest[dstIndex] = color3(dxTest, ddxTest, gaussianFilteredTest);
+    }
+
+    // Convolve in y direction (1st and 2nd derivative for filter in y direction, Gaussian in x direction), then compute difference.
+    // For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
+    // We filter both reference and test image simultaneously (for better performance).
+    __global__ static void kernelFeatureFilterSecondDirAndFeatureDifference(color3* featureDifferenceImage, color3* intermediateFeaturesImageReference, color3* intermediateFeaturesImageTest, color3* pFilter, const int3 dim, const int3 filterDim)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int dstIndex = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y) return;
+
+        const float normalizationFactor = 1.0f / std::sqrt(2.0f);
+
+        const float halfFilterWidth = filterDim.x / 2;
+
+        float dxReference = 0.0f, dxTest = 0.0f, ddxReference = 0.0f, ddxTest = 0.0f;
+        float dyReference = 0.0f, dyTest = 0.0f, ddyReference = 0.0f, ddyTest = 0.0f;
+
+        for (int iy = -halfFilterWidth; iy <= halfFilterWidth; iy++)
         {
             int yy = Min(Max(0, y + iy), dim.y - 1);
-            for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
-            {
-                int xx = Min(Max(0, x + ix), dim.x - 1);
 
-                int filterIndex = (iy + halfFilterHeight) * filterWidth + (ix + halfFilterWidth);
-                int srcIndex = yy * dim.x + xx;
-                const color3 weights = pFilter[filterIndex];
-                const color3 srcColor = srcImage[srcIndex];
+            int filterIndex = iy + halfFilterWidth;
+            int srcIndex = yy * dim.x + x;
+            const color3 featureWeights = pFilter[filterIndex];
+            const color3 intermediateFeaturesReference = intermediateFeaturesImageReference[srcIndex];
+            const color3 intermediateFeatureTest = intermediateFeaturesImageTest[srcIndex];
 
-                colorSum.x += weights.x * srcColor.x;
-                colorSum.y += weights.y * srcColor.y;
-                colorSum.z += weights.z * srcColor.z;
+            // Intermediate images (1st and 2nd derivative in x) multiplied by Gaussian.
+            dxReference += featureWeights.x * intermediateFeaturesReference.x;
+            dxTest += featureWeights.x * intermediateFeatureTest.x;
+            ddxReference += featureWeights.x * intermediateFeaturesReference.y;
+            ddxTest += featureWeights.x * intermediateFeatureTest.y;
 
-            }
+            // Intermediate image (Gaussian) multiplied by 1st and 2nd y-derivatives of Gaussian.
+            dyReference += featureWeights.y * intermediateFeaturesReference.z;
+            dyTest += featureWeights.y * intermediateFeatureTest.z;
+            ddyReference += featureWeights.z * intermediateFeaturesReference.z;
+            ddyTest += featureWeights.z * intermediateFeatureTest.z;
         }
 
-        dstImage[dstIndex] = colorSum;
+        const float edgeValueRef = std::sqrt(dxReference * dxReference + dyReference * dyReference);
+        const float edgeValueTest = std::sqrt(dxTest * dxTest + dyTest * dyTest);
+        const float pointValueRef = std::sqrt(ddxReference * ddxReference + ddyReference * ddyReference);
+        const float pointValueTest = std::sqrt(ddxTest * ddxTest + ddyTest * ddyTest);
+
+        const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
+        const float pointDifference = std::abs(pointValueRef - pointValueTest);
+
+        const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), DeviceFLIPConstants.gqf);
+
+        featureDifferenceImage[dstIndex].y = featureDifference;
     }
 
-
-    __global__ static void kernelConvolve(color3* dstImage, color3* srcImage, color3* pFilter, const int3 dim, int3 filterDim)
+    // Performs spatial filtering in the x direction on both the reference and test image at the same time (for better performance).
+    // Filtering has been changed to using separable filtering for better performance.
+    // For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
+    // referenceImage and testImage are expected to be in YCxCz space.
+    __global__ static void kernelSpatialFilterFirstDir(color3* intermediateYCxImageReference, color3* intermediateCzImageReference, color3* referenceImage, color3* intermediateYCxImageTest, color3* intermediateCzImageTest, color3* testImage, color3* pFilterYCx, color3* pFilterCz, const int3 dim, const int3 filterDim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
         int z = blockIdx.z * blockDim.z + threadIdx.z;
         int dstIndex = (z * dim.y + y) * dim.x + x;
 
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+        if (x >= dim.x || y >= dim.y) return;
 
-        const int3 halfFilterDim = { filterDim.x / 2, filterDim.y / 2, filterDim.z / 2 };
+        const float halfFilterWidth = filterDim.x / 2;
 
-        color3 colorSum = { 0.0f, 0.0f, 0.0f };
+        // Filter in x direction.
+        color3 intermediateYCxReference = { 0.0f, 0.0f, 0.0f };
+        color3 intermediateYCxTest = { 0.0f, 0.0f, 0.0f };
+        color3 intermediateCzReference = { 0.0f, 0.0f, 0.0f };
+        color3 intermediateCzTest = { 0.0f, 0.0f, 0.0f };
 
-        for (int iz = -halfFilterDim.z; iz <= halfFilterDim.z; iz++)
+        for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
         {
-            int zz = Min(Max(0, z + iz), dim.z - 1);
-            for (int iy = -halfFilterDim.y; iy <= halfFilterDim.y; iy++)
-            {
-                int yy = Min(Max(0, y + iy), dim.y - 1);
-                for (int ix = -halfFilterDim.x; ix <= halfFilterDim.x; ix++)
-                {
-                    int xx = Min(Max(0, x + ix), dim.x - 1);
+            int xx = Min(Max(0, x + ix), dim.x - 1);
 
-                    int filterIndex = (zz * filterDim.y + (iy + halfFilterDim.y)) * filterDim.x + (ix + halfFilterDim.x);
-                    int srcIndex = yy * dim.x + xx;
-                    const color3 weights = pFilter[filterIndex];
-                    const color3 srcColor = srcImage[srcIndex];
+            int filterIndex = ix + halfFilterWidth;
+            int srcIndex = y * dim.x + xx;
+            const color3 weightsYCx = pFilterYCx[filterIndex];
+            const color3 weightsCz = pFilterCz[filterIndex];
+            const color3 referenceColor = referenceImage[srcIndex];
+            const color3 testColor = testImage[srcIndex];
 
-                    colorSum.x += weights.x * srcColor.x;
-                    colorSum.y += weights.y * srcColor.y;
-                    colorSum.z += weights.z * srcColor.z;
-                }
-            }
+            intermediateYCxReference += color3(weightsYCx.x * referenceColor.x, weightsYCx.y * referenceColor.y, 0.0f);
+            intermediateYCxTest += color3(weightsYCx.x * testColor.x, weightsYCx.y * testColor.y, 0.0f);
+            intermediateCzReference += color3(weightsCz.x * referenceColor.z, weightsCz.y * referenceColor.z, 0.0f);
+            intermediateCzTest += color3(weightsCz.x * testColor.z, weightsCz.y * testColor.z, 0.0f);
         }
 
-        dstImage[dstIndex] = colorSum;
+        intermediateYCxImageReference[dstIndex] = color3(intermediateYCxReference.x, intermediateYCxReference.y, 0.0f);
+        intermediateYCxImageTest[dstIndex] = color3(intermediateYCxTest.x, intermediateYCxTest.y, 0.0f);
+        intermediateCzImageReference[dstIndex] = color3(intermediateCzReference.x, intermediateCzReference.y, 0.0f);
+        intermediateCzImageTest[dstIndex] = color3(intermediateCzTest.x, intermediateCzTest.y, 0.0f);
     }
 
-
-    __global__ static void kernelConvolve(float* dstImage, float* srcImage, float* pFilter, const int3 dim, int filterWidth, int filterHeight)
+    // Performs spatial filtering in the y direction (and clamps the results) on both the reference and test image at the same time (for better performance).
+    // Filtering has been changed to using separable filtering for better performance. For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
+    // After filtering, compute color differences.
+    __global__ static void kernelSpatialFilterSecondDirAndColorDifference(color3* colorDifferenceImage, color3* intermediateYCxImageReference, color3* intermediateCzImageReference, color3* intermediateYCxImageTest, color3* intermediateCzImageTest, color3* pFilterYCx, color3* pFilterCz, const int3 dim, const int3 filterDim, const float cmax, const float pccmax)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
         int z = blockIdx.z * blockDim.z + threadIdx.z;
         int dstIndex = (z * dim.y + y) * dim.x + x;
 
-        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+        if (x >= dim.x || y >= dim.y) return;
 
-        const int halfFilterWidth = filterWidth / 2;
-        const int halfFilterHeight = filterHeight / 2;
+        const float halfFilterWidth = filterDim.x / 2;
 
-        float colorSum = 0.0f;
+        // Filter in y direction.
+        color3 filteredYCxReference = { 0.0f, 0.0f, 0.0f };
+        color3 filteredYCxTest = { 0.0f, 0.0f, 0.0f };
+        color3 filteredCzReference = { 0.0f, 0.0f, 0.0f };
+        color3 filteredCzTest = { 0.0f, 0.0f, 0.0f };
 
-        for (int iy = -halfFilterHeight; iy <= halfFilterHeight; iy++)
+        for (int iy = -halfFilterWidth; iy <= halfFilterWidth; iy++)
         {
             int yy = Min(Max(0, y + iy), dim.y - 1);
-            for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
-            {
-                int xx = Min(Max(0, x + ix), dim.x - 1);
 
-                int filterIndex = (iy + halfFilterHeight) * filterWidth + (ix + halfFilterWidth);
-                int srcIndex = yy * dim.x + xx;
-                const float weight = pFilter[filterIndex];
-                const float srcColor = srcImage[srcIndex];
+            int filterIndex = iy + halfFilterWidth;
+            int srcIndex = yy * dim.x + x;
+            const color3 weightsYCx = pFilterYCx[filterIndex];
+            const color3 weightsCz = pFilterCz[filterIndex];
+            const color3 intermediateYCxReference = intermediateYCxImageReference[srcIndex];
+            const color3 intermediateYCxTest = intermediateYCxImageTest[srcIndex];
+            const color3 intermediateCzReference = intermediateCzImageReference[srcIndex];
+            const color3 intermediateCzTest = intermediateCzImageTest[srcIndex];
 
-                colorSum += weight * srcColor;
-
-            }
+            filteredYCxReference += color3(weightsYCx.x * intermediateYCxReference.x, weightsYCx.y * intermediateYCxReference.y, 0.0f);
+            filteredYCxTest += color3(weightsYCx.x * intermediateYCxTest.x, weightsYCx.y * intermediateYCxTest.y, 0.0f);
+            filteredCzReference += color3(weightsCz.x * intermediateCzReference.x, weightsCz.y * intermediateCzReference.y, 0.0f);
+            filteredCzTest += color3(weightsCz.x * intermediateCzTest.x, weightsCz.y * intermediateCzTest.y, 0.0f);
         }
 
-        dstImage[dstIndex] = colorSum;
-    }
+        // Clamp to [0,1] in linear RGB.
+        color3 filteredYCxCzReference = color3(filteredYCxReference.x, filteredYCxReference.y, filteredCzReference.x + filteredCzReference.y);
+        color3 filteredYCxCzTest = color3(filteredYCxTest.x, filteredYCxTest.y, filteredCzTest.x + filteredCzTest.y);
+        filteredYCxCzReference = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(filteredYCxCzReference)));
+        filteredYCxCzTest = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(filteredYCxCzTest)));
 
+        // Move from linear RGB to CIELab.
+        filteredYCxCzReference = color3::XYZ2CIELab(color3::LinearRGB2XYZ(filteredYCxCzReference));
+        filteredYCxCzTest = color3::XYZ2CIELab(color3::LinearRGB2XYZ(filteredYCxCzTest));
+
+        // Apply Hunt adjustment.
+        filteredYCxCzReference.y = color3::Hunt(filteredYCxCzReference.x, filteredYCxCzReference.y);
+        filteredYCxCzReference.z = color3::Hunt(filteredYCxCzReference.x, filteredYCxCzReference.z);
+        filteredYCxCzTest.y = color3::Hunt(filteredYCxCzTest.x, filteredYCxCzTest.y);
+        filteredYCxCzTest.z = color3::Hunt(filteredYCxCzTest.x, filteredYCxCzTest.z);
+
+        float colorDifference = color3::HyAB(filteredYCxCzReference, filteredYCxCzTest);
+
+        colorDifference = powf(colorDifference, DeviceFLIPConstants.gqc);
+
+        // Re-map error to the [0, 1] range. Values between 0 and pccmax are mapped to the range [0, gpt],
+        // while the rest are mapped to the range (gpt, 1].
+        if (colorDifference < pccmax)
+        {
+            colorDifference *= DeviceFLIPConstants.gpt / pccmax;
+        }
+        else
+        {
+            colorDifference = DeviceFLIPConstants.gpt + ((colorDifference - pccmax) / (cmax - pccmax)) * (1.0f - DeviceFLIPConstants.gpt);
+        }
+
+        colorDifferenceImage[dstIndex] = color3(colorDifference, 0.0f, 0.0f);
+    }
 }

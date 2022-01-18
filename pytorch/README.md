@@ -1,4 +1,4 @@
-# ꟻLIP: A Tool for Visualizing and Communicating Errors in Rendered Images
+# ꟻLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.2)
 By
 [Pontus Andersson](https://research.nvidia.com/person/pontus-andersson),
 [Jim Nilsson](https://research.nvidia.com/person/jim-nilsson),
@@ -16,7 +16,7 @@ and [HDR-ꟻLIP](https://research.nvidia.com/publication/2021-05_HDR-FLIP) image
 
 # License
 
-Copyright © 2020-2021, NVIDIA Corporation & Affiliates. All rights reserved.
+Copyright © 2020-2022, NVIDIA Corporation & Affiliates. All rights reserved.
 
 This work is made available under a [BSD 3-Clause License](../LICENSE.md).
 
@@ -57,5 +57,5 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
   **NOTE:** When start and/or stop exposures are not provided, HDR-ꟻLIP is not symmetric. The
   user should therefore make sure to input the test images as the *first* argument and the reference image
   as the *second* argument to the `HDRFLIPLoss`'s `forward()` function.
-- `tests.py` contains simple tests used to check that code updates do not alter results and
+- `../tests/test_pytorch.py` contains simple tests used to test whether code updates alter results and
   `data.py` contains image loading/saving functions.

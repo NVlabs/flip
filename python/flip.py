@@ -1,6 +1,6 @@
 """ FLIP metric tool """
 #################################################################################
-# Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -27,7 +27,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# SPDX-FileCopyrightText: Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES
+# SPDX-FileCopyrightText: Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES
 # SPDX-License-Identifier: BSD-3-Clause
 #################################################################################
 
@@ -412,6 +412,8 @@ def check_larger_than_one(value):
 #####################################################################################################################################################################################################################
 
 if __name__ == '__main__':
+	major_version = 1
+	minor_version = 2
 	parser = argparse.ArgumentParser(description=("Compute FLIP between reference.<png|exr> and test.<png|exr>.\n"
 												  "Reference and test(s) must have same resolution and format.\n"
 												  "If pngs are entered, LDR-FLIP will be evaluated. If exrs are entered, HDR-FLIP will be evaluated.\n"
@@ -452,6 +454,7 @@ if __name__ == '__main__':
 
 	# Print help string if flip.py is run without arguments
 	if len(sys.argv) == 1:
+		print("FLIP v%d.%d." % (major_version, minor_version))
 		parser.print_help()
 		sys.exit(1)
 

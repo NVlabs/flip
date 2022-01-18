@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,7 +26,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * SPDX-FileCopyrightText: Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
@@ -61,7 +61,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#include "color.h"
+#include "sharedflip.h"
 
 
 namespace FLIP
@@ -69,35 +69,15 @@ namespace FLIP
 
     static const float ToneMappingCoefficients[3][6] =
     {
-        { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f },  //  Reinhard
-        { 0.6f * 0.6f * 2.51f, 0.6f * 0.03f, 0.0f, 0.6f * 0.6f * 2.43f, 0.6f * 0.59f, 0.14f },  //  Aces, 0.6 is pre-exposure cancellation
-        { 0.231683f, 0.013791f, 0.0f, 0.18f, 0.3f, 0.018f },  //  Hable
-    };
-
-    enum class CombineOperation
-    {
-        Add,
-        Subtract,
-        Multiply,
-        L1,
-        L2
-    };
-
-    struct FLIPConstants
-    {
-        float gqc = 0.7f;
-        float gpc = 0.4f;
-        float gpt = 0.95f;
-        float gw = 0.082f;
-        float gqf = 0.5f;
+        { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f },                                                 // Reinhard.
+        { 0.6f * 0.6f * 2.51f, 0.6f * 0.03f, 0.0f, 0.6f * 0.6f * 2.43f, 0.6f * 0.59f, 0.14f },  // ACES, 0.6 is pre-exposure cancellation.
+        { 0.231683f, 0.013791f, 0.0f, 0.18f, 0.3f, 0.018f },                                    // Hable.
     };
 
     union int3
     {
         struct { int x, y, z; };
     };
-
-    const float PI = 3.14159265358979f;
 
     template<typename T = color3>
     class tensor
@@ -213,58 +193,6 @@ namespace FLIP
             return this->mDim.z;
         }
 
-        enum ReduceOperation
-        {
-            Add,
-            Max,
-            Min
-        };
-
-        template <ReduceOperation op>
-        T reduce(void)
-        {
-            float result = 0.0f;
-            switch (op)
-            {
-            case ReduceOperation::Add:
-                result = 0.0f;
-                break;
-            case ReduceOperation::Max:
-                result = 1e-30f;
-                break;
-            case ReduceOperation::Min:
-                result = 1e30f;
-                break;
-            }
-
-            for (int z = 0; z < this->getDepth(); z++)
-            {
-                for (int y = 0; y < this->getHeight(); y++)
-                {
-                    for (int x = 0; x < this->getWidth(); x++)
-                    {
-                        float value = this->get(x, y, z);
-                        switch (op)
-                        {
-                        default:
-                        case ReduceOperation::Add:
-                            result = result + value;
-                            break;
-                        case ReduceOperation::Max:
-                            result = std::max(result, value);
-                            break;
-                        case ReduceOperation::Min:
-                            result = std::min(result, value);
-                            break;
-                        }
-
-                    }
-                }
-            }
-
-            return result;
-        }
-
         void colorMap(tensor<float>& srcImage, tensor<color3>& colorMap)
         {
             for (int z = 0; z < this->getDepth(); z++)
@@ -295,36 +223,6 @@ namespace FLIP
             }
         }
 
-        void YCxCz2CIELab(void)
-        {
-            for (int z = 0; z < this->getDepth(); z++)
-            {
-#pragma omp parallel for
-                for (int y = 0; y < this->getHeight(); y++)
-                {
-                    for (int x = 0; x < this->getWidth(); x++)
-                    {
-                        this->set(x, y, z, color3::XYZ2CIELab(color3::LinearRGB2XYZ(color3::clamp(color3::XYZ2LinearRGB(color3::YCxCz2XYZ(this->get(x, y, z)))))));
-                    }
-                }
-            }
-        }
-
-        void YCxCz2Gray(tensor<color3>& srcImage)
-        {
-            for (int z = 0; z < this->getDepth(); z++)
-            {
-#pragma omp parallel for
-                for (int y = 0; y < this->getHeight(); y++)
-                {
-                    for (int x = 0; x < this->getWidth(); x++)
-                    {
-                        this->set(x, y, z, color3::YCxCz2Gray(srcImage.get(x, y, z)));
-                    }
-                }
-            }
-        }
-
         void LinearRGB2sRGB(void)
         {
             for (int z = 0; z < this->getDepth(); z++)
@@ -340,27 +238,6 @@ namespace FLIP
             }
         }
 
-        void multiplyAndAdd(T m, T a = T(0.0f))
-        {
-            for (int z = 0; z < this->getDepth(); z++)
-            {
-#pragma omp parallel for
-                for (int y = 0; y < this->getHeight(); y++)
-                {
-                    for (int x = 0; x < this->getWidth(); x++)
-                    {
-                        this->set(x, y, z, this->get(x, y, z) * m + a);
-                    }
-                }
-            }
-        }
-
-        void normalize(void)
-        {
-            T sum = this->reduce<ReduceOperation::Add>();
-            this->multiplyAndAdd(T(1.0f) / sum);
-        }
-
         void clear(const T color = T(0.0f))
         {
             for (int z = 0; z < this->getDepth(); z++)
@@ -371,40 +248,6 @@ namespace FLIP
                     for (int x = 0; x < this->getWidth(); x++)
                     {
                         this->set(x, y, z, color);
-                    }
-                }
-            }
-        }
-
-        void convolve(tensor& srcImage, tensor& filter)
-        {
-            const int halfFilterWidth = filter.getWidth() / 2;
-            const int halfFilterHeight = filter.getHeight() / 2;
-
-            for (int z = 0; z < this->getDepth(); z++)
-            {
-#pragma omp parallel for
-                for (int y = 0; y < this->getHeight(); y++)
-                {
-                    for (int x = 0; x < this->getWidth(); x++)
-                    {
-                        color3 colorSum = { 0.0f, 0.0f, 0.0f };
-
-                        for (int iy = -halfFilterHeight; iy <= halfFilterHeight; iy++)
-                        {
-                            int yy = Min(Max(0, y + iy), this->getHeight() - 1);
-                            for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
-                            {
-                                int xx = Min(Max(0, x + ix), this->getWidth() - 1);
-
-                                const color3 weights = filter.get(ix + halfFilterWidth, iy + halfFilterHeight, 0);
-                                const color3 srcColor = srcImage.get(xx, yy, 0);
-
-                                colorSum += weights * srcColor;
-                            }
-                        }
-
-                        this->set(x, y, z, colorSum);
                     }
                 }
             }
@@ -554,7 +397,6 @@ namespace FLIP
             return (ok != 0);
         }
 
-
         bool exrLoad(const std::string& fileName, const int z = 0)
         {
             EXRVersion exrVersion;
@@ -646,7 +488,7 @@ namespace FLIP
             auto rawImgChn = reinterpret_cast<float**>(exrImage.images);
             bool loaded = false;
 
-            // 1 channel images can be loaded into either scalar or vector formats
+            // 1 channel images can be loaded into either scalar or vector formats.
             if (exrHeader.num_channels == 1)
             {
                 for (int y = 0; y < this->mDim.y; y++)
@@ -660,7 +502,7 @@ namespace FLIP
                 loaded = true;
             }
 
-            // 2 channel images can only be loaded into vector2/3/4 formats
+            // 2 channel images can only be loaded into vector2/3/4 formats.
             if (exrHeader.num_channels == 2)
             {
                 assert(idxR != -1 && idxG != -1);
@@ -680,7 +522,7 @@ namespace FLIP
                 loaded = true;
             }
 
-            // 3 channel images can only be loaded into vector3/4 formats
+            // 3 channel images can only be loaded into vector3/4 formats.
             if (exrHeader.num_channels == 3)
             {
                 assert(idxR != -1 && idxG != -1 && idxB != -1);
@@ -701,7 +543,7 @@ namespace FLIP
                 loaded = true;
             }
 
-            // 4 channel images can only be loaded into vector4 formats
+            // 4 channel images can only be loaded into vector4 formats.
             if (exrHeader.num_channels == 4)
             {
                 assert(idxR != -1 && idxG != -1 && idxB != -1);
@@ -737,5 +579,4 @@ namespace FLIP
         }
 
     };
-
 }

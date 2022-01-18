@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,7 +26,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * SPDX-FileCopyrightText: Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
@@ -95,7 +95,7 @@ public:
     iterator begin(size_t begin = 0) const { return iterator(this, begin); }
     iterator end(size_t end = std::string::npos) const { return iterator(this, (end != std::string::npos && end <= mVector.size() ? end : mVector.size())); }
 
-    // conversion to const std::vector
+    // Conversion to const std::vector.
     operator const std::vector<T>() const { return mVector; }
     operator std::vector<T>() { return mVector; }
 };
@@ -104,7 +104,7 @@ typedef struct
 {
     std::string longName;
     std::string shortName;
-    int numArgs;  // -1: '+' if required, '*' if not required
+    int numArgs;  // -1: '+' if required, '*' if not required.
     bool required;
     std::string meta;
     std::string help;
@@ -207,7 +207,7 @@ public:
 
                     if (optionHasArgument)
                     {
-                        //  eat option arguments
+                        //  Eat option arguments.
                         atArg++;
                         while (atArg < argc && numOptionArguments != 0)
                         {
@@ -329,7 +329,6 @@ public:
         std::string command = mCommand.substr(mCommand.find_last_of("/\\") + 1);
 
         size_t numOptionalOptions = 0;
-        size_t longestOption = 0;
         for (auto& o : ao.options)
         {
             if (o.required == false)
@@ -403,7 +402,5 @@ public:
                 std::cout << "\t\t" << o.help << "\n";
             }
         }
-
-
     }
 };

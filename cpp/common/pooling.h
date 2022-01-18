@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,7 +26,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * SPDX-FileCopyrightText: Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
@@ -176,7 +176,7 @@ public:
         }
         ss << "]\n\n";
 
-        //  FLIP histogram
+        // FLIP histogram.
         ss << "dataFLIP = [";
         for (size_t bucketId = 0; bucketId < this->mvBuckets.size(); bucketId++)
         {
@@ -185,7 +185,7 @@ public:
         }
         ss << "]\n\n";
 
-        //  Weighted FLIP histogram
+        // Weighted FLIP histogram.
         ss << "bucketStep = " << bucketStep << "\n";
         ss << "weightedDataFLIP = np.empty(" << this->mvBuckets.size() << ")\n";
         ss << "moments = np.empty(" << this->mvBuckets.size() << ")\n";
@@ -311,7 +311,7 @@ public:
         weight = (weightedMedianIndex + 0.5) * bucketStep;
         weightedValue = mHistogram.getBucketValue(weightedMedianIndex) * weight;
         double discrepancy = percent * sumWeightedDataValue - sum;
-        double linearWeight = discrepancy / weightedValue; // in [0,1]
+        double linearWeight = discrepancy / weightedValue; // In [0,1].
         double percentile = (weightedMedianIndex + linearWeight) * bucketStep;
         return percentile;
     }
@@ -340,7 +340,7 @@ public:
         }
         else
         {
-            //  Using the nearest-rank method
+            // Using the nearest-rank method.
             percentile = mvData[size_t(std::ceil(mvData.size() * percent))];
         }
 
@@ -391,7 +391,7 @@ public:
 
         size_t area = size_t(imgWidth) * size_t(imgHeight);
 
-        //  python output
+        // Python output.
         std::ofstream pythonHistogramFile;
         pythonHistogramFile.open(pyFileName);
         pythonHistogramFile << mHistogram.toPython(pyFileName, area, getMean(), getMaxValue(), getMinValue(), getPercentile(0.5f, true), getPercentile(0.25f, true), getPercentile(0.75f, true),  optionLog, includeValues, yMax);

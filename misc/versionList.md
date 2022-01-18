@@ -3,6 +3,23 @@
 In addition to various minor changes, the following was
 changed for the different versions of ꟻLIP:
 
+# Version 1.2 (commit TODO)
+- Changed to CUDA 11.5 (was done after v1.1, but before v1.2).
+- Adds tests for C++ and CUDA in the tests-directory.
+  Additionally, the Python and PyTorch tests were moved to that directory.
+- Performance optimizations for C++ and CUDA implementations:
+    - Uses separable filters.
+    - Merges several functions/kernels into fewer.
+    - Uses OpenMP for the CPU.
+    - Results (not incuding file load/save):
+        - 111-124x faster for LDR/HDR CPU (depends on CPU setup, though).
+        - 2.4-2.8x faster LDR/HDR CUDA (depends on CPU/GPU setup)
+		- Timings for 1920x1080 images:
+			- CPP/LDR: 63 ms
+			- CPP/HDR: 1050 ms
+			- CUDA/LDR: 13 ms
+			- CUDA/HDR: 136 ms
+
 # Version 1.1 (commit 4ed59e9)
 - NVIDIA Source Code License changed to a 3-Clause BSD License
 - Precision updates:

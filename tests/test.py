@@ -57,11 +57,11 @@ from data import *
 if __name__ == '__main__':
 	"""
 	Test script. Runs FLIP for both LDR and HDR using one of CUDA/CPP/PYTHON based on the commandline argument.
-    Both the mean FLIP is tested and the pixel values from the resulting FLIP images.
+	Both the mean FLIP is tested and the pixel values from the resulting FLIP images.
 	"""
 
 	if(len(sys.argv) != 2):
-		print("Usage: python test.py --{cuda/cpp/python}")
+		print("Usage: python test.py --{cuda|cpp|python}")
 		print("Tip: do not forget to set up 'conda activate flip'.")
 		sys.exit()
 
@@ -70,16 +70,16 @@ if __name__ == '__main__':
 		test_str = "CUDA"
 		correct_ldr_image_filename = "correct_ldrflip_cuda.png";
 		correct_hdr_image_filename = "correct_hdrflip_cuda.png";
-		ldr_cmd = "../cpp/x64/release/flip-cuda.exe --reference ../images/reference.png --test ../images/test.png -v 0"
-		hdr_cmd = "../cpp/x64/release/flip-cuda.exe --reference ../images/reference.exr --test ../images/test.exr -v 0 --no-exposure-map"
+		ldr_cmd = "../cpp/x64/release/flip-cuda.exe --reference ../images/reference.png --test ../images/test.png"
+		hdr_cmd = "../cpp/x64/release/flip-cuda.exe --reference ../images/reference.exr --test ../images/test.exr --no-exposure-map"
 		expected_ldr_mean = 0.159691
 		expected_hdr_mean = 0.283478
 	elif(sys.argv[1] == "--cpp" or sys.argv[1] == "cpp" or sys.argv[1] == "-cpp"):
 		test_str = "CPP"
 		correct_ldr_image_filename = "correct_ldrflip_cpp.png";
 		correct_hdr_image_filename = "correct_hdrflip_cpp.png";
-		ldr_cmd = "../cpp/x64/release/flip.exe --reference ../images/reference.png --test ../images/test.png -v 0"
-		hdr_cmd = "../cpp/x64/release/flip.exe --reference ../images/reference.exr --test ../images/test.exr -v 0 --no-exposure-map"
+		ldr_cmd = "../cpp/x64/release/flip.exe --reference ../images/reference.png --test ../images/test.png"
+		hdr_cmd = "../cpp/x64/release/flip.exe --reference ../images/reference.exr --test ../images/test.exr --no-exposure-map"
 		expected_ldr_mean = 0.159691
 		expected_hdr_mean = 0.283478
 	elif(sys.argv[1] == "--python" or sys.argv[1] == "python" or sys.argv[1] == "-python"):

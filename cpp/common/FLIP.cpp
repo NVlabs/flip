@@ -236,6 +236,9 @@ int main(int argc, char** argv)
     FLIP::filename exposureFileName("tmp.png");
 
     uint32_t testFileCount = 0;
+    uint32_t maxTestFileCount = uint32_t(commandLine.getOptionValues("test").size());
+    FLIP::image<FLIP::color3> originalReferenceImage(referenceImage.getWidth(), referenceImage.getHeight());
+
     for (auto& testFileNameString : commandLine.getOptionValues("test"))
     {
         FLIP::filename testFileName = testFileNameString;
@@ -364,8 +367,16 @@ int main(int argc, char** argv)
         }
         else
         {
+            if (maxTestFileCount > 1 && testFileCount == 0)     // Are we testing more than one image, and are we testing the first image?
+            {
+                originalReferenceImage.copy(referenceImage);    // If so, then store the referenceImage in originalReferenceImage, since FLIP() destroys referenceImage, i.e., in the errorMapFLIP.FLIP() just below.
+            }
             errorMapFLIP.FLIP(referenceImage, testImage, gFLIPOptions.PPD);
             t = std::chrono::high_resolution_clock::now();
+            if (maxTestFileCount > 1)
+            {
+                referenceImage.copy(originalReferenceImage);    // Restore the original referenceImage for the second test, and all images after.
+            }
         }
 
         if (!commandLine.optionSet("no-error-map"))

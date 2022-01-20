@@ -3,7 +3,8 @@
 In addition to various minor changes, the following was
 changed for the different versions of ꟻLIP:
 
-# Version 1.2 (commit TODO)
+=======
+# Version 1.2 (commit dde1eca)
 - Changed to CUDA 11.5 (was done after v1.1, but before v1.2).
 - Adds tests for C++ and CUDA in the tests-directory.
   Additionally, the Python and PyTorch tests were moved to that directory.

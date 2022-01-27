@@ -53,6 +53,8 @@
 #include <fstream>
 #include <algorithm>
 #include <chrono>
+#include <filesystem>
+
 #define NOMINMAX
 #define FIXED_DECIMAL_DIGITS(x, d) std::fixed << std::setprecision(d) << (x)
 
@@ -148,14 +150,26 @@ int main(int argc, char** argv)
         }
     }
 
+    FLIP::filename referenceFileName(commandLine.getOptionValue("reference"));
+    std::vector<std::string>& testFileNames = commandLine.getOptionValues("test");
+    bool bUseHDR = (referenceFileName.getExtension() == "exr");
+
     std::string destinationDirectory = ".";
     if (commandLine.optionSet("directory"))
     {
         destinationDirectory = commandLine.getOptionValue("directory");
-    }
+        std::replace(destinationDirectory.begin(), destinationDirectory.end(), '\\', '/');      // Replace backslash with forwardslash.
+        const bool bNoExposureMap = bUseHDR ? commandLine.optionSet("no-exposure-map") : true;
+        const bool bSaveLDRImages = bUseHDR ? commandLine.optionSet("save-ldr-images") : false;
+        const bool bSaveLDRFLIP   = bUseHDR ? commandLine.optionSet("save-ldrflip") : false;
+        const bool willCreateOutput = (!commandLine.optionSet("no-error-map")) || (!bNoExposureMap) || bSaveLDRImages || bSaveLDRFLIP || commandLine.optionSet("histogram");
 
-    FLIP::filename referenceFileName(commandLine.getOptionValue("reference"));
-    std::vector<std::string>& testFileNames = commandLine.getOptionValues("test");
+        if (!std::filesystem::exists(destinationDirectory) && willCreateOutput)     // Create directories if the parameters indicate that some files will be saved.
+        {
+            std::cout << "Creating new directory(s): <" << destinationDirectory << ">.\n";
+            std::filesystem::create_directories(destinationDirectory);
+        }
+    }
 
     FLIP::image<FLIP::color3> magmaMap(FLIP::MapMagma, 256);
 
@@ -176,7 +190,6 @@ int main(int argc, char** argv)
 
     FLIP::image<FLIP::color3> referenceImage(referenceFileName.toString());
 
-    bool bUseHDR = (referenceFileName.getExtension() == "exr");
 
     std::cout << "Invoking " << (bUseHDR ? "HDR" : "LDR") << "-FLIP\n";
     std::cout << "     Pixels per degree: " << int(std::round(gFLIPOptions.PPD)) << "\n" << (!bUseHDR ? "\n" : "");

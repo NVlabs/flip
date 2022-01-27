@@ -156,9 +156,9 @@ int main(int argc, char** argv)
 
     std::string destinationDirectory = ".";
     if (commandLine.optionSet("directory"))
-    {        
+    {
         destinationDirectory = commandLine.getOptionValue("directory");
-
+        std::replace(destinationDirectory.begin(), destinationDirectory.end(), '\\', '/');      // Replace backslash with forwardslash.
         const bool bNoExposureMap = bUseHDR ? commandLine.optionSet("no-exposure-map") : true;
         const bool bSaveLDRImages = bUseHDR ? commandLine.optionSet("save-ldr-images") : false;
         const bool bSaveLDRFLIP   = bUseHDR ? commandLine.optionSet("save-ldrflip") : false;

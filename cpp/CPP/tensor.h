@@ -336,9 +336,9 @@ namespace FLIP
         {
             bool bOk = false;
             std::string extension = fileName.substr(fileName.find_last_of(".") + 1);
-            if (extension == "png")
+            if (extension == "png" || extension == "bmp" || extension == "tga")
             {
-                bOk = this->pngLoad(fileName, z);
+                bOk = this->imageLoad(fileName, z);
             }
             else if (extension == "exr")
             {
@@ -348,7 +348,7 @@ namespace FLIP
             return bOk;
         }
 
-        bool pngLoad(const std::string& filename, const int z = 0)
+        bool imageLoad(const std::string& filename, const int z = 0)
         {
             int width, height, bpp;
             unsigned char* pixels = stbi_load(filename.c_str(), &width, &height, &bpp, 3);

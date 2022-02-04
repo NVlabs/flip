@@ -18,12 +18,12 @@ and [HDR-ꟻLIP](https://research.nvidia.com/publication/2021-05_HDR-FLIP) image
 
 Copyright © 2020-2022, NVIDIA Corporation & Affiliates. All rights reserved.
 
-This work is made available under a [BSD 3-Clause License](../LICENSE.md).
+This work is made available under a [BSD 3-Clause License](../misc/LICENSE.md).
 
 The repository distributes code for `tinyexr`, which is subject to a [BSD 3-Clause License](../LICENSE-third-party.md#bsd-3-clause-license),<br>
-and `stb_image`, which is subject to an [MIT License](../LICENSE-third-party.md#mit-license).
+and `stb_image`, which is subject to an [MIT License](../misc/LICENSE-third-party.md#mit-license).
 
-For individual contributions to the project, please confer the [Individual Contributor License Agreement](../CLA.md).
+For individual contributions to the project, please confer the [Individual Contributor License Agreement](../misc/CLA.md).
 
 For business inquiries, please visit our website and submit the form: [NVIDIA Research Licensing](https://www.nvidia.com/en-us/research/inquiries/).
 

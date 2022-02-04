@@ -20,7 +20,7 @@ Copyright © 2020-2022, NVIDIA Corporation & Affiliates. All rights reserved.
 
 This work is made available under a [BSD 3-Clause License](../misc/LICENSE.md).
 
-The repository distributes code for `tinyexr`, which is subject to a [BSD 3-Clause License](../LICENSE-third-party.md#bsd-3-clause-license),<br>
+The repository distributes code for `tinyexr`, which is subject to a [BSD 3-Clause License](../misc/LICENSE-third-party.md#bsd-3-clause-license),<br>
 and `stb_image`, which is subject to an [MIT License](../misc/LICENSE-third-party.md#mit-license).
 
 For individual contributions to the project, please confer the [Individual Contributor License Agreement](../misc/CLA.md).

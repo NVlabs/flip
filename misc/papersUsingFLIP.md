@@ -67,6 +67,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Taras Khakhulin, Denis Korzhenkov, Pavel Solovev, Gleb Sterkin, Timotei Ardelean, and Victor Lempitsky, ["Stereo Magnification with Multi-Layer Images"](https://samsunglabs.github.io/StereoLayers/), arXiv:2201.05023, 2022.
 
+1. Yixin Zhuang, ["Filtering In Implicit Neural Networks"](https://arxiv.org/abs/2201.13013),	arXiv:2201.13013, 2022.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

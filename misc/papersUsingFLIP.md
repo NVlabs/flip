@@ -84,3 +84,5 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Tomas Polasek, David Hrusa, Bedrich Benes, an Martin Čadík, ["ICTree: Automatic Perceptual Metrics for Tree Models"](http://cphoto.fit.vutbr.cz/ictree/),
 ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
+
+1. Georg Kohl, Li-Wei Chen, and Nils Thuerey, ["Learning Similarity Metrics for Volumetric Simulations with Multiscale CNNs"](https://arxiv.org/abs/2202.04109), 	arXiv:2202.04109, 2022.

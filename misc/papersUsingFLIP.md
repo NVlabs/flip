@@ -88,3 +88,9 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 
 1. Georg Kohl, Li-Wei Chen, and Nils Thuerey, ["Learning Similarity Metrics for Volumetric Simulations with Multiscale CNNs"](https://arxiv.org/abs/2202.04109), 	arXiv:2202.04109, 2022.
+
+**Code/frameworks/tools that use ꟻLIP:**
+1. [Falcor](https://github.com/NVIDIAGameWorks/Falcor).
+
+1. [The FLOP tool](https://github.com/jeremyong/flop/releases/tag/v1.618)
+

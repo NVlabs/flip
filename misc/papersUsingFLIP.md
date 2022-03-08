@@ -69,6 +69,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Yixin Zhuang, ["Filtering In Implicit Neural Networks"](https://arxiv.org/abs/2201.13013),	arXiv:2201.13013, 2022.
 
+1. Alejandro Cosin Ayerbe and Gustavo Patow, ["Clustered voxel real-time global illumination"](https://dugi-doc.udg.edu/bitstream/handle/10256/20698/ClusteredVoxel.pdf?sequence=1), *Computers & Graphics*, Volume 103, pp. 75-89, April 2022.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

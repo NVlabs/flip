@@ -92,5 +92,5 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 **Code/frameworks/tools that use ꟻLIP:**
 1. [Falcor](https://github.com/NVIDIAGameWorks/Falcor).
 
-1. [The FLOP tool](https://github.com/jeremyong/flop/releases/tag/v1.618)
+1. [The FLOꟼ tool](https://github.com/jeremyong/flop/releases/tag/v1.618).
 

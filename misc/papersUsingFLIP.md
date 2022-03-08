@@ -1,4 +1,4 @@
-# List of papers that are using/citing ꟻLIP
+# List of papers/code that are using/citing ꟻLIP
 
 Please let us know if you know of more papers that use/cite ꟻLIP.
 

@@ -81,6 +81,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
  
 1. Joao Liborio Cardoso, Bernhard Kerbl, Lei Yang, Yury Uralsky, and Michael Wimmer, ["Training and Predicting Visual Error for Real-Time Applications"](https://jaliborc.github.io/rt-percept/paper.pdf), I3D 2022.
 
+1. Cara Tursun and Piotr Didyk, ["Perceptual Visibility Model for Temporal Contrast Changes in Periphery"](https://arxiv.org/abs/2205.00108), arXiv:2205.00108, 2022.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

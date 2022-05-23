@@ -101,6 +101,7 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 
 1. Cara Tursun and Piotr Didyk, ["Perceptual Visibility Model for Temporal Contrast Changes in Periphery"](https://arxiv.org/abs/2205.00108), arXiv:2205.00108, 2022.
 
+1. Rafal K. Mantiuk, Malisha Ashraf, and Alexandre Chapiro, ["stelaCSF - A Unified Model of Contrast Sensitivity as the Function of Spatio-Temporal Frequency, Eccentricity, Luminance and Area"](https://www.cl.cam.ac.uk/~rkm38/pdfs/mantiuk2022_stelaCSF.pdf), SIGGRAPH 2022.
 
 **Code/frameworks/tools that use ꟻLIP:**
 1. [Falcor](https://github.com/NVIDIAGameWorks/Falcor).

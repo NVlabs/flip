@@ -109,6 +109,8 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 
 1. Rafal K. Mantiuk, Malisha Ashraf, and Alexandre Chapiro, ["stelaCSF - A Unified Model of Contrast Sensitivity as the Function of Spatio-Temporal Frequency, Eccentricity, Luminance and Area"](https://www.cl.cam.ac.uk/~rkm38/pdfs/mantiuk2022_stelaCSF.pdf), SIGGRAPH 2022.
 
+1. Jae-Ho Nah, ["ASTC Block-Size Determination Method based on PSNR Values"](http://journal.cg-korea.org/archive/view_article?pid=jkcgs-28-2-21), Journal of the Korea Computer Graphics Society, June 2022. 
+
 **Code/frameworks/tools that use ꟻLIP:**
 1. [Falcor](https://github.com/NVIDIAGameWorks/Falcor).
 

@@ -113,6 +113,8 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 
 1. Jae-Ho Nah, ["ASTC Block-Size Determination Method based on PSNR Values"](http://journal.cg-korea.org/archive/view_article?pid=jkcgs-28-2-21), Journal of the Korea Computer Graphics Society, June 2022. 
 
+1. Sayantan Datta, Derek Nowrouzezahrai, Christoph Schied, and Zhao Dong, ["Neural Shadow Mapping"](http://flycooler.com/download/neuralShadowMapping.pdf), SIGGRAPH 2022.
+
 **Code/frameworks/tools that use ꟻLIP:**
 1. [Falcor](https://github.com/NVIDIAGameWorks/Falcor).
 

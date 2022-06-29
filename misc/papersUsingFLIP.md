@@ -89,6 +89,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Tianye Li, Mira Slavcheva, Michael Zollhoefer Simon Green, Christoph Lassner, Changil Kim, Tanner Schmidt, Steven Lovegrove, Michael Goesele, Richard Newcombe, and Zhaoyang Lv, ["Neural 3D Video Synthesis from Multi-view Video"](https://openaccess.thecvf.com/content/CVPR2022/papers/Li_Neural_3D_Video_Synthesis_From_Multi-View_Video_CVPR_2022_paper.pdf), CVPR 2022.
 
+1. Y. Wu, H. Vo, J. Gong, and Z. Zhu,  ["UnityPIC: Unity Point-Cloud Interactive Core"](https://par.nsf.gov/servlets/purl/10286826), Eurographics Symposium on Parallel Graphics and Visualization, 2021.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

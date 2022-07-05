@@ -93,6 +93,10 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Alan Wolfe, Nathan Morrical, Tomas Akenine-Möller, and Ravi Ramamoorthi, ["Spatiotemporal Blue Noise Masks"](https://research.nvidia.com/publication/2022-07_spatiotemporal-blue-noise-masks), Eurographics Sympsium on Rendering, 2022.
 
+1. Charlie Mrad, ["Image Upscaling for Ray Traced Foveated Rendering"](https://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=9091182&fileOId=9091183), Master's thesis, Lund University, 2022.
+
+1. Grigoris Tsopouridis, Ioannis Fudos, and Andreas-Alexandros Vasilakis, ["Deep Hybrid Order-Independent Transparency"](http://graphics.cs.aueb.gr/graphics/docs/papers/DeepOIT.pdf), The Visual Computer, 2022.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

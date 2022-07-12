@@ -97,6 +97,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Grigoris Tsopouridis, Ioannis Fudos, and Andreas-Alexandros Vasilakis, ["Deep Hybrid Order-Independent Transparency"](http://graphics.cs.aueb.gr/graphics/docs/papers/DeepOIT.pdf), The Visual Computer, 2022.
 
+1. Aamir Mustafa, Hongjie You, and Rafal K. Mantiuk, ["A Comparative Study on the Loss Functions for Image Enhancement Networks"](https://www.cl.cam.ac.uk/~am2806/assets/papers/LIM_Histogram_Loss.pdf), London Imaging Meeting, 2022.
+
 1. Yujie Wang, Praneeth Chakravarthula, Qi Sun, and Baoquan Chen, ["Joint Neural Phase Retrieval and Compression for Energy- and Computation-Efficient Holography on the Edge"](https://www.immersivecomputinglab.org/wp-content/uploads/2022/07/Hologram_compression_network_11-compressed.pdf), ACM Transactions on Graphics (Proceedings of SIGGRAPH), 2022.
 
 **Citing ꟻLIP (but not using):**

@@ -97,7 +97,7 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Grigoris Tsopouridis, Ioannis Fudos, and Andreas-Alexandros Vasilakis, ["Deep Hybrid Order-Independent Transparency"](http://graphics.cs.aueb.gr/graphics/docs/papers/DeepOIT.pdf), The Visual Computer, 2022.
 
-1. Yujie Wang, Praneeth Chakravarthula, Qi Sun, and Baoquan Chen, ["Joint Neural Phase Retrieval and Compression for Energy- and Computation-Eicient Holography on the Edge"](https://www.immersivecomputinglab.org/wp-content/uploads/2022/07/Hologram_compression_network_11-compressed.pdf), 
+1. Yujie Wang, Praneeth Chakravarthula, Qi Sun, and Baoquan Chen, ["Joint Neural Phase Retrieval and Compression for Energy- and Computation-Efficient Holography on the Edge"](https://www.immersivecomputinglab.org/wp-content/uploads/2022/07/Hologram_compression_network_11-compressed.pdf), 
 
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.

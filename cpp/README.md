@@ -41,6 +41,7 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
   ```
 
   CUDA support is enabled via the `FLIP_ENABLE_CUDA`, which can be passed to CMake on the command line with `-DFLIP_ENABLE_CUDA=ON` or set interactively with `ccmake` or `cmake-gui`.
+  `FLIP_LIBRARY` option allows to output a library rather than an executable.
 - Usage: `flip[-cuda].exe --reference reference.{exr|png} --test test.{exr|png} [options]`, where the list of options can be seen by `flip[-cuda].exe -h`.
 - Tested on Windows 10 version 20H2 with CUDA 11.5. Compiled with Visual Studio 2019. If you use another version of CUDA, you will need to change the `CUDA 11.5` strings in the `CUDA.vcxproj` file accordingly.
 - `../tests/test.py` contains simple tests used to test whether code updates alter results.

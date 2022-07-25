@@ -32,7 +32,12 @@
 
 project(flip-cuda LANGUAGES CXX CUDA)
 
-add_executable(${PROJECT_NAME} ../common/FLIP.cpp)
+if (FLIP_LIBRARY)
+  add_library(${PROJECT_NAME} ../common/FLIP.cpp)
+else()
+  add_executable(${PROJECT_NAME} ../common/FLIP.cpp)
+endif()
+
 target_include_directories(${PROJECT_NAME}
 PRIVATE
   ${CMAKE_CURRENT_LIST_DIR}

@@ -468,7 +468,7 @@ int main(int argc, char** argv)
             {
                 testQuantity = pooledValues.getMean();
             }
-            else if (exitOnTestQuantity == "weigthed-median")
+            else if (exitOnTestQuantity == "weighted-median")
             {
                 testQuantity = pooledValues.getPercentile(0.5f, true);
             }

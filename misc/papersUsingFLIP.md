@@ -131,6 +131,8 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 
 1. Sayantan Datta, Derek Nowrouzezahrai, Christoph Schied, and Zhao Dong, ["Neural Shadow Mapping"](http://flycooler.com/download/neuralShadowMapping.pdf), SIGGRAPH 2022.
 
+1. Matilda Tamm, Olivia Shamon, Hector Anadon Leon, Konrad Tollmar, and Linus Gisslén, ["Automatic Testing and Validation of Level of Detail Reductions Through Supervised Learning"](https://arxiv.org/abs/2208.12674), arXiv:2208.12674, 2022.
+
 **Code/frameworks/tools that use ꟻLIP:**
 1. [Falcor](https://github.com/NVIDIAGameWorks/Falcor).
 

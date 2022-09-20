@@ -105,6 +105,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Joao Liborio Cardoso, Bernhard Kerbl, Lei Yang, Yury Uralsky, and Michael Wimmer, ["Training and Predicting Visual Error for Real-Time Applications"](https://dl.acm.org/doi/abs/10.1145/3522625), Proceedings of the ACM on Computer Graphics and Interactive Techniques, Volume 5, Issue 1, May 2022.
 
+1. Michal Hvězda, ["Dynamic Diffuse Global Illumination"](https://dspace.cvut.cz/bitstream/handle/10467/101357/F3-DP-2022-Hvezda-Michal-diploma_thesis.pdf?sequence=-1), master thesis, Czech Technical University in Prague, 2022.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

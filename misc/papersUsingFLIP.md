@@ -133,7 +133,7 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 
 1. Matilda Tamm, Olivia Shamon, Hector Anadon Leon, Konrad Tollmar, and Linus Gisslén, ["Automatic Testing and Validation of Level of Detail Reductions Through Supervised Learning"](https://arxiv.org/abs/2208.12674), arXiv:2208.12674, 2022.
 
-1. David Hrusa, ["BOTANICAL TREE PERCEIVED REALISM METRIC"]([https://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=9022150&fileOId=9022160](https://hammer.purdue.edu/articles/thesis/Botanical_Tree_Perceived_Realism_Metric/14579490)), Master's thesis, Purdue University, 2021.
+1. David Hrusa, ["BOTANICAL TREE PERCEIVED REALISM METRIC"](https://hammer.purdue.edu/articles/thesis/Botanical_Tree_Perceived_Realism_Metric/14579490), Master's thesis, Purdue University, 2021.
 
 **Code/frameworks/tools that use ꟻLIP:**
 1. [Falcor](https://github.com/NVIDIAGameWorks/Falcor).

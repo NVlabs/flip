@@ -63,8 +63,6 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Mikhail Derevyannykh, ["Real-Time Path-Guiding Based on Parametric Mixture Models"](https://arxiv.org/pdf/2112.09728.pdf), arXiv:2112.09728, 2021.
 
-1. Alejandro Cosin Ayerbe and Gustavo Patow, ["Clustered voxel real-time global illumination"](https://www.sciencedirect.com/science/article/pii/S009784932200005X), Computers & Graphics, 2022.
-
 1. Taras Khakhulin, Denis Korzhenkov, Pavel Solovev, Gleb Sterkin, Timotei Ardelean, and Victor Lempitsky, ["Stereo Magnification with Multi-Layer Images"](https://samsunglabs.github.io/StereoLayers/), arXiv:2201.05023, 2022.
 
 1. Yixin Zhuang, ["Filtering In Implicit Neural Networks"](https://arxiv.org/abs/2201.13013),	arXiv:2201.13013, 2022.
@@ -134,6 +132,8 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 1. Sayantan Datta, Derek Nowrouzezahrai, Christoph Schied, and Zhao Dong, ["Neural Shadow Mapping"](http://flycooler.com/download/neuralShadowMapping.pdf), SIGGRAPH 2022.
 
 1. Matilda Tamm, Olivia Shamon, Hector Anadon Leon, Konrad Tollmar, and Linus Gisslén, ["Automatic Testing and Validation of Level of Detail Reductions Through Supervised Learning"](https://arxiv.org/abs/2208.12674), arXiv:2208.12674, 2022.
+
+1. David Hrusa, ["BOTANICAL TREE PERCEIVED REALISM METRIC"]([https://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=9022150&fileOId=9022160](https://hammer.purdue.edu/articles/thesis/Botanical_Tree_Perceived_Realism_Metric/14579490)), Master's thesis, Purdue University, 2021.
 
 **Code/frameworks/tools that use ꟻLIP:**
 1. [Falcor](https://github.com/NVIDIAGameWorks/Falcor).

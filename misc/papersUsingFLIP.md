@@ -105,6 +105,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Michal Hvězda, ["Dynamic Diffuse Global Illumination"](https://dspace.cvut.cz/bitstream/handle/10467/101357/F3-DP-2022-Hvezda-Michal-diploma_thesis.pdf?sequence=-1), master thesis, Czech Technical University in Prague, 2022.
 
+1. Aamir Mustafa, Param Hanji, Rafal K. Mantiuk, ["Distilling Style from Image Pairs for Global Forward and Inverse Tone Mapping"](https://arxiv.org/abs/2209.15165), arXiv:2209.15165, 2022.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

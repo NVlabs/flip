@@ -107,6 +107,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Aamir Mustafa, Param Hanji, Rafal K. Mantiuk, ["Distilling Style from Image Pairs for Global Forward and Inverse Tone Mapping"](https://arxiv.org/abs/2209.15165), arXiv:2209.15165, 2022.
 
+1. Subin Kim, Sihyun Yu, Jaeho Lee, and Jinwoo Shin, ["Scalable Neural Video Representations with Learnable Positional Features"](https://arxiv.org/pdf/2210.06823.pdf), 	arXiv:2210.06823, 2022.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

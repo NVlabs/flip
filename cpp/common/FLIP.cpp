@@ -281,7 +281,7 @@ int main(int argc, char** argv)
         FLIP::image<FLIP::color3> testImage(testFileName.toString());
 
         FLIP::image<FLIP::color3> viridisMap(FLIP::MapViridis, 256);
-        FLIP::image<float> errorMapFLIP(referenceImage.getWidth(), referenceImage.getHeight());
+        FLIP::image<float> errorMapFLIP(referenceImage.getWidth(), referenceImage.getHeight(), 0.0f);
 
         auto t0 = std::chrono::high_resolution_clock::now();
         auto t = t0;
@@ -289,7 +289,7 @@ int main(int argc, char** argv)
         {
             FLIP::image<FLIP::color3> rImage(referenceImage.getWidth(), referenceImage.getHeight());
             FLIP::image<FLIP::color3> tImage(referenceImage.getWidth(), referenceImage.getHeight());
-            FLIP::image<float> tmpErrorMap(referenceImage.getWidth(), referenceImage.getHeight());
+            FLIP::image<float> tmpErrorMap(referenceImage.getWidth(), referenceImage.getHeight(), 0.0f);
             FLIP::image<float> prevTmpErrorMap(referenceImage.getWidth(), referenceImage.getHeight());
 
             FLIP::image<float> maxErrorExposureMap(referenceImage.getWidth(), referenceImage.getHeight());

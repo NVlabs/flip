@@ -119,4 +119,4 @@ Should your work use the ꟻLIP tool in a more general fashion, please cite the 
 
 # Acknowledgements
 We appreciate the following peoples' contributions to this repository:
-Jonathan Granskog, Jacob Munkberg, Jon Hasselgren, Jefferson Amstutz, Alan Wolfe, Herveau Killian, Vinh Truong, and Philippe Dagobert.
+Jonathan Granskog, Jacob Munkberg, Jon Hasselgren, Jefferson Amstutz, Alan Wolfe, Herveau Killian, Vinh Truong, Philippe Dagobert, and Hannes Hergeth.

@@ -109,6 +109,10 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Subin Kim, Sihyun Yu, Jaeho Lee, and Jinwoo Shin, ["Scalable Neural Video Representations with Learnable Positional Features"](https://arxiv.org/pdf/2210.06823.pdf), 	arXiv:2210.06823, 2022.
 
+1. Bingyi Lu, Jiyuan Liu, and Huilin Xiong, ["Transformation-Based Adversarial Defense Via Sparse Representation"](https://ieeexplore.ieee.org/abstract/document/9897917), *IEEE International Conference on Image Processing*, 2022.
+
+1. Keshuo Xu, Zhihua Wang, Yang Yang, Jianlei Dong, Lihao Xu, Yuming Fang, and Kede Ma, ["A Database of Visual Color Differences of Modern Smartphone Photography"](https://ieeexplore.ieee.org/abstract/document/9897498), *IEEE International Conference on Image Processing*, 2022
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

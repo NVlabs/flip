@@ -117,6 +117,10 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Ling Li, Chunyi Chen, Jun Peng, and Ripei Zhang, ["Predicting visual difference maps for computer-generated images by integrating human visual system model and deep learning"](https://ietresearch.onlinelibrary.wiley.com/doi/pdfdirect/10.1049/ipr2.12681), IET Image Processing, 2022.
 
+1. Feng Wang, Sinan Tan, Xinghang Li, Zeyue Tian, and Huaping Liu, ["Mixed Neural Voxels for Fast Multi-view Video Synthesis"](https://arxiv.org/abs/2212.00190), 	arXiv:2212.00190, 2022. 
+
+1.  Jozef Hladky, Michael Stengel, Nicholas Vining, Bernhard Kerbl, Hans-Peter Seidel, and Markus Steinberger, ["QuadStream: A Quad-Based Scene Streaming Architecture for Novel Viewpoint Reconstruction"](https://dl.acm.org/doi/abs/10.1145/3550454.3555524), ACM Transactions on Graphics, Volume 41, Issue 6, December 2022.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 
@@ -146,6 +150,8 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 1. Matilda Tamm, Olivia Shamon, Hector Anadon Leon, Konrad Tollmar, and Linus Gisslén, ["Automatic Testing and Validation of Level of Detail Reductions Through Supervised Learning"](https://arxiv.org/abs/2208.12674), arXiv:2208.12674, 2022.
 
 1. David Hrusa, ["BOTANICAL TREE PERCEIVED REALISM METRIC"](https://hammer.purdue.edu/articles/thesis/Botanical_Tree_Perceived_Realism_Metric/14579490), Master's thesis, Purdue University, 2021.
+
+1. Farnood Salehi, Marco Manzi, Gerhard Röthlin, Christopher Schroers, Romman Weber, and Marios Papas, ["Deep Adaptive Sampling and Reconstruction using Analytic Distributions"](https://studios.disneyresearch.com/2022/11/30/deep-adaptive-sampling-and-reconstruction-using-analytic-distributions/?utm_source=rss&utm_medium=rss&utm_campaign=deep-adaptive-sampling-and-reconstruction-using-analytic-distributions), SIGGRAPH Asia, 2022.
 
 **Code/frameworks/tools that use ꟻLIP:**
 1. [Falcor](https://github.com/NVIDIAGameWorks/Falcor).

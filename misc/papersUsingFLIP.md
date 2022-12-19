@@ -121,6 +121,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1.  Jozef Hladky, Michael Stengel, Nicholas Vining, Bernhard Kerbl, Hans-Peter Seidel, and Markus Steinberger, ["QuadStream: A Quad-Based Scene Streaming Architecture for Novel Viewpoint Reconstruction"](https://dl.acm.org/doi/abs/10.1145/3550454.3555524), ACM Transactions on Graphics, Volume 41, Issue 6, December 2022.
 
+1. Jae-Ho Nah and Hyeju Kim, ["TexSR: Image Super-Resolution for High-Quality Texture Mapping"](https://dl.acm.org/doi/abs/10.1145/3550082.3564204), SIGGRAPH Asia 2022 Posters, December 2022.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

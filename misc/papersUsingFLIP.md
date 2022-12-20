@@ -123,6 +123,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Jae-Ho Nah and Hyeju Kim, ["TexSR: Image Super-Resolution for High-Quality Texture Mapping"](https://dl.acm.org/doi/abs/10.1145/3550082.3564204), SIGGRAPH Asia 2022 Posters, December 2022.
 
+1. Olivier Therrien, Yannick Levesque, and Guillaume Gilet, ["Screen space indirect lighting with visibility bitmask"](https://link.springer.com/article/10.1007/s00371-022-02703-y), The Visual Computer, 2022.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

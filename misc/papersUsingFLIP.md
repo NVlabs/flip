@@ -125,6 +125,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Olivier Therrien, Yannick Levesque, and Guillaume Gilet, ["Screen space indirect lighting with visibility bitmask"](https://link.springer.com/article/10.1007/s00371-022-02703-y), The Visual Computer, 2022.
 
+1. Shishira R Maiya, Sharath Girish, Max Ehrlich, Hanyu Wang, Kwot Sin Lee, Patrick Poirson, Pengxiang Wu, Chen Wang, and Abhinav Shrivastava, ["NIRVANA: Neural Implicit Representations of Videos with Adaptive Networks and Autoregressive Patch-wise Modeling"](https://arxiv.org/pdf/2212.14593.pdf), arXiv:2212.1459, 2022.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

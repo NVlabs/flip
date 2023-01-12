@@ -144,7 +144,7 @@ namespace FLIP
             filterYCx.synchronizeDevice();
             filterCz.synchronizeDevice();
             FLIP::kernelSpatialFilterFirstDir << <intermediateYCxImageReference.getGridDim(), intermediateYCxImageReference.getBlockDim() >> > (intermediateYCxImageReference.mvpDeviceData, intermediateCzImageReference.mvpDeviceData, referenceImage.mvpDeviceData, intermediateYCxImageTest.mvpDeviceData, intermediateCzImageTest.mvpDeviceData, testImage.mvpDeviceData, filterYCx.mvpDeviceData, filterCz.mvpDeviceData, intermediateYCxImageReference.mDim, filterYCx.mDim); // Filter sizes are the same.
-            checkStatus("kernelSpatialFilterFirstDir");
+            image<T>::checkStatus("kernelSpatialFilterFirstDir");
             intermediateYCxImageReference.setState(CudaTensorState::DEVICE_ONLY);
             intermediateCzImageReference.setState(CudaTensorState::DEVICE_ONLY);
             intermediateYCxImageTest.setState(CudaTensorState::DEVICE_ONLY);
@@ -166,7 +166,7 @@ namespace FLIP
             const float pccmax = FLIPConstants.gpc * cmax;
 
             FLIP::kernelSpatialFilterSecondDirAndColorDifference << <colorDifferenceImage.getGridDim(), colorDifferenceImage.getBlockDim() >> > (colorDifferenceImage.mvpDeviceData, intermediateYCxImageReference.mvpDeviceData, intermediateCzImageReference.mvpDeviceData, intermediateYCxImageTest.mvpDeviceData, intermediateCzImageTest.mvpDeviceData, filterYCx.mvpDeviceData, filterCz.mvpDeviceData, colorDifferenceImage.mDim, filterYCx.mDim, cmax, pccmax); // Filter sizes are the same.
-            checkStatus("kernelSpatialFilterSecondDirAndColorDifference");
+            image<T>::checkStatus("kernelSpatialFilterSecondDirAndColorDifference");
             colorDifferenceImage.setState(CudaTensorState::DEVICE_ONLY);
         }
 

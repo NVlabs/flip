@@ -129,6 +129,9 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Oskar Nyström, ["Evaluating PQPM for Usage in Combination with Continuous LOD in VR"](https://www.diva-portal.org/smash/get/diva2:1712288/FULLTEXT02.pdf), Master's thesis, 2022.
 
+1. Akshay Jindal, ["Motion quality models for
+real-time adaptive rendering"](https://aspace.repository.cam.ac.uk/bitstream/handle/1810/345746/aj577-thesis-opt.pdf?sequence=3&isAllowed=y), PhD thesis, University of Cambridge, October 2022.
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

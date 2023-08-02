@@ -137,6 +137,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Hanxue Liang, Tianhao Wu, Param Hanji, Francesco Banterle, Hongyun Gao, Rafal Mantiuk, and Cengiz Oztireli, ["Perceptual Quality Assessment of NeRF and Neural View Synthesis Methods for Front-Facing Views"](https://arxiv.org/pdf/2303.15206.pdf), arXiv:2303:15206, April 2023.
 
+1. Ahmet H. Güzel, Jeanne Beyazian, Praneeth Chakravarthula, and Kaan Akșit, ["ChromaCorrect: prescription correction in virtual reality headsets through perceptual guidance"](https://opg.optica.org/boe/fulltext.cfm?uri=boe-14-5-2166&id=529310), Biomedical Optics Express, vol. 14, no. 5, April 2023.
+
 1. Chen Yang, Kailing Wang, Yuehao Wang, Xiaokang Yang, and Wei Shen, ["Neural LerPlane Representations for Fast 4D Reconstruction of Deformable Tissues"](https://arxiv.org/pdf/2305.19906.pdf), arXiv:2305:19906, May 2023.
 
 1. Uğur Çoğalan, Mojtaba Bemana, Hans-Peter Seidel, and Karol Myszkowski, ["Enhancing image quality prediction with self-supervised visual masking"](https://arxiv.org/pdf/2305.19858.pdf), arXiv:2305:19858, May 2023.
@@ -164,6 +166,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Carlos Rodriguez-Pardo1, Konstantinos Kazatzisb, Jorge Lopez-Moreno, and Elena Garces, ["NeuBTF: Neural fields for BTF encoding and transfer"](https://arxiv.org/pdf/2307.01199.pdf), arXiv:2307:01199, July 2023.
 
+1. Cheng-Kang Ted Chao, Jason Klein, Jianchao Tan, Jose Echevarria, and Yotam Gingold,["ColorfulCurves: Palette-Aware Lightness Control and Color Editing via Sparse Optimization"](https://dl.acm.org/doi/abs/10.1145/3592405), ACM Transactions on Graphics, vol. 42, no. 4, July 2023.
+
 1. Alexander Rath, Ömercan Yazici, and Philipp Slusallek, ["Focal Path Guiding for Light Transport Simulation"](https://dl.acm.org/doi/abs/10.1145/3588432.3591543), SIGGRAPH, August 2023.
 
 1. Martin Balint, Krzysztof Wolski, Karol Myszkowski, Hans-Peter Seidel, and Rafał Mantiuk, ["Neural Partitioning Pyramids for Denoising Monte Carlo Renderings"](https://dl.acm.org/doi/abs/10.1145/3588432.3591562), SIGGRAPH, August 2023.
@@ -172,8 +176,7 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Karthik Vaidyanathan, Marco Salvi, Bartlomiej Wronski, Tomas Akenine‑Möller, Pontus Ebelin, and Aaron Lefohn, ["Random-Access Neural Compression of Material Textures"](https://research.nvidia.com/labs/rtr/neural_texture_compression/), SIGGRAPH, August 2023.
 
-
-
+1. Toya Katsube, Shinya Nishida, and Yoshihiro Watanabe, ["パストレーシングを用いたプロジェクションマッピングのための"](http://sigmr.vrsj.org/events/pdfs/2023Jan/MR2023-02.pdf) http://sigmr.vrsj.org/, 2023.
 
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.

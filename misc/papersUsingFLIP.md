@@ -129,6 +129,17 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Oskar Nyström, ["Evaluating PQPM for Usage in Combination with Continuous LOD in VR"](https://www.diva-portal.org/smash/get/diva2:1712288/FULLTEXT02.pdf), Master's thesis, 2022.
 
+1. Gaspard Nahmias, ["Normal Map Appearance Filtering using Linearl Transformed Cosines"](https://escholarship.mcgill.ca/downloads/4m90f1453?locale=en), Master's thesis, October 2022.
+
+1. Hee Min Choi, Hyoa Kang, and Dokwan Oh, ["Is Overfitting Necessary for Implicit Video Representation?"](https://openreview.net/forum?id=JuNIuHLm9y), OpenReview.net, April 2023.
+
+1. Chen Yang, Kailing Wang, Yuehao Wang, Xiaokang Yang, and Wei Shen, ["Neural LerPlane Representations for Fast 4D Reconstruction of Deformable Tissues"](https://arxiv.org/pdf/2305.19906.pdf), arXiv:2305:19906, May 2023.
+
+1. Uğur Çoğalan, Mojtaba Bemana, Hans-Peter Seidel, and Karol Myszkowski, ["Enhancing image quality prediction with self-supervised visual masking"](https://arxiv.org/pdf/2305.19858.pdf), arXiv:2305:19858, May 2023.
+
+1. Jakub Olejnik, ["Exploration of Alternative Image Representation Using Signed Distance Functions"](https://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=9129143&fileOId=9129184), Master's thesis, June 2023.
+
+1. Karthik Vaidyanathan, Marco Salvi, Bartlomiej Wronski, Tomas Akenine‑Möller, Pontus Ebelin, and Aaron Lefohn, ["Random-Access Neural Compression of Material Textures"](https://research.nvidia.com/labs/rtr/neural_texture_compression/), SIGGRAPH, August 2023.
 
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
@@ -166,6 +177,8 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 
 1. Akshay Jindal, ["Motion quality models for
 real-time adaptive rendering"](https://aspace.repository.cam.ac.uk/bitstream/handle/1810/345746/aj577-thesis-opt.pdf?sequence=3&isAllowed=y), PhD thesis, University of Cambridge, October 2022.
+
+1. GRIGORIS TSOPOURIDIS, ANDREAS A. VASILAKIS, and IOANNIS FUDOS, ["Deep and Fast Approximate Order Independent Transparency"](https://arxiv.org/pdf/2305.10197.pdf), arXiv:2305.10197, May 2023.
 
 
 **Code/frameworks/tools that use ꟻLIP:**

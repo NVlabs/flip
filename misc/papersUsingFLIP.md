@@ -131,23 +131,31 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Gaspard Nahmias, ["Normal Map Appearance Filtering using Linearl Transformed Cosines"](https://escholarship.mcgill.ca/downloads/4m90f1453?locale=en), Master's thesis, October 2022.
 
+1. Nikolai Hofmann, Jon Hasselgren, and Jacob Munkberg, ["Joint Neural Denoising of Surfaces and Volumes"](https://research.nvidia.com/publication/2023-03_joint-neural-denoising-surfaces-and-volumes) (used in supplemental image viewer), I3D, March 2023..
+   
 1. Hee Min Choi, Hyoa Kang, and Dokwan Oh, ["Is Overfitting Necessary for Implicit Video Representation?"](https://openreview.net/forum?id=JuNIuHLm9y), OpenReview.net, April 2023.
 
 1. Chen Yang, Kailing Wang, Yuehao Wang, Xiaokang Yang, and Wei Shen, ["Neural LerPlane Representations for Fast 4D Reconstruction of Deformable Tissues"](https://arxiv.org/pdf/2305.19906.pdf), arXiv:2305:19906, May 2023.
 
 1. Uğur Çoğalan, Mojtaba Bemana, Hans-Peter Seidel, and Karol Myszkowski, ["Enhancing image quality prediction with self-supervised visual masking"](https://arxiv.org/pdf/2305.19858.pdf), arXiv:2305:19858, May 2023.
 
+1. Karel Tomanec, ["Efficient sampling for computing complex illumination in real-time"](https://dspace.cvut.cz/handle/10467/109399), May 2023.
+
 1. Jakub Olejnik, ["Exploration of Alternative Image Representation Using Signed Distance Functions"](https://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=9129143&fileOId=9129184), Master's thesis, June 2023.
 
-1. Karthik Vaidyanathan, Marco Salvi, Bartlomiej Wronski, Tomas Akenine‑Möller, Pontus Ebelin, and Aaron Lefohn, ["Random-Access Neural Compression of Material Textures"](https://research.nvidia.com/labs/rtr/neural_texture_compression/), SIGGRAPH, August 2023.
-
 1. Polychronakis, Andreas and Koulieris, George Alex and Mania, Katerina, ["An Inverted Pyramid Acceleration Structure Guiding Foveated Sphere Tracing for Implicit Surfaces in VR"](https://diglib.eg.org/handle/10.2312/sr20231128), Eurographics Symposium on Rendering, June 2023.
+
+1. T. Neff, B. Budge, Z. Dong, D. Schmalstieg, and M. Steinberger, ["PSAO: Point-Based Split Rendering for Ambient Occlusion"](https://diglib.eg.org/handle/10.2312/hpg20231131), High-Performance Graphics, June 2023.
 
 1. Jaroslav Kravec, Martin Káčerik and Jiří Bittner, ["PVLI: potentially visible layered image for real-time ray tracing"](https://link.springer.com/article/10.1007/s00371-023-03007-5), The Visual Computer, July 2023.
 
 1. Carlos Rodriguez-Pardo, Javier Fabre, Elena Garces, and Jorge Lopez-Moreno, ["NEnv: Neural Environment Maps for Global Illumination"](https://onlinelibrary.wiley.com/doi/full/10.1111/cgf.14883), Computer Graphics Forum, vol. 42, no. 4, July 2023.
 
 1. Z. Zeng, Z. Xu, L. Wang, L. Wu, L. Yan, ["Ray-aligned Occupancy Map Array for Fast Approximate Ray Tracing"](https://onlinelibrary.wiley.com/doi/full/10.1111/cgf.14882), Computer Graphics Forum, vol. 42, no. 4, July 2023.
+
+1. Carlos Rodriguez-Pardo1, Konstantinos Kazatzisb, Jorge Lopez-Moreno, and Elena Garces, ["NeuBTF: Neural fields for BTF encoding and transfer"](https://arxiv.org/pdf/2307.01199.pdf), arXiv:2307:01199, July 2023.
+
+1. Karthik Vaidyanathan, Marco Salvi, Bartlomiej Wronski, Tomas Akenine‑Möller, Pontus Ebelin, and Aaron Lefohn, ["Random-Access Neural Compression of Material Textures"](https://research.nvidia.com/labs/rtr/neural_texture_compression/), SIGGRAPH, August 2023.
 
 
 
@@ -190,6 +198,9 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 real-time adaptive rendering"](https://aspace.repository.cam.ac.uk/bitstream/handle/1810/345746/aj577-thesis-opt.pdf?sequence=3&isAllowed=y), PhD thesis, University of Cambridge, October 2022.
 
 1. GRIGORIS TSOPOURIDIS, ANDREAS A. VASILAKIS, and IOANNIS FUDOS, ["Deep and Fast Approximate Order Independent Transparency"](https://arxiv.org/pdf/2305.10197.pdf), arXiv:2305.10197, May 2023.
+
+1. K. Herveau, M. Piochowiak1, and C. Dachsbacher, ["Minimal Convolutional Neural Networks for Temporal Anti Aliasing"](https://diglib.eg.org/handle/10.2312/hpg20231134), High-Performance Graphics, June 2023.
+
 
 
 **Code/frameworks/tools that use ꟻLIP:**

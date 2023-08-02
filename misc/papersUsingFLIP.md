@@ -141,6 +141,17 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Karthik Vaidyanathan, Marco Salvi, Bartlomiej Wronski, Tomas Akenine‑Möller, Pontus Ebelin, and Aaron Lefohn, ["Random-Access Neural Compression of Material Textures"](https://research.nvidia.com/labs/rtr/neural_texture_compression/), SIGGRAPH, August 2023.
 
+1. Polychronakis, Andreas and Koulieris, George Alex and Mania, Katerina, ["An Inverted Pyramid Acceleration Structure Guiding Foveated Sphere Tracing for Implicit Surfaces in VR"](https://diglib.eg.org/handle/10.2312/sr20231128), Eurographics Symposium on Rendering, June 2023.
+
+1. Jaroslav Kravec, Martin Káčerik and Jiří Bittner, ["PVLI: potentially visible layered image for real-time ray tracing"](https://link.springer.com/article/10.1007/s00371-023-03007-5), The Visual Computer, July 2023.
+
+1. Carlos Rodriguez-Pardo, Javier Fabre, Elena Garces, and Jorge Lopez-Moreno, ["NEnv: Neural Environment Maps for Global Illumination"](https://onlinelibrary.wiley.com/doi/full/10.1111/cgf.14883), Computer Graphics Forum, vol. 42, no. 4, July 2023.
+
+1. Z. Zeng, Z. Xu, L. Wang, L. Wu, L. Yan, ["Ray-aligned Occupancy Map Array for Fast Approximate Ray Tracing"](https://onlinelibrary.wiley.com/doi/full/10.1111/cgf.14882), Computer Graphics Forum, vol. 42, no. 4, July 2023.
+
+
+
+
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

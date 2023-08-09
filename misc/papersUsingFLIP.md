@@ -180,6 +180,7 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Philippe Weier,  Tobias Zirr, Anton Kaplanyan, Ling-Qi Yan, and  Philipp Slusallek, ["Neural Prefiltering for Correlation-Aware Levels of Detail"](https://dl.acm.org/doi/abs/10.1145/3592443?mi=kthjst&af=R&AllField=PubIdSortField%3A%280730-0301%29&content=standard&expand=dl&sortBy=EpubDate_desc&target=advanced), ACM Transactions on Graphics, vol. 42, no. 4, 2023.
 
+1. Alexander Weinrauch, Wolfgang Tatzgern, Pascal Stadlbauer, Alexis Crickx, Jozef Hladky, Arno Coomans, Martin Winter, Joerg H. Mueller,  and Markus Steinberger, ["Effect-based Multi-viewer Caching for Cloud-native Rendering"](https://dl.acm.org/doi/10.1145/3592431),  ACM Transactions on Graphics, vol. 42, no. 4, 2023.
  
 
 **Citing ꟻLIP (but not using):**

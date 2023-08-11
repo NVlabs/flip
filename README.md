@@ -31,7 +31,7 @@ can be found [here](misc/separatedConvolutions.pdf).
 
 # License
 
-Copyright © 2020-2022, NVIDIA Corporation & Affiliates. All rights reserved.
+Copyright © 2020-2023, NVIDIA Corporation & Affiliates. All rights reserved.
 
 This work is made available under a [BSD 3-Clause License](misc/LICENSE.md).
 

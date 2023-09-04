@@ -77,8 +77,6 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 1.  T. Neff, J.H. Mueller, M. Steinberger, and D. Schmalstieg,
  ["Meshlets and How to Shade Them: A Study on Texture-Space Shading"](https://arbook.icg.tugraz.at/schmalstieg/Schmalstieg_405.pdf), Eurographics, 2022.
  
-1. Joao Liborio Cardoso, Bernhard Kerbl, Lei Yang, Yury Uralsky, and Michael Wimmer, ["Training and Predicting Visual Error for Real-Time Applications"](https://jaliborc.github.io/rt-percept/paper.pdf), I3D 2022.
-
 1. Zhihua Wang, Keshuo Xu, Yang Yang, Jianlei Dong, Shuhang Gu, Lihao Xu, Yuming Fang, and Kede Ma, ["Measuring Perceptual Color Differences of Smartphone Photography"](https://arxiv.org/abs/2205.13489), arXiv:2205.13489, 2022.
 
 1. Jacob Munkberg, Jon Hasselgren, Tianchang Shen, Jun Gao, Wenzheng Chen, Alex Evans, Thomas Muller,and Sanja Fidler, ["Extracting Triangular 3D Models, Materials, and Lighting From Images"](https://arxiv.org/pdf/2111.12503.pdf), 	arXiv:2111.12503, 2021.

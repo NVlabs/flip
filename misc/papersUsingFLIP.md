@@ -182,6 +182,7 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Xinyu Gao, Ziyi Yang, Yunlu Zhao, Yuxiang Sun, Xiaogang Jin, and Changqing Zou, ["A General Implicit Framework for Fast NeRF Composition and Rendering"](https://arxiv.org/pdf/2308.04669.pdf), arXiv:2308.04669, August 2023.
 
+1. Jae-Ho Nah, ["QuickETC2-HQ: Improved ETC2 encoding techniques for real-time, high-quality texture compression"](https://www.sciencedirect.com/science/article/abs/pii/S0097849323002236), Computers & Graphics, vol. 116, November 2023.
 
 
 **Citing ꟻLIP (but not using):**
@@ -227,6 +228,7 @@ real-time adaptive rendering"](https://aspace.repository.cam.ac.uk/bitstream/han
 
 1. K. Herveau, M. Piochowiak1, and C. Dachsbacher, ["Minimal Convolutional Neural Networks for Temporal Anti Aliasing"](https://diglib.eg.org/handle/10.2312/hpg20231134), High-Performance Graphics, June 2023.
 
+1. Mojtaba Bemana, ["Efficient Image-Based Rendering"](https://publikationen.sulb.uni-saarland.de/handle/20.500.11880/36287), PhD thesis, July 2023.
 
 
 **Code/frameworks/tools that use ꟻLIP:**

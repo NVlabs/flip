@@ -219,8 +219,7 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 
 1. Yasuko Sugito, Javier Vazquez-Corral, Trevor Canham, and Marcelo Bertalmío, ["Image Quality Evaluation in Professional HDR/WCG Production Questions the Need for HDR Metrics"](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9833382&tag=1), *IEEE Transactions on Image Processing*, vol. 31, pp. 5163-5177, 2022
 
-1. Akshay Jindal, ["Motion quality models for
-real-time adaptive rendering"](https://aspace.repository.cam.ac.uk/bitstream/handle/1810/345746/aj577-thesis-opt.pdf?sequence=3&isAllowed=y), PhD thesis, University of Cambridge, October 2022.
+1. Akshay Jindal, ["Motion quality models for real-time adaptive rendering"](https://aspace.repository.cam.ac.uk/bitstream/handle/1810/345746/aj577-thesis-opt.pdf?sequence=3&isAllowed=y), PhD thesis, University of Cambridge, October 2022.
 
 1. M. Emre Celebi, ["Forty years of color quantization: a modern, algorithmic survey"](https://link.springer.com/article/10.1007/s10462-023-10406-6), Artificial Intelligence Review, April 2023.
 
@@ -229,6 +228,8 @@ real-time adaptive rendering"](https://aspace.repository.cam.ac.uk/bitstream/han
 1. K. Herveau, M. Piochowiak1, and C. Dachsbacher, ["Minimal Convolutional Neural Networks for Temporal Anti Aliasing"](https://diglib.eg.org/handle/10.2312/hpg20231134), High-Performance Graphics, June 2023.
 
 1. Mojtaba Bemana, ["Efficient Image-Based Rendering"](https://publikationen.sulb.uni-saarland.de/handle/20.500.11880/36287), PhD thesis, July 2023.
+
+1. Martin Balint, Krzysztof Wolski, Karol Myszkowski, Hans-Peter Seidel, Rafał Mantiuk,["Neural Partitioning Pyramids for Denoising Monte Carlo Renderings"](https://dl.acm.org/doi/10.1145/3588432.3591562), SIGGRAPH, July 2023.
 
 
 **Code/frameworks/tools that use ꟻLIP:**

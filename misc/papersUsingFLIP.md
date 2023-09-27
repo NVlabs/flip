@@ -156,6 +156,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. T. Neff, B. Budge, Z. Dong, D. Schmalstieg, and M. Steinberger, ["PSAO: Point-Based Split Rendering for Ambient Occlusion"](https://diglib.eg.org/handle/10.2312/hpg20231131), High-Performance Graphics, June 2023.
 
+1. Marcos Fajardo and Matt Pharr, ["Fast Procedural Noise By Stochastic Sampling"](Fast Procedural Noise By Monte Carlo Sampling), Eurographics Symposium on Rendering, 2023.
+
 1. Jaroslav Kravec, Martin Káčerik and Jiří Bittner, ["PVLI: potentially visible layered image for real-time ray tracing"](https://link.springer.com/article/10.1007/s00371-023-03007-5), The Visual Computer, July 2023.
 
 1. Carlos Rodriguez-Pardo, Javier Fabre, Elena Garces, and Jorge Lopez-Moreno, ["NEnv: Neural Environment Maps for Global Illumination"](https://onlinelibrary.wiley.com/doi/full/10.1111/cgf.14883), Computer Graphics Forum, vol. 42, no. 4, July 2023.

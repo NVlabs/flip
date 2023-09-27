@@ -233,6 +233,8 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 
 1. Martin Balint, Krzysztof Wolski, Karol Myszkowski, Hans-Peter Seidel, Rafał Mantiuk,["Neural Partitioning Pyramids for Denoising Monte Carlo Renderings"](https://dl.acm.org/doi/10.1145/3588432.3591562), SIGGRAPH, July 2023.
 
+1. Davide Sforza and Fabio Pellacini, ["Numerical approximations for energy preserving microfacet models"](https://www.sciencedirect.com/science/article/pii/S0097849323000675), Volume 114, Pages 36-44, August 2023.
+
 
 **Code/frameworks/tools that use ꟻLIP:**
 1. [Falcor](https://github.com/NVIDIAGameWorks/Falcor).

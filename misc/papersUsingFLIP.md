@@ -186,6 +186,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Jae-Ho Nah, ["QuickETC2-HQ: Improved ETC2 encoding techniques for real-time, high-quality texture compression"](https://www.sciencedirect.com/science/article/abs/pii/S0097849323002236), Computers & Graphics, vol. 116, November 2023.
 
+1. Bucciero, Alberto and Fanini, Bruno and Graf, Holger and Pescarin, Sofia, and Rizvic, Selma, ["Effective Interactive Visualization of Neural Relightable Images in a Web-based Multi-layered Framework"](https://diglib.eg.org/handle/10.2312/gch20231158), Eurographics Workshop on Graphics and Cultural Heritage, 2023
+
 
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.

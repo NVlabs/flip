@@ -188,6 +188,9 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Bucciero, Alberto and Fanini, Bruno and Graf, Holger and Pescarin, Sofia, and Rizvic, Selma, ["Effective Interactive Visualization of Neural Relightable Images in a Web-based Multi-layered Framework"](https://diglib.eg.org/handle/10.2312/gch20231158), Eurographics Workshop on Graphics and Cultural Heritage, 2023
 
+1. Takuhiro Kaneko, ["MIMO-NeRF: Fast Neural Rendering with Multi-input Multi-output Neural Radiance Fields"](https://openaccess.thecvf.com/content/ICCV2023/papers/Kaneko_MIMO-NeRF_Fast_Neural_Rendering_with_Multi-input_Multi-output_Neural_Radiance_Fields_ICCV_2023_paper.pdf), ICCV, 2023.
+
+
 
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
@@ -236,6 +239,8 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 1. Martin Balint, Krzysztof Wolski, Karol Myszkowski, Hans-Peter Seidel, Rafał Mantiuk,["Neural Partitioning Pyramids for Denoising Monte Carlo Renderings"](https://dl.acm.org/doi/10.1145/3588432.3591562), SIGGRAPH, July 2023.
 
 1. Davide Sforza and Fabio Pellacini, ["Numerical approximations for energy preserving microfacet models"](https://www.sciencedirect.com/science/article/pii/S0097849323000675), Volume 114, Pages 36-44, August 2023.
+
+1. Marwah Kareem ghoben, Lamia AbedNoor Muhammed, ["Analysis of Image Quality Assessment Methods and Metrics: A Comprehensive Review"](https://www.qu.edu.iq/journalcm/index.php/journalcm/article/download/1275/839), Journal of Al-Qadisiyah  for computer science and mathematics, 2023.
 
 
 **Code/frameworks/tools that use ꟻLIP:**

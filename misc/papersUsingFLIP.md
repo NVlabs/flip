@@ -242,6 +242,9 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 
 1. Marwah Kareem ghoben, Lamia AbedNoor Muhammed, ["Analysis of Image Quality Assessment Methods and Metrics: A Comprehensive Review"](https://www.qu.edu.iq/journalcm/index.php/journalcm/article/download/1275/839), Journal of Al-Qadisiyah  for computer science and mathematics, 2023.
 
+1. Oscar Fickel, ["Blue Noise Distributed MCMC Decorrelation of ReSTIR" (https://studenttheses.uu.nl/handle/20.500.12932/45244), Master's thesis, 2023.
+
+
 
 **Code/frameworks/tools that use ꟻLIP:**
 1. [Falcor](https://github.com/NVIDIAGameWorks/Falcor).

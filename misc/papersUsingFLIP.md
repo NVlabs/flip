@@ -190,7 +190,7 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Takuhiro Kaneko, ["MIMO-NeRF: Fast Neural Rendering with Multi-input Multi-output Neural Radiance Fields"](https://openaccess.thecvf.com/content/ICCV2023/papers/Kaneko_MIMO-NeRF_Fast_Neural_Rendering_with_Multi-input_Multi-output_Neural_Radiance_Fields_ICCV_2023_paper.pdf), ICCV, 2023.
 
-1.Hyeon-ki Lee and Jae-Ho Nah,  ["H-ETC2: Design of a CPU-GPU Hybrid ETC2 Encoder"](https://diglib.eg.org/handle/10.1111/cgf14969), Pacific Graphics/Computer Graphics Forum, vol. 42, no. 7, 2023.
+1. Hyeon-ki Lee and Jae-Ho Nah,  ["H-ETC2: Design of a CPU-GPU Hybrid ETC2 Encoder"](https://diglib.eg.org/handle/10.1111/cgf14969), Pacific Graphics/Computer Graphics Forum, vol. 42, no. 7, 2023.
 
 
 

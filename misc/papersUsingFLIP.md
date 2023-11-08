@@ -192,6 +192,9 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Hyeon-ki Lee and Jae-Ho Nah,  ["H-ETC2: Design of a CPU-GPU Hybrid ETC2 Encoder"](https://diglib.eg.org/handle/10.1111/cgf14969), Pacific Graphics/Computer Graphics Forum, vol. 42, no. 7, 2023.
 
+1. Zhaowei Gao, Mingyang Song, Christopher Schroers, and Yang Zhang, ["Revitalizing Legacy Video Content: Deinterlacing with Bidirectional Information Propagation"](https://arxiv.org/abs/2310.19535), arXiv:2310.19535, October, 2023.
+
+
 
 
 **Citing ꟻLIP (but not using):**

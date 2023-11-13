@@ -194,6 +194,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Zhaowei Gao, Mingyang Song, Christopher Schroers, and Yang Zhang, ["Revitalizing Legacy Video Content: Deinterlacing with Bidirectional Information Propagation"](https://arxiv.org/abs/2310.19535), arXiv:2310.19535, October, 2023.
 
+1. Farnood Salehi, Tunç Ozan Aydın, André Gaillard, Guglielmo Camporese, and Yuxuan Wang, ["Empowering Convolutional Neural Networks with MetaSin Activation"](https://openreview.net/pdf?id=cay8LnKSro), NeurIPS 2023.
+
 
 
 

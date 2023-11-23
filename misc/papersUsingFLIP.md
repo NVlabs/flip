@@ -196,6 +196,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Farnood Salehi, Tunç Ozan Aydın, André Gaillard, Guglielmo Camporese, and Yuxuan Wang, ["Empowering Convolutional Neural Networks with MetaSin Activation"](https://openreview.net/pdf?id=cay8LnKSro), NeurIPS 2023.
 
+1. Francesco Banterle, Giuseppe Caggianese, Nicola Capece, Ugo Erra, Katia Lupinetti, Gilda and Manfredi, ["A Foveated Framework to Accelerate Real-time Path Tracing"](https://diglib.eg.org/handle/10.2312/stag20231305), Smart Tools and Applications in Graphics - Eurographics Italian Chapter Conference, 2023.
+
 
 
 

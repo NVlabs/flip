@@ -253,6 +253,7 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 
 1. Oscar Fickel, ["Blue Noise Distributed MCMC Decorrelation of ReSTIR" (https://studenttheses.uu.nl/handle/20.500.12932/45244), Master's thesis, 2023.
 
+1. Marissa du Bois, Aria Kraft, and Ani Alston, ["Integrating X ͤ SS with Velocity and Luminance Adaptive Rasterization"](https://www.intel.com/content/www/us/en/developer/articles/technical/xess-velocity-and-luminance-adaptive-rasterization.html), 2023.
 
 
 **Code/frameworks/tools that use ꟻLIP:**

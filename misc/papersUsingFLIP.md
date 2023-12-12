@@ -198,6 +198,7 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Francesco Banterle, Giuseppe Caggianese, Nicola Capece, Ugo Erra, Katia Lupinetti, Gilda and Manfredi, ["A Foveated Framework to Accelerate Real-time Path Tracing"](https://diglib.eg.org/handle/10.2312/stag20231305), Smart Tools and Applications in Graphics - Eurographics Italian Chapter Conference, 2023.
 
+1. Justine Giroux, Mohammad Reza Karimi Dastjerdi, Yannick Hold-Geoffroy, Javier Vazquez-Corral, and Jean-François Lalonde, ["Towards a Perceptual Evaluation Framework for Lighting Estimation"](https://arxiv.org/pdf/2312.04334.pdf), arXiv:2312.04334, December 2023.
 
 
 

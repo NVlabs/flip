@@ -262,7 +262,7 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 
 1. Pontus Ebelin, Gyorgy Denes, Tomas Akenine-Möller, Kalle Åström, Magnus Oskarsson, and William H. McIlhagga, ["Estimates of Temporal Edge Detection Filters in Human Vision"](https://dl.acm.org/doi/10.1145/3639052?fbclid=IwAR1YiWpXaULEHzFVbe4vdyDxqQA2T9x78aByHaDzqpBguGk3ATRZ6MnkZkA), ACM Transactions on Applied Perception, December 2023.
 
-
+1. Walter Adame Gonzalez, ["FONDUE: Robust resolution-invariant denoising of Magnetic Resonance Images using Nested UNets"](https://escholarship.mcgill.ca/concern/theses/73666b12s), MSc thesis, McGill University, 2023.
 
 
 

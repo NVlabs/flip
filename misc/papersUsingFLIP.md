@@ -200,6 +200,7 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Justine Giroux, Mohammad Reza Karimi Dastjerdi, Yannick Hold-Geoffroy, Javier Vazquez-Corral, and Jean-François Lalonde, ["Towards a Perceptual Evaluation Framework for Lighting Estimation"](https://arxiv.org/pdf/2312.04334.pdf), arXiv:2312.04334, December 2023.
 
+1. Chen Yang, Kailing Wang, Yuehao Wang, Qi Dou, Xiaokang Yang, and Wei Shen, ["Efficient Deformable Tissue Reconstruction via Orthogonal Neural Plane"](https://arxiv.org/pdf/2312.15253.pdf),	arXiv:2312.15253, December 2023.
 
 
 **Citing ꟻLIP (but not using):**
@@ -255,6 +256,10 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 1. Oscar Fickel, ["Blue Noise Distributed MCMC Decorrelation of ReSTIR" (https://studenttheses.uu.nl/handle/20.500.12932/45244), Master's thesis, 2023.
 
 1. Marissa du Bois, Aria Kraft, and Ani Alston, ["Integrating X ͤ SS with Velocity and Luminance Adaptive Rasterization"](https://www.intel.com/content/www/us/en/developer/articles/technical/xess-velocity-and-luminance-adaptive-rasterization.html), 2023.
+
+1. Pontus Ebelin, Gyorgy Denes, Tomas Akenine-Möller, Kalle Åström, Magnus Oskarsson, and William H. McIlhagga, ["Estimates of Temporal Edge Detection Filters in Human Vision"](https://dl.acm.org/doi/10.1145/3639052?fbclid=IwAR1YiWpXaULEHzFVbe4vdyDxqQA2T9x78aByHaDzqpBguGk3ATRZ6MnkZkA), ACM Transactions on Applied Perception, December 2023.
+
+
 
 
 **Code/frameworks/tools that use ꟻLIP:**

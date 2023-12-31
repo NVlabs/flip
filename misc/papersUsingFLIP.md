@@ -202,6 +202,9 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Chen Yang, Kailing Wang, Yuehao Wang, Qi Dou, Xiaokang Yang, and Wei Shen, ["Efficient Deformable Tissue Reconstruction via Orthogonal Neural Plane"](https://arxiv.org/pdf/2312.15253.pdf),	arXiv:2312.15253, December 2023.
 
+1. Hyeju Kim and Jah-Ho Nah, ["Comparative analysis of the deep-learning-based super-resolution methods for generating high-resolution texture maps"](http://journal.cg-korea.org/archive/view_article?pid=jkcgs-29-5-31), Journal of the Korea Computer Graphics Society 29(5):31-40, 2023.
+
+
 
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
@@ -258,6 +261,7 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 1. Marissa du Bois, Aria Kraft, and Ani Alston, ["Integrating X ͤ SS with Velocity and Luminance Adaptive Rasterization"](https://www.intel.com/content/www/us/en/developer/articles/technical/xess-velocity-and-luminance-adaptive-rasterization.html), 2023.
 
 1. Pontus Ebelin, Gyorgy Denes, Tomas Akenine-Möller, Kalle Åström, Magnus Oskarsson, and William H. McIlhagga, ["Estimates of Temporal Edge Detection Filters in Human Vision"](https://dl.acm.org/doi/10.1145/3639052?fbclid=IwAR1YiWpXaULEHzFVbe4vdyDxqQA2T9x78aByHaDzqpBguGk3ATRZ6MnkZkA), ACM Transactions on Applied Perception, December 2023.
+
 
 
 

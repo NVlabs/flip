@@ -204,6 +204,10 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Hyeju Kim and Jah-Ho Nah, ["Comparative analysis of the deep-learning-based super-resolution methods for generating high-resolution texture maps"](http://journal.cg-korea.org/archive/view_article?pid=jkcgs-29-5-31), Journal of the Korea Computer Graphics Society 29(5):31-40, 2023.
 
+1. Thomson TG, Jeppe Revall Frisvad, Ravi Ramamoorthi, and Henrik Wann Jensen, ["Neural BSSRDF: Object Appearance Representation Including Heterogeneous Subsurface Scattering"](https://arxiv.org/abs/2312.15711), 	arXiv:2312.15711, December 2023.
+
+
+
 
 
 **Citing ꟻLIP (but not using):**

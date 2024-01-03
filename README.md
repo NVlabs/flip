@@ -79,7 +79,7 @@ cmake --build .
 
 CUDA support is enabled via the `FLIP_ENABLE_CUDA`, which can be passed to CMake on the command line with
 `-DFLIP_ENABLE_CUDA=ON` or set interactively with `ccmake` or `cmake-gui`.
-`FLIP_LIBRARY` option allows to output a library rather than an executable.
+`FLIP_BUILD_TOOLS` option allows to output the `flip` executable in addition to the FLIP library.
 
 **Usage:**
 ```

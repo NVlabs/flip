@@ -30,15 +30,23 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #################################################################################
 
-if (FLIP_LIBRARY)
-  add_library(${PROJECT_NAME} ../common/FLIP.cpp)
-else()
-  add_executable(${PROJECT_NAME} ../common/FLIP.cpp)
-endif()
+add_library(${PROJECT_NAME} ../common/FLIP.cpp)
 
 target_include_directories(${PROJECT_NAME}
 PRIVATE
   ${CMAKE_CURRENT_LIST_DIR}
   ${CMAKE_CURRENT_LIST_DIR}/../common
 )
-install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+if(FLIP_BUILD_TOOLS)
+  add_executable(flip_cli ../common/FLIP.cpp)
+  target_include_directories(flip_cli
+    PRIVATE
+      ${CMAKE_CURRENT_LIST_DIR}
+      ${CMAKE_CURRENT_LIST_DIR}/../common
+  )
+  install(TARGETS flip_cli DESTINATION ${CMAKE_INSTALL_BINDIR})
+  set_property(TARGET flip_cli PROPERTY EXPORT_NAME "cli")
+  set_property(TARGET flip_cli PROPERTY OUTPUT_NAME "flip")
+endif()

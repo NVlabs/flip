@@ -47,7 +47,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 include(GNUInstallDirs)
 
 option(FLIP_ENABLE_CUDA "Include CUDA version of flip" OFF)
-option(FLIP_LIBRARY OFF)
+option(FLIP_BUILD_TOOLS "Build command-line tools" ON)
 
 add_subdirectory(cpp/CPP)
 if (FLIP_ENABLE_CUDA)

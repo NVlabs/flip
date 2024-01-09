@@ -58,7 +58,15 @@
 #define NOMINMAX
 #define FIXED_DECIMAL_DIGITS(x, d) std::fixed << std::setprecision(d) << (x)
 
-#include "FLIP.h"
+
+//#define FLIP_USE_CUDA
+#include "../CPP/flip_single_header.h"
+
+#include "commandline.h"
+#include "filename.h"
+#include "pooling.h"
+#include "mapMagma.h"
+#include "mapViridis.h"
 
 struct
 {

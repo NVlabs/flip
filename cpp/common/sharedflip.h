@@ -1,5 +1,6 @@
 #pragma once
 
+#if 0
 #ifdef USING_CUDA
 #include "../CUDA/color.cuh"
 #else
@@ -75,3 +76,4 @@ namespace FLIP
         return radius;
     }
 }
+#endif

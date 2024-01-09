@@ -12,10 +12,20 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+#ifdef FLIP_USE_CUDA
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+#endif
+
+#ifdef FLIP_USE_CUDA
+#define HOST_DEVICE_FOR_CUDA __host__ __device__
+#else
+#define HOST_DEVICE_FOR_CUDA
+#endif 
+
 // color.h
 namespace FLIP
 {
-
 #define Max(x, y) ((x) > (y) ? (x) : (y))
 #define Min(x, y) ((x) > (y) ? (y) : (x))
 
@@ -30,31 +40,34 @@ namespace FLIP
             struct { float r, g, b; };
             struct { float x, y, z; };
             struct { float h, s, v; };
+#ifdef FLIP_USE_CUDA
+            float3 float3;
+#endif
         };
 
     public:
-        color3(void)
+        HOST_DEVICE_FOR_CUDA color3(void)
         {
             this->x = 0.0f;
             this->y = 0.0f;
             this->z = 0.0f;
         }
 
-        color3(float v)
+        HOST_DEVICE_FOR_CUDA color3(float v)
         {
             this->x = v;
             this->y = v;
             this->z = v;
         }
 
-        color3(const float* pColor)
+        HOST_DEVICE_FOR_CUDA color3(const float* pColor)
         {
             this->x = pColor[0];
             this->y = pColor[1];
             this->z = pColor[2];
         }
 
-        color3(const unsigned char* pColor)
+        HOST_DEVICE_FOR_CUDA color3(const unsigned char* pColor)
         {
             this->x = float(pColor[0]);
             this->y = float(pColor[1]);
@@ -62,61 +75,61 @@ namespace FLIP
             *this /= 255.0f;
         }
 
-        color3(float _x, float _y, float _z)
+        HOST_DEVICE_FOR_CUDA color3(float _x, float _y, float _z)
         {
             this->x = _x;
             this->y = _y;
             this->z = _z;
         }
 
-        color3(const color3& c)
+        HOST_DEVICE_FOR_CUDA color3(const color3& c)
         {
             this->x = c.x;
             this->y = c.y;
             this->z = c.z;
         }
 
-        bool operator==(const color3 v) const
+        HOST_DEVICE_FOR_CUDA bool operator==(const color3 v) const
         {
             return this->x == v.x && this->y == v.y && this->z == v.z;
         }
 
-        bool operator!=(const color3 v) const
+        HOST_DEVICE_FOR_CUDA bool operator!=(const color3 v) const
         {
             return !(*this == v);
         }
 
-        color3 operator+(const color3 v) const
+        HOST_DEVICE_FOR_CUDA color3 operator+(const color3 v) const
         {
             return color3(this->x + v.x, this->y + v.y, this->z + v.z);
         }
 
-        color3 operator-(const color3 v) const
+        HOST_DEVICE_FOR_CUDA color3 operator-(const color3 v) const
         {
             return color3(this->x - v.x, this->y - v.y, this->z - v.z);
         }
 
-        color3 operator*(const float v) const
+        HOST_DEVICE_FOR_CUDA color3 operator*(const float v) const
         {
             return color3(this->x * v, this->y * v, this->z * v);
         }
 
-        color3 operator*(const color3 v) const
+        HOST_DEVICE_FOR_CUDA color3 operator*(const color3 v) const
         {
             return color3(this->x * v.x, this->y * v.y, this->z * v.z);
         }
 
-        color3 operator/(const float v) const
+        HOST_DEVICE_FOR_CUDA color3 operator/(const float v) const
         {
             return color3(this->x / v, this->y / v, this->z / v);
         }
 
-        color3 operator/(const color3 v) const
+        HOST_DEVICE_FOR_CUDA color3 operator/(const color3 v) const
         {
             return color3(this->x / v.x, this->y / v.y, this->z / v.z);
         }
 
-        color3 operator+=(const color3 v)
+        HOST_DEVICE_FOR_CUDA color3 operator+=(const color3 v)
         {
             this->x += v.x;
             this->y += v.y;
@@ -124,7 +137,7 @@ namespace FLIP
             return *this;
         }
 
-        color3 operator*=(const color3 v)
+        HOST_DEVICE_FOR_CUDA color3 operator*=(const color3 v)
         {
             this->x *= v.x;
             this->y *= v.y;
@@ -132,7 +145,7 @@ namespace FLIP
             return *this;
         }
 
-        color3 operator/=(const color3 v)
+        HOST_DEVICE_FOR_CUDA color3 operator/=(const color3 v)
         {
             this->x /= v.x;
             this->y /= v.y;
@@ -140,44 +153,44 @@ namespace FLIP
             return *this;
         }
 
-        void clear(const color3 v = { 0.0f, 0.0f, 0.0f })
+        HOST_DEVICE_FOR_CUDA void clear(const color3 v = { 0.0f, 0.0f, 0.0f })
         {
             this->x = v.x;
             this->y = v.y;
             this->z = v.z;
         }
 
-        static inline color3 min(color3 v0, color3 v1)
+        HOST_DEVICE_FOR_CUDA static inline color3 min(color3 v0, color3 v1)
         {
             return color3(Min(v0.x, v1.x), Min(v0.y, v1.y), Min(v0.z, v1.z));
         }
 
-        static inline color3 max(color3 v0, color3 v1)
+        HOST_DEVICE_FOR_CUDA static inline color3 max(color3 v0, color3 v1)
         {
             return color3(Max(v0.x, v1.x), Max(v0.y, v1.y), Max(v0.z, v1.z));
         }
 
-        static inline color3 abs(color3 v)
+        HOST_DEVICE_FOR_CUDA static inline color3 abs(color3 v)
         {
             return color3(std::abs(v.x), std::abs(v.y), std::abs(v.z));
         }
 
-        static inline color3 sqrt(color3 v)
+        HOST_DEVICE_FOR_CUDA static inline color3 sqrt(color3 v)
         {
             return color3(std::sqrt(v.x), std::sqrt(v.y), std::sqrt(v.z));
         }
 
-        static inline color3 clamp(color3 v, float _min = 0.0f, float _max = 1.0f)
+        HOST_DEVICE_FOR_CUDA static inline color3 clamp(color3 v, float _min = 0.0f, float _max = 1.0f)
         {
             return color3(Min(Max(v.x, _min), _max), Min(Max(v.y, _min), _max), Min(Max(v.z, _min), _max));
         }
 
-        static inline float linearRGB2Luminance(color3 linearRGB)
+        HOST_DEVICE_FOR_CUDA static inline float linearRGB2Luminance(color3 linearRGB)
         {
             return 0.2126f * linearRGB.r + 0.7152f * linearRGB.g + 0.0722f * linearRGB.b;
         }
 
-        static inline float sRGB2LinearRGB(float sC)
+        HOST_DEVICE_FOR_CUDA static inline float sRGB2LinearRGB(float sC)
         {
             if (sC <= 0.04045f)
             {
@@ -186,7 +199,7 @@ namespace FLIP
             return powf((sC + 0.055f) / 1.055f, 2.4f);
         }
 
-        static inline float LinearRGB2sRGB(float lC)
+        HOST_DEVICE_FOR_CUDA static inline float LinearRGB2sRGB(float lC)
         {
             if (lC <= 0.0031308f)
             {
@@ -196,7 +209,7 @@ namespace FLIP
             return 1.055f * powf(lC, 1.0f / 2.4f) - 0.055f;
         }
 
-        static inline color3 sRGB2LinearRGB(color3 sRGB)
+        HOST_DEVICE_FOR_CUDA static inline color3 sRGB2LinearRGB(color3 sRGB)
         {
             float R = sRGB2LinearRGB(sRGB.x);
             float G = sRGB2LinearRGB(sRGB.y);
@@ -205,7 +218,7 @@ namespace FLIP
             return color3(R, G, B);
         }
 
-        static inline color3 LinearRGB2sRGB(color3 RGB)
+        HOST_DEVICE_FOR_CUDA static inline color3 LinearRGB2sRGB(color3 RGB)
         {
             float sR = LinearRGB2sRGB(RGB.x);
             float sG = LinearRGB2sRGB(RGB.y);
@@ -214,7 +227,7 @@ namespace FLIP
             return color3(sR, sG, sB);
         }
 
-        static inline color3 LinearRGB2XYZ(color3 RGB)
+        HOST_DEVICE_FOR_CUDA static inline color3 LinearRGB2XYZ(color3 RGB)
         {
             // Source: https://www.image-engineering.de/library/technotes/958-how-to-convert-between-srgb-and-ciexyz
             // Assumes D65 standard illuminant.
@@ -236,7 +249,7 @@ namespace FLIP
             return XYZ;
         }
 
-        static inline color3 XYZ2LinearRGB(color3 XYZ)
+        HOST_DEVICE_FOR_CUDA static inline color3 XYZ2LinearRGB(color3 XYZ)
         {
             // Return values in linear RGB, assuming D65 standard illuminant.
             const float a11 = 3.241003275f;
@@ -257,7 +270,7 @@ namespace FLIP
             return RGB;
         }
 
-        static inline color3 XYZ2CIELab(color3 XYZ, const color3 invReferenceIlluminant = INV_DEFAULT_ILLUMINANT)
+        HOST_DEVICE_FOR_CUDA static inline color3 XYZ2CIELab(color3 XYZ, const color3 invReferenceIlluminant = INV_DEFAULT_ILLUMINANT)
         {
             const float delta = 6.0f / 29.0f;
             const float deltaSquare = delta * delta;
@@ -277,7 +290,7 @@ namespace FLIP
             return color3(L, a, b);
         }
 
-        static inline color3 CIELab2XYZ(color3 Lab, const color3 referenceIlluminant = DEFAULT_ILLUMINANT)
+        HOST_DEVICE_FOR_CUDA static inline color3 CIELab2XYZ(color3 Lab, const color3 referenceIlluminant = DEFAULT_ILLUMINANT)
         {
             // The default illuminant is D65.
             float Y = (Lab.x + 16.0f) / 116.0f;
@@ -294,7 +307,7 @@ namespace FLIP
             return color3(X, Y, Z) * referenceIlluminant;
         }
 
-        static inline color3 XYZ2YCxCz(color3 XYZ, const color3 invReferenceIlluminant = INV_DEFAULT_ILLUMINANT)
+        HOST_DEVICE_FOR_CUDA static inline color3 XYZ2YCxCz(color3 XYZ, const color3 invReferenceIlluminant = INV_DEFAULT_ILLUMINANT)
         {
             // The default illuminant is D65.
             XYZ = XYZ * invReferenceIlluminant;
@@ -305,7 +318,7 @@ namespace FLIP
             return color3(Y, Cx, Cz);
         }
 
-        static inline color3 YCxCz2XYZ(color3 YCxCz, const color3 referenceIlluminant = DEFAULT_ILLUMINANT)
+        HOST_DEVICE_FOR_CUDA static inline color3 YCxCz2XYZ(color3 YCxCz, const color3 referenceIlluminant = DEFAULT_ILLUMINANT)
         {
             // The default illuminant is D65.
             const float Y = (YCxCz.x + 16.0f) / 116.0f;
@@ -317,26 +330,26 @@ namespace FLIP
             return color3(X, Y, Z) * referenceIlluminant;
         }
 
-        static inline float YCxCz2Gray(color3 YCxCz)
+        HOST_DEVICE_FOR_CUDA static inline float YCxCz2Gray(color3 YCxCz)
         {
             return (YCxCz.x + 16.0f) / 116.0f; // Make it [0,1].
         }
 
         // FLIP-specific functions below.
 
-        static inline float Hunt(const float luminance, const float chrominance)
+        HOST_DEVICE_FOR_CUDA static inline float Hunt(const float luminance, const float chrominance)
         {
             return 0.01f * luminance * chrominance;
         }
 
-        static inline float HyAB(color3& refPixel, color3& testPixel)
+        HOST_DEVICE_FOR_CUDA static inline float HyAB(color3& refPixel, color3& testPixel)
         {
             float cityBlockDistanceL = std::fabs(refPixel.x - testPixel.x);
             float euclideanDistanceAB = std::sqrt((refPixel.y - testPixel.y) * (refPixel.y - testPixel.y) + (refPixel.z - testPixel.z) * (refPixel.z - testPixel.z));
             return cityBlockDistanceL + euclideanDistanceAB;
         }
 
-        static inline float computeMaxDistance(float gqc)
+        HOST_DEVICE_FOR_CUDA static inline float computeMaxDistance(float gqc)
         {
             color3 greenLab = color3::XYZ2CIELab(color3::LinearRGB2XYZ(color3(0.0f, 1.0f, 0.0f)));
             color3 blueLab = color3::XYZ2CIELab(color3::LinearRGB2XYZ(color3(0.0f, 0.0f, 1.0f)));
@@ -353,13 +366,8 @@ namespace FLIP
 }
 
 
-// sharedflip.h
-#ifdef USING_CUDA
-#include "../CUDA/color.cuh"
-#else
-#include "../CPP/color.h"
-#endif
 
+// sharedflip.h
 namespace FLIP
 {
     const float PI = 3.14159265358979f;

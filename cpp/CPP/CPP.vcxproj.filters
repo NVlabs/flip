@@ -37,6 +37,7 @@
     <ClInclude Include="..\common\mapViridis.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="flip_single_header.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\FLIP.cpp">

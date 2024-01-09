@@ -50,10 +50,10 @@
 
 #pragma once
 
-#include "sharedflip.h"
-#include "image.h"
-#include "commandline.h"
-#include "filename.h"
-#include "pooling.h"
-#include "mapMagma.h"
-#include "mapViridis.h"
+//#include "sharedflip.h"
+//#include "image.h"
+//#include "commandline.h"
+//#include "filename.h"
+//#include "pooling.h"
+//#include "mapMagma.h"
+//#include "mapViridis.h"

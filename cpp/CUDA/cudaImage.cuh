@@ -132,6 +132,88 @@ namespace FLIP
 
 
         //////////////////////////////////////////////////////////////////////////////////
+        static void setSpatialFilters(image<color3>& filterYCx, image<color3>& filterCz, float ppd, int filterRadius) // For details, see separatedConvolutions.pdf in the FLIP repository.
+        {
+            float deltaX = 1.0f / ppd;
+            color3 filterSumYCx = { 0.0f, 0.0f, 0.0f };
+            color3 filterSumCz = { 0.0f, 0.0f, 0.0f };
+            int filterWidth = 2 * filterRadius + 1;
+
+            for (int x = 0; x < filterWidth; x++)
+            {
+                float ix = (x - filterRadius) * deltaX;
+
+                float ix2 = ix * ix;
+                float gY = Gaussian(ix2, GaussianConstants.a1.x, GaussianConstants.b1.x);
+                float gCx = Gaussian(ix2, GaussianConstants.a1.y, GaussianConstants.b1.y);
+                float gCz1 = GaussianSqrt(ix2, GaussianConstants.a1.z, GaussianConstants.b1.z);
+                float gCz2 = GaussianSqrt(ix2, GaussianConstants.a2.z, GaussianConstants.b2.z);
+                color3 valueYCx = color3(gY, gCx, 0.0f);
+                color3 valueCz = color3(gCz1, gCz2, 0.0f);
+                filterYCx.set(x, 0, valueYCx);
+                filterCz.set(x, 0, valueCz);
+                filterSumYCx += valueYCx;
+                filterSumCz += valueCz;
+            }
+
+            // Normalize weights.
+            color3 normFactorYCx = { 1.0f / filterSumYCx.x, 1.0f / filterSumYCx.y, 1.0f };
+            float normFactorCz = 1.0f / std::sqrt(filterSumCz.x * filterSumCz.x + filterSumCz.y * filterSumCz.y);
+            for (int x = 0; x < filterWidth; x++)
+            {
+                color3 pYCx = filterYCx.get(x, 0);
+                color3 pCz = filterCz.get(x, 0);
+
+                filterYCx.set(x, 0, color3(pYCx.x * normFactorYCx.x, pYCx.y * normFactorYCx.y, 0.0f));
+                filterCz.set(x, 0, color3(pCz.x * normFactorCz, pCz.y * normFactorCz, 0.0f));
+            }
+        }
+
+        static void setFeatureFilter(image<color3>& filter, const float ppd) // For details, see separatedConvolutions.pdf in the FLIP repository.
+        {
+            const float stdDev = 0.5f * FLIPConstants.gw * ppd;
+            const int radius = int(std::ceil(3.0f * stdDev));
+            const int width = 2 * radius + 1;
+
+            float gSum = 0.0f;
+            float dgSumNegative = 0.0f;
+            float dgSumPositive = 0.0f;
+            float ddgSumNegative = 0.0f;
+            float ddgSumPositive = 0.0f;
+
+            for (int x = 0; x < width; x++)
+            {
+                int xx = x - radius;
+
+                float g = Gaussian(float(xx), stdDev);
+                gSum += g;
+
+                // 1st derivative.
+                float dg = -float(xx) * g;
+                if (dg > 0.0f)
+                    dgSumPositive += dg;
+                else
+                    dgSumNegative -= dg;
+
+                // 2nd derivative.
+                float ddg = (float(xx) * float(xx) / (stdDev * stdDev) - 1.0f) * g;
+                if (ddg > 0.0f)
+                    ddgSumPositive += ddg;
+                else
+                    ddgSumNegative -= ddg;
+
+                filter.set(x, 0, color3(g, dg, ddg));
+            }
+
+            // Normalize weights (Gaussian weights should sum to 1; postive and negative weights of 1st and 2nd derivative should sum to 1 and -1, respectively).
+            for (int x = 0; x < width; x++)
+            {
+                color3 p = filter.get(x, 0);
+
+                filter.set(x, 0, color3(p.x / gSum, p.y / (p.y > 0.0f ? dgSumPositive : dgSumNegative), p.z / (p.z > 0.0f ? ddgSumPositive : ddgSumNegative)));
+            }
+        }
+
 
         void FLIP(image<color3>& reference, image<color3>& test, float ppd);
 
@@ -396,87 +478,6 @@ namespace FLIP
         return true;
     }
 
-    static void setSpatialFilters(image<color3>& filterYCx, image<color3>& filterCz, float ppd, int filterRadius) // For details, see separatedConvolutions.pdf in the FLIP repository.
-    {
-        float deltaX = 1.0f / ppd;
-        color3 filterSumYCx = { 0.0f, 0.0f, 0.0f };
-        color3 filterSumCz = { 0.0f, 0.0f, 0.0f };
-        int filterWidth = 2 * filterRadius + 1;
-
-        for (int x = 0; x < filterWidth; x++)
-        {
-            float ix = (x - filterRadius) * deltaX;
-
-            float ix2 = ix * ix;
-            float gY = Gaussian(ix2, GaussianConstants.a1.x, GaussianConstants.b1.x);
-            float gCx = Gaussian(ix2, GaussianConstants.a1.y, GaussianConstants.b1.y);
-            float gCz1 = GaussianSqrt(ix2, GaussianConstants.a1.z, GaussianConstants.b1.z);
-            float gCz2 = GaussianSqrt(ix2, GaussianConstants.a2.z, GaussianConstants.b2.z);
-            color3 valueYCx = color3(gY, gCx, 0.0f);
-            color3 valueCz = color3(gCz1, gCz2, 0.0f);
-            filterYCx.set(x, 0, valueYCx);
-            filterCz.set(x, 0, valueCz);
-            filterSumYCx += valueYCx;
-            filterSumCz += valueCz;
-        }
-
-        // Normalize weights.
-        color3 normFactorYCx = { 1.0f / filterSumYCx.x, 1.0f / filterSumYCx.y, 1.0f };
-        float normFactorCz = 1.0f / std::sqrt(filterSumCz.x * filterSumCz.x + filterSumCz.y * filterSumCz.y);
-        for (int x = 0; x < filterWidth; x++)
-        {
-            color3 pYCx = filterYCx.get(x, 0);
-            color3 pCz = filterCz.get(x, 0);
-
-            filterYCx.set(x, 0, color3(pYCx.x * normFactorYCx.x, pYCx.y * normFactorYCx.y, 0.0f));
-            filterCz.set(x, 0, color3(pCz.x * normFactorCz, pCz.y * normFactorCz, 0.0f));
-        }
-    }
-
-    static void setFeatureFilter(image<color3>& filter, const float ppd) // For details, see separatedConvolutions.pdf in the FLIP repository.
-    {
-        const float stdDev = 0.5f * FLIPConstants.gw * ppd;
-        const int radius = int(std::ceil(3.0f * stdDev));
-        const int width = 2 * radius + 1;
-
-        float gSum = 0.0f;
-        float dgSumNegative = 0.0f;
-        float dgSumPositive = 0.0f;
-        float ddgSumNegative = 0.0f;
-        float ddgSumPositive = 0.0f;
-
-        for (int x = 0; x < width; x++)
-        {
-            int xx = x - radius;
-
-            float g = Gaussian(float(xx), stdDev);
-            gSum += g;
-
-            // 1st derivative.
-            float dg = -float(xx) * g;
-            if (dg > 0.0f)
-                dgSumPositive += dg;
-            else
-                dgSumNegative -= dg;
-
-            // 2nd derivative.
-            float ddg = (float(xx) * float(xx) / (stdDev * stdDev) - 1.0f) * g;
-            if (ddg > 0.0f)
-                ddgSumPositive += ddg;
-            else
-                ddgSumNegative -= ddg;
-
-            filter.set(x, 0, color3(g, dg, ddg));
-        }
-
-        // Normalize weights (Gaussian weights should sum to 1; postive and negative weights of 1st and 2nd derivative should sum to 1 and -1, respectively).
-        for (int x = 0; x < width; x++)
-        {
-            color3 p = filter.get(x, 0);
-
-            filter.set(x, 0, color3(p.x / gSum, p.y / (p.y > 0.0f ? dgSumPositive : dgSumNegative), p.z / (p.z > 0.0f ? ddgSumPositive : ddgSumNegative)));
-        }
-    }
 
     ///////////////////////////////////////////////////////////////////////////
 

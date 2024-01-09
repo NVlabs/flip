@@ -126,7 +126,6 @@ namespace FLIP
 
 
         //////////////////////////////////////////////////////////////////////////////////
-
         static void setSpatialFilters(image<color3>& filterYCx, image<color3>& filterCz, float ppd, int filterRadius) // For details, see separatedConvolutions.pdf in the FLIP repository.
         {
             float deltaX = 1.0f / ppd;
@@ -209,38 +208,6 @@ namespace FLIP
             }
         }
 
-        void FLIP(image<color3>& reference, image<color3>& test, float ppd)
-        {
-            int width = reference.getWidth();
-            int height = reference.getHeight();
-
-            // Transform from sRGB to YCxCz.
-            reference.sRGB2YCxCz();
-            test.sRGB2YCxCz();
-
-            // Prepare separated spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
-            // (YCx for the Achromatic and Red-Green channels and Cz for the Blue-Yellow channel).
-            int spatialFilterRadius = calculateSpatialFilterRadius(ppd);
-            int spatialFilterWidth = 2 * spatialFilterRadius + 1;
-            image<color3> spatialFilterYCx(spatialFilterWidth, 1);
-            image<color3> spatialFilterCz(spatialFilterWidth, 1);
-            setSpatialFilters(spatialFilterYCx, spatialFilterCz, ppd, spatialFilterRadius);
-
-            // The next call performs spatial filtering on both the reference and test image at the same time (for better performance).
-            // It then computes the color difference between the images. "this" is an image<float> here, so we store the color difference in that image.
-            this->computeColorDifference(reference, test, spatialFilterYCx, spatialFilterCz);
-
-            // Prepare separated feature (edge/point) detection filters.
-            const float stdDev = 0.5f * FLIPConstants.gw * ppd;
-            const int featureFilterRadius = int(std::ceil(3.0f * stdDev));
-            int featureFilterWidth = 2 * featureFilterRadius + 1;
-            image<color3> featureFilter(featureFilterWidth, 1);
-            setFeatureFilter(featureFilter, ppd);
-
-            // The following call convolves referenceImage and testImage with the edge and point detection filters and performs additional
-            // computations for the final feature differences, and then computes the final FLIP error and stores in "this".
-            this->computeFeatureDifferenceAndFinalError(reference, test, featureFilter);
-        }
 
         // Performs spatial filtering (and clamps the results) on both the reference and test image at the same time (for better performance).
         // Filtering has been changed to separable filtering for better performance. For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
@@ -642,5 +609,37 @@ namespace FLIP
         return true;
     }
 
+    void FLIP(image<color3>& reference, image<color3>& test, float ppd)
+    {
+        int width = reference.getWidth();
+        int height = reference.getHeight();
+
+        // Transform from sRGB to YCxCz.
+        reference.sRGB2YCxCz();
+        test.sRGB2YCxCz();
+
+        // Prepare separated spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
+        // (YCx for the Achromatic and Red-Green channels and Cz for the Blue-Yellow channel).
+        int spatialFilterRadius = calculateSpatialFilterRadius(ppd);
+        int spatialFilterWidth = 2 * spatialFilterRadius + 1;
+        image<color3> spatialFilterYCx(spatialFilterWidth, 1);
+        image<color3> spatialFilterCz(spatialFilterWidth, 1);
+        setSpatialFilters(spatialFilterYCx, spatialFilterCz, ppd, spatialFilterRadius);
+
+        // The next call performs spatial filtering on both the reference and test image at the same time (for better performance).
+        // It then computes the color difference between the images. "this" is an image<float> here, so we store the color difference in that image.
+        this->computeColorDifference(reference, test, spatialFilterYCx, spatialFilterCz);
+
+        // Prepare separated feature (edge/point) detection filters.
+        const float stdDev = 0.5f * FLIPConstants.gw * ppd;
+        const int featureFilterRadius = int(std::ceil(3.0f * stdDev));
+        int featureFilterWidth = 2 * featureFilterRadius + 1;
+        image<color3> featureFilter(featureFilterWidth, 1);
+        setFeatureFilter(featureFilter, ppd);
+
+        // The following call convolves referenceImage and testImage with the edge and point detection filters and performs additional
+        // computations for the final feature differences, and then computes the final FLIP error and stores in "this".
+        this->computeFeatureDifferenceAndFinalError(reference, test, featureFilter);
+    }
+
 }
-#endif

@@ -10,8 +10,9 @@ namespace FLIP
 {
     const float PI = 3.14159265358979f;
 
-    static const struct
+    static const struct xFLIPConstants
     {
+        xFLIPConstants() = default;
         float gqc = 0.7f;
         float gpc = 0.4f;
         float gpt = 0.95f;
@@ -19,8 +20,9 @@ namespace FLIP
         float gqf = 0.5f;
     } FLIPConstants;
 
-    static const struct
+    static const struct xGaussianConstants
     {
+        xGaussianConstants() = default;
         color3 a1 = { 1.0f, 1.0f, 34.1f };
         color3 b1 = { 0.0047f, 0.0053f, 0.04f };
         color3 a2 = { 0.0f, 0.0f, 13.5f };

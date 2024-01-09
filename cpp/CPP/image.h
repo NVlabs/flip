@@ -48,10 +48,10 @@
 
 // Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
 
+#if 0
 #pragma once
 
-#include "sharedflip.h"
-#include "tensor.h"
+#include "flip_single_header.h"
 
 namespace FLIP
 {
@@ -642,3 +642,4 @@ namespace FLIP
     }
 
 }
+#endif

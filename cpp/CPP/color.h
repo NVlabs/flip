@@ -47,7 +47,7 @@
 // Pointer to the paper: https://research.nvidia.com/publication/2020-07_FLIP.
 
 // Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
-
+#if 0
 #pragma once
 
 #include <iostream>
@@ -391,3 +391,4 @@ namespace FLIP
     };
 
 }
+#endif

@@ -47,7 +47,7 @@
 // Pointer to the paper: https://research.nvidia.com/publication/2020-07_FLIP.
 
 // Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
-
+#if 0
 #pragma once
 
 #include <algorithm>
@@ -61,7 +61,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#include "sharedflip.h"
+#include "flip_single_header.h"
 
 
 namespace FLIP
@@ -580,3 +580,4 @@ namespace FLIP
 
     };
 }
+#endif

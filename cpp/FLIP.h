@@ -6,13 +6,65 @@
 // * Also, we use color3 now, but it would be nice (for PBRT) to be able to use
 //   float* threeChannelImage, uint width, uint height for the paramt to FLIP().
 //
+// * void FLIP(image<color3>& reference, image<color3>& test, float ppd);  Is this really needed?
+// * move constants to beginning of single header.
 // * Simplify FLIP-tool.cpp so that it has less code and calls into the single header.
 // * Check performance
 // * Check output with test.py (CPU ok so far).
 // * Make sure all features work for CPU and for CUDA.
 // * Fix new directory structure.
 // * Search for TODO in the entire project.
-// * Update headers (Copyright (c) 2020-2023, NVIDIA CORPORATION etc)!
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+ * Copyright (c) 2020-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2023 NVIDIA CORPORATION & AFFILIATES
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+ // Visualizing and Communicating Errors in Rendered Images
+ // Ray Tracing Gems II, 2021,
+ // by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
+ // Pointer to the chapter: https://research.nvidia.com/publication/2021-08_Visualizing-and-Communicating.
+
+ // Visualizing Errors in Rendered High Dynamic Range Images
+ // Eurographics 2021,
+ // by Pontus Andersson, Jim Nilsson, Peter Shirley, and Tomas Akenine-Moller.
+ // Pointer to the paper: https://research.nvidia.com/publication/2021-05_HDR-FLIP.
+
+ // FLIP: A Difference Evaluator for Alternating Images
+ // High Performance Graphics 2020,
+ // by Pontus Andersson, Jim Nilsson, Tomas Akenine-Moller,
+ // Magnus Oskarsson, Kalle Astrom, and Mark D. Fairchild.
+ // Pointer to the paper: https://research.nvidia.com/publication/2020-07_FLIP.
+
+ // Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
 
 #pragma once
 #include <algorithm>
@@ -597,7 +649,6 @@ namespace FLIP
             XYZ.x = a11 * RGB.x + a12 * RGB.y + a13 * RGB.z;
             XYZ.y = a21 * RGB.x + a22 * RGB.y + a23 * RGB.z;
             XYZ.z = a31 * RGB.x + a32 * RGB.y + a33 * RGB.z;
-
             return XYZ;
         }
 
@@ -618,7 +669,6 @@ namespace FLIP
             RGB.x = a11 * XYZ.x + a12 * XYZ.y + a13 * XYZ.z;
             RGB.y = a21 * XYZ.x + a22 * XYZ.y + a23 * XYZ.z;
             RGB.z = a31 * XYZ.x + a32 * XYZ.y + a33 * XYZ.z;
-
             return RGB;
         }
 
@@ -638,7 +688,6 @@ namespace FLIP
             float L = 116.0f * XYZ.y - 16.0f;
             float a = 500.0f * (XYZ.x - XYZ.y);
             float b = 200.0f * (XYZ.y - XYZ.z);
-
             return color3(L, a, b);
         }
 
@@ -655,7 +704,6 @@ namespace FLIP
             X = (X > delta ? X * X * X : (X - term) * factor);
             Y = (Y > delta ? Y * Y * Y : (Y - term) * factor);
             Z = (Z > delta ? Z * Z * Z : (Z - term) * factor);
-
             return color3(X, Y, Z) * referenceIlluminant;
         }
 
@@ -666,7 +714,6 @@ namespace FLIP
             float Y = 116.0f * XYZ.y - 16.0f;
             float Cx = 500.0f * (XYZ.x - XYZ.y);
             float Cz = 200.0f * (XYZ.y - XYZ.z);
-
             return color3(Y, Cx, Cz);
         }
 
@@ -678,7 +725,6 @@ namespace FLIP
             const float Cz = YCxCz.z / 200.0f;
             float X = Y + Cx;
             float Z = Y - Cz;
-
             return color3(X, Y, Z) * referenceIlluminant;
         }
 
@@ -688,7 +734,6 @@ namespace FLIP
         }
 
         // FLIP-specific functions below.
-
         HOST_DEVICE_FOR_CUDA static inline float Hunt(const float luminance, const float chrominance)
         {
             return 0.01f * luminance * chrominance;
@@ -707,7 +752,6 @@ namespace FLIP
             color3 blueLab = color3::XYZ2CIELab(color3::LinearRGB2XYZ(color3(0.0f, 0.0f, 1.0f)));
             color3 greenLabHunt = color3(greenLab.x, Hunt(greenLab.x, greenLab.y), Hunt(greenLab.x, greenLab.z));
             color3 blueLabHunt = color3(blueLab.x, Hunt(blueLab.x, blueLab.y), Hunt(blueLab.x, blueLab.z));
-
             return powf(HyAB(greenLabHunt, blueLabHunt), gqc);
         }
 
@@ -874,7 +918,6 @@ namespace FLIP
         int i = (z * dim.y + y) * dim.x + x;
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
         pDstImage[i] = pColorMap[int(pSrcImage[i] * 255.0f + 0.5f) % mapSize];
     }
 
@@ -886,7 +929,6 @@ namespace FLIP
         int i = (z * dim.y + y) * dim.x + x;
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
         pDstImage[i] = color3(pSrcImage[i]);
     }
 
@@ -902,7 +944,6 @@ namespace FLIP
         const float cdiff = pColorFeatureDifference[i].x;
         const float fdiff = pColorFeatureDifference[i].y;
         const float errorFLIP = std::pow(cdiff, 1.0f - fdiff);
-
         pDstImage[i] = errorFLIP;
     }
 
@@ -914,7 +955,6 @@ namespace FLIP
         int i = (z * dim.y + y) * dim.x + x;
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
         float srcValue = pSrcErrorMap[i];
         float dstValue = pDstErrorMap[i];
 
@@ -933,7 +973,6 @@ namespace FLIP
         int i = (z * dim.y + y) * dim.x + x;
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
         pImage[i] = color3::XYZ2YCxCz(color3::LinearRGB2XYZ(color3::sRGB2LinearRGB(pImage[i])));
     }
 
@@ -945,13 +984,10 @@ namespace FLIP
         int i = (z * dim.y + y) * dim.x + x;
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
         pImage[i] = color3::LinearRGB2sRGB(pImage[i]);
     }
 
-
-    //  General kernels
-
+    //  General kernels.
     __global__ static void kernelClear(color3* pImage, const int3 dim, const color3 color = { 0.0f, 0.0f, 0.0f })
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -960,10 +996,8 @@ namespace FLIP
         int i = (z * dim.y + y) * dim.x + x;
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
         pImage[i] = color;
     }
-
 
     __global__ static void kernelClear(float* pImage, const int3 dim, const float color = 0.0f)
     {
@@ -973,10 +1007,8 @@ namespace FLIP
         int i = (z * dim.y + y) * dim.x + x;
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
         pImage[i] = color;
     }
-
 
     __global__ static void kernelMultiplyAndAdd(color3* pImage, const int3 dim, color3 m, color3 a)
     {
@@ -986,10 +1018,8 @@ namespace FLIP
         int i = (z * dim.y + y) * dim.x + x;
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
         pImage[i] = pImage[i] * m + a;
     }
-
 
     __global__ static void kernelMultiplyAndAdd(color3* pImage, const int3 dim, float m, float a)
     {
@@ -999,7 +1029,6 @@ namespace FLIP
         int i = (z * dim.y + y) * dim.x + x;
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
         pImage[i] = pImage[i] * m + a;
     }
 
@@ -1317,9 +1346,7 @@ namespace FLIP
         CudaTensorState mState = CudaTensorState::UNINITIALIZED;
         dim3 mBlockDim, mGridDim;
 #endif
-
     protected:
-
         bool allocateHost(void)
         {
             this->mvpHostData = (T*)malloc(this->mVolume * sizeof(T));
@@ -1537,10 +1564,8 @@ namespace FLIP
                 this->init({ width, height, 1});
             }
             memcpy(this->mvpHostData, pPixels, size_t(width) * height * sizeof(float) * 3); 
-            this->mState = CudaTensorState::HOST_ONLY;          // TODO: is this correct?
-
+            this->mState = CudaTensorState::HOST_ONLY;
         }
-
 #endif
 
         int3 getDimensions(void) const
@@ -2318,7 +2343,7 @@ namespace FLIP
             }
         }
 #else // FLIP_USE_CUDA
-        void FLIP(image<color3>& reference, image<color3>& test, float ppd); // TODO: check if this is really needed!
+        void FLIP(image<color3>& reference, image<color3>& test, float ppd);
 
         // Perform the x-component of separable spatial filtering of both the reference and the test.
         // referenceImage and testImage are expected to be in YCxCz space.

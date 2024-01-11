@@ -11,18 +11,21 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\common\commandline.h" />
-    <ClInclude Include="..\common\filename.h" />
-    <ClInclude Include="..\common\stb_image.h" />
-    <ClInclude Include="..\common\stb_image_write.h" />
-    <ClInclude Include="..\common\tinyexr.h" />
     <ClInclude Include="..\FLIP.h" />
+    <ClInclude Include="commandline.h" />
+    <ClInclude Include="filename.h" />
+    <ClInclude Include="imagehelpers.h" />
+    <ClInclude Include="stb_image.h" />
+    <ClInclude Include="stb_image_write.h" />
+    <ClInclude Include="tinyexr.h" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\common\FLIP-tool.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </CudaCompile>
     <CudaCompile Include="FLIP-tool.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="FLIP-tool.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F9C72EA1-F42E-4640-8E03-C9AE310AAEB3}</ProjectGuid>

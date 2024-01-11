@@ -49,4 +49,4 @@
  // Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
 
 #define FLIP_USE_CUDA
-#include "../common/FLIP-tool.cpp"
+#include "FLIP-tool.cpp"

@@ -1,21 +1,15 @@
 // TODO: single header FLIP
 //
-// * Make simpler functions for FLIP, i.e., if you want to get HDR-FLIP, then that should
-//   just be one call. Even HDR-FLIP should be a single call.
+// * Make simpler functions for FLIP, i.e., if you want to get HDR-FLIP, then that should just be one call. 
+// * Also, we use color3 now, but it would be nice (for PBRT) to be able to use float* threeChannelImage, uint width, uint height for the paramt to FLIP().
+// * Simplify FLIP-tool.cpp so that it has less code and calls into the single header, i.e., uses the stuff in the two bullets above.
 //
-// * Also, we use color3 now, but it would be nice (for PBRT) to be able to use
-//   float* threeChannelImage, uint width, uint height for the paramt to FLIP().
-//
-// * void FLIP(image<color3>& reference, image<color3>& test, float ppd);  Is this really needed?
-// * move constants to beginning of single header.
-// * Simplify FLIP-tool.cpp so that it has less code and calls into the single header.
-//
+// * fix so we do not need absolute path to cuda_runtime.h and device_launch_parameters.h.
+
 // TESTING
-// * Check performance
-// * Check output with test.py (CPU ok so far).
-// * Make sure all features work for CPU and for CUDA.
-// * Fix new directory structure.
-// * Search for TODO in the entire project.
+// * Check performance (1 sec for CPU, 0.1 for GPU, approximately).
+// * Check output with test.py.
+// * Make sure all features work (pooling, diagrams output, exposure maps, multiple image input etc) for CPU and for CUDA.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /*
@@ -79,7 +73,7 @@
 #include <fstream>
 
 #ifdef FLIP_USE_CUDA
-#include "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3\include\cuda_runtime.h"                  // TODO: fix these two lines later.
+#include "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3\include\cuda_runtime.h"
 #include "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3\include\device_launch_parameters.h"
 #endif
 

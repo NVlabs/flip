@@ -88,16 +88,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\common\commandline.h" />
-    <ClInclude Include="..\common\filename.h" />
-    <ClInclude Include="..\common\imagehelpers.h" />
-    <ClInclude Include="..\common\stb_image.h" />
-    <ClInclude Include="..\common\stb_image_write.h" />
-    <ClInclude Include="..\common\tinyexr.h" />
     <ClInclude Include="..\FLIP.h" />
+    <ClInclude Include="commandline.h" />
+    <ClInclude Include="filename.h" />
+    <ClInclude Include="imagehelpers.h" />
+    <ClInclude Include="stb_image.h" />
+    <ClInclude Include="stb_image_write.h" />
+    <ClInclude Include="tinyexr.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\common\FLIP-tool.cpp" />
+    <ClCompile Include="FLIP-tool.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

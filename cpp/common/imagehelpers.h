@@ -71,17 +71,6 @@ namespace ImageHelpers
             return false;
         }
 
-        // TODO: fix so this happens on load.
-
-        //#ifndef FLIP_USE_CUDA
-        //        this->init({ width, height, z + 1 });
-        //#else
-        //        if (this->mState == CudaTensorState::UNINITIALIZED)
-        //        {
-        //            this->init({ width, height, z + 1 });
-        //        }
-        //#endif
-        //
         pixels = new float[3 * imgWidth * imgHeight];
 #pragma omp parallel for
         for (int y = 0; y < imgHeight; y++)
@@ -143,17 +132,6 @@ namespace ImageHelpers
 
         imgWidth = exrImage.width;
         imgHeight = exrImage.height;
-
-        // TODO: fix so this happens on load.
-
-        //#ifndef FLIP_USE_CUDA
-        //        this->init({ width, height, z + 1 });
-        //#else
-        //        if (this->mState == CudaTensorState::UNINITIALIZED)
-        //        {
-        //            this->init({ width, height, z + 1 });
-        //        }
-        //#endif
 
         int idxR = -1;
         int idxG = -1;
@@ -344,4 +322,118 @@ namespace ImageHelpers
 
         return (ok != 0);
     }
+
+    // TODO: might want to add this back in. It was convenient for debugging.
+#if 0
+    bool exrSave(const std::string& fileName)
+    {
+#ifdef FLIP_USE_CUDA
+        this->synchronizeHost();
+#endif
+        constexpr int channels = 3;
+
+        float* vpImage[channels] = {};   // TODO: ={} were added to get rid of warning. Let someone code review.
+        std::vector<float> vImages[channels];
+        for (int i = 0; i < channels; ++i)
+        {
+            vImages[i].resize(this->mDim.x * this->mDim.y);
+        }
+        int pixelIndex = 0;
+        for (int y = 0; y < this->mDim.y; y++)
+        {
+            for (int x = 0; x < this->mDim.x; x++)
+            {
+                color3 p = this->get(x, y);
+                vImages[0][pixelIndex] = p.r;
+                vImages[1][pixelIndex] = p.g;
+                vImages[2][pixelIndex] = p.b;
+                pixelIndex++;
+            }
+        }
+        vpImage[0] = &(vImages[2].at(0));  // B
+        vpImage[1] = &(vImages[1].at(0));  // G
+        vpImage[2] = &(vImages[0].at(0));  // R
+
+        EXRHeader exrHeader;
+        InitEXRHeader(&exrHeader);
+        exrHeader.num_channels = channels;
+        exrHeader.channels = (EXRChannelInfo*)malloc(channels * sizeof(EXRChannelInfo));
+        exrHeader.pixel_types = (int*)malloc(channels * sizeof(int));
+        exrHeader.requested_pixel_types = (int*)malloc(channels * sizeof(int));
+        exrHeader.compression_type = TINYEXR_COMPRESSIONTYPE_ZIP;
+        for (int i = 0; i < channels; i++)
+        {
+            exrHeader.pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT;
+            exrHeader.requested_pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT;
+            exrHeader.channels[i].name[1] = '\0';
+        }
+        exrHeader.channels[0].name[0] = 'B';
+        exrHeader.channels[1].name[0] = 'G';
+        exrHeader.channels[2].name[0] = 'R';
+
+        EXRImage exrImage;
+        InitEXRImage(&exrImage);
+        exrImage.num_channels = channels;
+        exrImage.images = (unsigned char**)vpImage;
+        exrImage.width = this->mWidth;
+        exrImage.height = this->mHeight;
+
+        const char* error;
+        int ret = SaveEXRImageToFile(&exrImage, &exrHeader, fileName.c_str(), &error);
+        if (ret != TINYEXR_SUCCESS)
+        {
+            std::cerr << "Failed to save EXR file <" << fileName << ">: " << error << "\n";
+            return false;
+        }
+
+        free(exrHeader.channels);
+        free(exrHeader.pixel_types);
+        free(exrHeader.requested_pixel_types);
+
+        return true;
+    }
+
+#if 0
+    template <>
+    bool image<float>::exrSave(const std::string& fileName)
+    {
+#ifdef FLIP_USE_CUDA
+        this->synchronizeHost();
+#endif
+
+        EXRHeader exrHeader;
+        InitEXRHeader(&exrHeader);
+        exrHeader.num_channels = 1;
+        exrHeader.channels = (EXRChannelInfo*)malloc(sizeof(EXRChannelInfo));
+        exrHeader.pixel_types = (int*)malloc(sizeof(int));
+        exrHeader.requested_pixel_types = (int*)malloc(sizeof(int));
+        exrHeader.compression_type = TINYEXR_COMPRESSIONTYPE_ZIP;
+        exrHeader.pixel_types[0] = TINYEXR_PIXELTYPE_FLOAT;
+        exrHeader.requested_pixel_types[0] = TINYEXR_PIXELTYPE_FLOAT;
+        exrHeader.channels[0].name[0] = 'R';
+        exrHeader.channels[0].name[1] = '\0';
+
+        EXRImage exrImage;
+        InitEXRImage(&exrImage);
+        exrImage.num_channels = 1;
+        exrImage.images = (unsigned char**)&(this->mvpHostData);
+        exrImage.width = this->mDim.x;
+        exrImage.height = this->mDim.y;
+
+        const char* error;
+        int ret = SaveEXRImageToFile(&exrImage, &exrHeader, fileName.c_str(), &error);
+        if (ret != TINYEXR_SUCCESS)
+        {
+            std::cerr << "Failed to save EXR file <" << fileName << ">: " << error << "\n";
+            return false;
+        }
+
+        free(exrHeader.channels);
+        free(exrHeader.pixel_types);
+        free(exrHeader.requested_pixel_types);
+
+        return true;
+    }
+#endif
+#endif
 }

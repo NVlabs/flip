@@ -60,11 +60,10 @@
 
 
 //#define FLIP_USE_CUDA
-#include "../CPP/flip_single_header.h"
+#include "../FLIP.cuh"
 
 #include "commandline.h"
 #include "filename.h"
-#include "pooling.h"
 
 struct
 {

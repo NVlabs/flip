@@ -48,8 +48,8 @@
 
 // Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
 
+#if 0
 #pragma once
-
 #include "sharedflip.h"
 #include "cudaTensor.cuh"
 
@@ -523,3 +523,4 @@ namespace FLIP
         this->finalError(colorFeatureDifference);
     }
 }
+#endif

@@ -47,7 +47,7 @@
 // Pointer to the paper: https://research.nvidia.com/publication/2020-07_FLIP.
 
 // Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
-
+#if 0
 #pragma once
 
 #include "stdio.h"
@@ -482,3 +482,4 @@ namespace FLIP
         colorDifferenceImage[dstIndex] = color3(colorDifference, 0.0f, 0.0f);
     }
 }
+#endif

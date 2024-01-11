@@ -11,9 +11,6 @@
     <ClInclude Include="..\common\filename.h">
       <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="..\common\pooling.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="..\common\stb_image.h">
       <Filter>common</Filter>
     </ClInclude>
@@ -23,6 +20,8 @@
     <ClInclude Include="..\common\tinyexr.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="..\FLIP.h" />
+    <ClInclude Include="..\FLIP.cuh" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="common">

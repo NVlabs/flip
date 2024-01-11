@@ -13,10 +13,11 @@
   <ItemGroup>
     <ClInclude Include="..\common\commandline.h" />
     <ClInclude Include="..\common\filename.h" />
-    <ClInclude Include="..\common\pooling.h" />
     <ClInclude Include="..\common\stb_image.h" />
     <ClInclude Include="..\common\stb_image_write.h" />
     <ClInclude Include="..\common\tinyexr.h" />
+    <ClInclude Include="..\FLIP.cuh" />
+    <ClInclude Include="..\FLIP.h" />
     <ClInclude Include="color.cuh" />
     <ClInclude Include="cudaImage.cuh" />
     <ClInclude Include="cudaKernels.cuh" />

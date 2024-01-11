@@ -1,6 +1,6 @@
 // TODO: single header FLIP
-// * Move all EXR to outside this header. Move it to the tool code.
-// * Move all stb_image to outside this header.
+// * Move all EXR to outside this header. Move it to imagehelpers.h
+// * Move all stb_image to imagehelpers.h for use by the tool.
 // * Make sure everything works for CPU and for CUDA.
 // * Make simpler functions for FLIP, i.e., if you want to get HDR-FLIP, then that should
 //   just be one call.
@@ -8,8 +8,10 @@
 //   float* threeChannelImage, uint width, uint height for the paramt to FLIP().
 // * Check performance
 // * Check output with test.py
-// * Rename to CPU and GPU instead of CPP and CUDA.
-// * Remove all files that are not used any longer.
+// * Fix new directory structure.
+// * Remove all files that are not used any longer: 
+// * Change to a single FLIP namespace in the singleheader.
+// * Rename single header to FLIP.h
 
 #pragma once
 #include <algorithm>
@@ -21,19 +23,16 @@
 #include <sstream>
 #include <fstream>
 
-
 #define TINYEXR_IMPLEMENTATION
 #include "tinyexr.h"
-
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
 #ifdef FLIP_USE_CUDA
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
-#include "device_launch_parameters.h"
+#include "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3\include\cuda_runtime.h"                  // TODO: fix these two lines later.
+#include "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3\include\device_launch_parameters.h"
 #endif
 
 #ifdef FLIP_USE_CUDA
@@ -797,14 +796,10 @@ namespace FLIP
 
 }
 
-
-
-// sharedflip.h
 namespace FLIP
 {
     const float PI = 3.14159265358979f;
 
-#ifndef FLIP_USE_CUDA
     static const struct xFLIPConstants
     {
         xFLIPConstants() = default;
@@ -814,7 +809,7 @@ namespace FLIP
         float gw = 0.082f;
         float gqf = 0.5f;
     } FLIPConstants;
-#else
+#ifdef FLIP_USE_CUDA
     __constant__ struct
     {
         float gqc = 0.7f;
@@ -1089,7 +1084,7 @@ namespace FLIP
 
         if (x >= dim.x || y >= dim.y) return;
 
-        const float halfFilterWidth = filterDim.x / 2;
+        const float halfFilterWidth = filterDim.x / 2;  // TODO: should be int, right?!
 
         float dxReference = 0.0f, dxTest = 0.0f, ddxReference = 0.0f, ddxTest = 0.0f;
         float gaussianFilteredReference = 0.0f, gaussianFilteredTest = 0.0f;
@@ -1139,7 +1134,7 @@ namespace FLIP
 
         const float normalizationFactor = 1.0f / std::sqrt(2.0f);
 
-        const float halfFilterWidth = filterDim.x / 2;
+        const float halfFilterWidth = filterDim.x / 2;  // TODO: should be int, right?!
 
         float dxReference = 0.0f, dxTest = 0.0f, ddxReference = 0.0f, ddxTest = 0.0f;
         float dyReference = 0.0f, dyTest = 0.0f, ddyReference = 0.0f, ddyTest = 0.0f;
@@ -1193,7 +1188,7 @@ namespace FLIP
 
         if (x >= dim.x || y >= dim.y) return;
 
-        const float halfFilterWidth = filterDim.x / 2;
+        const float halfFilterWidth = filterDim.x / 2; // TODO: should be int, right?!
 
         // Filter in x direction.
         color3 intermediateYCxReference = { 0.0f, 0.0f, 0.0f };
@@ -1236,7 +1231,7 @@ namespace FLIP
 
         if (x >= dim.x || y >= dim.y) return;
 
-        const float halfFilterWidth = filterDim.x / 2;
+        const float halfFilterWidth = filterDim.x / 2; // TODO: should be int, right?!
 
         // Filter in y direction.
         color3 filteredYCxReference = { 0.0f, 0.0f, 0.0f };
@@ -1514,20 +1509,24 @@ namespace FLIP
             return (z * this->mDim.y + y) * mDim.x + x;
         }
 
-        T get(int x, int y, int z)
+
+#ifndef FLIP_USE_CUDA
+        T get(int x, int y, int z) const
         {
-#ifdef FLIP_USE_CUDA
-            this->synchronizeHost();
-#endif
             return this->mvpHostData[this->index(x, y, z)];
         }
 
-#ifndef FLIP_USE_CUDA
         void set(int x, int y, int z, T value)
         {
             this->mvpHostData[this->index(x, y, z)] = value;
         }
 #else
+        T get(int x, int y, int z)
+        {
+            this->synchronizeHost();
+            return this->mvpHostData[this->index(x, y, z)];
+        }
+
         void set(int x, int y, int z, T value)
         {
             this->synchronizeHost();
@@ -2216,20 +2215,24 @@ namespace FLIP
         {
         }
 
+
+#ifndef FLIP_USE_CUDA
         T get(int x, int y) const
         {
-#ifdef FLIP_USE_CUDA
-            this->synchronizeHost();
-#endif
             return this->mvpHostData[this->index(x, y)];
         }
 
-#ifndef FLIP_USE_CUDA
         void set(int x, int y, T value)
         {
             this->mvpHostData[this->index(x, y)] = value;
         }
 #else
+        T get(int x, int y)
+        {
+            this->synchronizeHost();
+            return this->mvpHostData[this->index(x, y)];
+        }
+
         void set(int x, int y, T value)
         {
             this->synchronizeHost();
@@ -2684,7 +2687,6 @@ namespace FLIP
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
 #endif
-
         void computeExposures(std::string tm, float& startExposure, float& stopExposure)
         {
             int toneMapper = 1;
@@ -2741,7 +2743,7 @@ namespace FLIP
 #endif
             constexpr int channels = 3;
 
-            float* vpImage[channels];
+            float* vpImage[channels] = {};   // TODO: ={} were added to get rid of warning. Let someone code review.
             std::vector<float> vImages[channels];
             for (int i = 0; i < channels; ++i)
             {

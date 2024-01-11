@@ -9,6 +9,8 @@
 // * void FLIP(image<color3>& reference, image<color3>& test, float ppd);  Is this really needed?
 // * move constants to beginning of single header.
 // * Simplify FLIP-tool.cpp so that it has less code and calls into the single header.
+//
+// TESTING
 // * Check performance
 // * Check output with test.py (CPU ok so far).
 // * Make sure all features work for CPU and for CUDA.
@@ -94,6 +96,58 @@ namespace FLIP
 
 #define DEFAULT_ILLUMINANT { 0.950428545f, 1.000000000f, 1.088900371f }
 #define INV_DEFAULT_ILLUMINANT { 1.052156925f, 1.000000000f, 0.918357670f }
+
+    const float PI = 3.14159265358979f;
+
+    static const struct xFLIPConstants
+    {
+        xFLIPConstants() = default;
+        float gqc = 0.7f;
+        float gpc = 0.4f;
+        float gpt = 0.95f;
+        float gw = 0.082f;
+        float gqf = 0.5f;
+    } FLIPConstants;
+
+#ifndef FLIP_USE_CUDA
+    static const float ToneMappingCoefficients[3][6] =
+    {
+        { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f },                                                 // Reinhard.
+        { 0.6f * 0.6f * 2.51f, 0.6f * 0.03f, 0.0f, 0.6f * 0.6f * 2.43f, 0.6f * 0.59f, 0.14f },  // ACES, 0.6 is pre-exposure cancellation.
+        { 0.231683f, 0.013791f, 0.0f, 0.18f, 0.3f, 0.018f },                                    // Hable.
+    };
+    union int3
+    {
+        struct { int x, y, z; };
+    };
+#else // FLIP_USE_CUDA
+    __constant__ struct
+    {
+        float gqc = 0.7f;
+        float gpc = 0.4f;
+        float gpt = 0.95f;
+        float gw = 0.082f;
+        float gqf = 0.5f;
+    } DeviceFLIPConstants;
+
+    __device__ const float ToneMappingCoefficients[3][6] =
+    {
+        { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f },                                                 // Reinhard.
+        { 0.6f * 0.6f * 2.51f, 0.6f * 0.03f, 0.0f, 0.6f * 0.6f * 2.43f, 0.6f * 0.59f, 0.14f },  // ACES, 0.6 is pre-exposure cancellation.
+        { 0.231683f, 0.013791f, 0.0f, 0.18f, 0.3f, 0.018f },                                    // Hable.
+    };
+
+    const dim3 DEFAULT_KERNEL_BLOCK_DIM = { 32, 32, 1 };
+    enum class CudaTensorState
+    {
+        UNINITIALIZED,
+        ALLOCATED,
+        HOST_ONLY,
+        DEVICE_ONLY,
+        SYNCHRONIZED
+    };
+
+#endif
 
     template <typename T>
     class histogram
@@ -831,28 +885,6 @@ namespace FLIP
         {0.926106f, 0.897330f, 0.104071f}, {0.935904f, 0.898570f, 0.108131f}, {0.945636f, 0.899815f, 0.112838f}, {0.955300f, 0.901065f, 0.118128f}, {0.964894f, 0.902323f, 0.123941f}, {0.974417f, 0.903590f, 0.130215f}, {0.983868f, 0.904867f, 0.136897f}, {0.993248f, 0.906157f, 0.143936f}
     };
 
-    const float PI = 3.14159265358979f;     // TODO: move all types of constants to the beginning of the file?!
-
-    static const struct xFLIPConstants
-    {
-        xFLIPConstants() = default;
-        float gqc = 0.7f;
-        float gpc = 0.4f;
-        float gpt = 0.95f;
-        float gw = 0.082f;
-        float gqf = 0.5f;
-    } FLIPConstants;
-#ifdef FLIP_USE_CUDA
-    __constant__ struct
-    {
-        float gqc = 0.7f;
-        float gpc = 0.4f;
-        float gpt = 0.95f;
-        float gw = 0.082f;
-        float gqf = 0.5f;
-    } DeviceFLIPConstants;
-#endif
-
     static const struct xGaussianConstants
     {
         xGaussianConstants() = default;
@@ -861,7 +893,6 @@ namespace FLIP
         color3 a2 = { 0.0f, 0.0f, 13.5f };
         color3 b2 = { 1.0e-5f, 1.0e-5f, 0.025f };
     } GaussianConstants;  // Constants for Gaussians -- see paper for details.
-
 
     static inline float Gaussian(const float x, const float sigma) // 1D Gaussian (without normalization factor).
     {
@@ -1032,7 +1063,6 @@ namespace FLIP
         pImage[i] = pImage[i] * m + a;
     }
 
-
     __global__ static void kernelMultiplyAndAdd(float* pImage, const int3 dim, float m, float a)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -1044,15 +1074,6 @@ namespace FLIP
 
         pImage[i] = pImage[i] * m + a;
     }
-
-
-    __device__ const float ToneMappingCoefficients[3][6] =
-    {
-        { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f },                                                 // Reinhard.
-        { 0.6f * 0.6f * 2.51f, 0.6f * 0.03f, 0.0f, 0.6f * 0.6f * 2.43f, 0.6f * 0.59f, 0.14f },  // ACES, 0.6 is pre-exposure cancellation.
-        { 0.231683f, 0.013791f, 0.0f, 0.18f, 0.3f, 0.018f },                                    // Hable.
-    };
-
 
     __global__ static void kernelToneMap(color3* pImage, const int3 dim, int toneMapper)
     {
@@ -1076,7 +1097,6 @@ namespace FLIP
         pImage[i] = color3(((color * color) * tc[0] + color * tc[1] + tc[2]) / (color * color * tc[3] + color * tc[4] + tc[5]));
     }
 
-
     __global__ static void kernelClamp(color3* pImage, const int3 dim, float low, float high)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -1085,7 +1105,6 @@ namespace FLIP
         int i = (z * dim.y + y) * dim.x + x;
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-
         pImage[i] = color3::clamp(pImage[i], low, high);
     }
 
@@ -1133,7 +1152,6 @@ namespace FLIP
             gaussianFilteredReference += featureWeights.x * yReferenceNormalized;
             gaussianFilteredTest += featureWeights.x * yTestNormalized;
         }
-
         intermediateFeaturesImageReference[dstIndex] = color3(dxReference, ddxReference, gaussianFilteredReference);
         intermediateFeaturesImageTest[dstIndex] = color3(dxTest, ddxTest, gaussianFilteredTest);
     }
@@ -1151,7 +1169,6 @@ namespace FLIP
         if (x >= dim.x || y >= dim.y) return;
 
         const float normalizationFactor = 1.0f / std::sqrt(2.0f);
-
         const int halfFilterWidth = filterDim.x / 2;
 
         float dxReference = 0.0f, dxTest = 0.0f, ddxReference = 0.0f, ddxTest = 0.0f;
@@ -1184,12 +1201,9 @@ namespace FLIP
         const float edgeValueTest = std::sqrt(dxTest * dxTest + dyTest * dyTest);
         const float pointValueRef = std::sqrt(ddxReference * ddxReference + ddyReference * ddyReference);
         const float pointValueTest = std::sqrt(ddxTest * ddxTest + ddyTest * ddyTest);
-
         const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
         const float pointDifference = std::abs(pointValueRef - pointValueTest);
-
         const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), DeviceFLIPConstants.gqf);
-
         featureDifferenceImage[dstIndex].y = featureDifference;
     }
 
@@ -1293,7 +1307,6 @@ namespace FLIP
         filteredYCxCzTest.z = color3::Hunt(filteredYCxCzTest.x, filteredYCxCzTest.z);
 
         float colorDifference = color3::HyAB(filteredYCxCzReference, filteredYCxCzTest);
-
         colorDifference = powf(colorDifference, DeviceFLIPConstants.gqc);
 
         // Re-map error to the [0, 1] range. Values between 0 and pccmax are mapped to the range [0, gpt],
@@ -1309,29 +1322,6 @@ namespace FLIP
 
         colorDifferenceImage[dstIndex] = color3(colorDifference, 0.0f, 0.0f);
     }
-#endif
-
-#ifndef FLIP_USE_CUDA
-    static const float ToneMappingCoefficients[3][6] =
-    {
-        { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f },                                                 // Reinhard.
-        { 0.6f * 0.6f * 2.51f, 0.6f * 0.03f, 0.0f, 0.6f * 0.6f * 2.43f, 0.6f * 0.59f, 0.14f },  // ACES, 0.6 is pre-exposure cancellation.
-        { 0.231683f, 0.013791f, 0.0f, 0.18f, 0.3f, 0.018f },                                    // Hable.
-    };
-    union int3
-    {
-        struct { int x, y, z; };
-    };
-#else  // FLIP_USE_CUDA
-    const dim3 DEFAULT_KERNEL_BLOCK_DIM = { 32, 32, 1 };
-    enum class CudaTensorState
-    {
-        UNINITIALIZED,
-        ALLOCATED,
-        HOST_ONLY,
-        DEVICE_ONLY,
-        SYNCHRONIZED
-    };
 #endif
 
     template<typename T = color3>
@@ -1520,7 +1510,6 @@ namespace FLIP
             return (z * this->mDim.y + y) * mDim.x + x;
         }
 
-
 #ifndef FLIP_USE_CUDA
         T get(int x, int y, int z) const
         {
@@ -1537,7 +1526,6 @@ namespace FLIP
             this->init({ width, height, 1 });
             memcpy(this->mvpHostData, pPixels, size_t(width) * height * sizeof(float) * 3);
         }
-
 #else
         T get(int x, int y, int z)
         {
@@ -1873,17 +1861,6 @@ namespace FLIP
 #ifndef FLIP_USE_CUDA
         image()
         {}
-#if 0
-        image(std::string fileName)
-        {
-            bool bOk = this->load(fileName);
-            if (!bOk)
-            {
-                std::cout << "Failed to load image <" << fileName << ">" << std::endl;
-                exit(-1);
-            }
-        }
-#endif
 
         image(const int width, const int height)
             : tensor<T>(width, height, 1)
@@ -1981,7 +1958,6 @@ namespace FLIP
         {
         }
 
-
 #ifndef FLIP_USE_CUDA
         T get(int x, int y) const
         {
@@ -2006,8 +1982,6 @@ namespace FLIP
             this->setState(CudaTensorState::HOST_ONLY);
         }
 #endif
-
-        //////////////////////////////////////////////////////////////////////////////////
 
         static void setSpatialFilters(image<color3>& filterYCx, image<color3>& filterCz, float ppd, int filterRadius) // For details, see separatedConvolutions.pdf in the FLIP repository.
         {
@@ -2202,7 +2176,6 @@ namespace FLIP
                     {
                         colorDifference = FLIPConstants.gpt + ((colorDifference - pccmax) / (cmax - pccmax)) * (1.0f - FLIPConstants.gpt);
                     }
-
                     this->set(x, y, colorDifference);
                 }
             }
@@ -2255,7 +2228,6 @@ namespace FLIP
                         gaussianFilteredReference += featureWeights.x * yReferenceNormalized;
                         gaussianFilteredTest += featureWeights.x * yTestNormalized;
                     }
-
                     intermediateFeaturesImageReference.set(x, y, color3(dxReference, ddxReference, gaussianFilteredReference));
                     intermediateFeaturesImageTest.set(x, y, color3(dxTest, ddxTest, gaussianFilteredTest));
                 }
@@ -2502,8 +2474,6 @@ namespace FLIP
             stopExposure = log2(xMax / Ymedian);
         }
 
-
-
 #ifndef FLIP_USE_CUDA
         void FLIP(image<color3>& reference, image<color3>& test, float ppd)
         {
@@ -2583,5 +2553,4 @@ namespace FLIP
         this->finalError(colorFeatureDifference);
     }
 #endif
-
 }

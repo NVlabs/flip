@@ -65,8 +65,6 @@
 #include "commandline.h"
 #include "filename.h"
 #include "pooling.h"
-#include "mapMagma.h"
-#include "mapViridis.h"
 
 struct
 {

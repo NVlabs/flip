@@ -5,7 +5,6 @@
     <ClInclude Include="cudaImage.cuh" />
     <ClInclude Include="cudaKernels.cuh" />
     <ClInclude Include="cudaTensor.cuh" />
-    <ClInclude Include="FLIP.h" />
     <ClInclude Include="..\common\commandline.h">
       <Filter>common</Filter>
     </ClInclude>
@@ -22,15 +21,6 @@
       <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="..\common\tinyexr.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\sharedflip.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\mapMagma.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\mapViridis.h">
       <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>

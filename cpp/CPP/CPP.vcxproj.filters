@@ -6,10 +6,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="color.h" />
-    <ClInclude Include="FLIP.h" />
-    <ClInclude Include="image.h" />
-    <ClInclude Include="tensor.h" />
     <ClInclude Include="..\common\commandline.h">
       <Filter>common</Filter>
     </ClInclude>
@@ -26,15 +22,6 @@
       <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="..\common\tinyexr.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\sharedflip.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\mapMagma.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\common\mapViridis.h">
       <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="flip_single_header.h" />

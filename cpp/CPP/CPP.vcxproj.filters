@@ -27,7 +27,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\common\FLIP.cpp">
+    <ClCompile Include="..\common\FLIP-tool.cpp">
       <Filter>common</Filter>
     </ClCompile>
   </ItemGroup>

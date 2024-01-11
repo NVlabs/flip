@@ -58,8 +58,6 @@
 #define NOMINMAX
 #define FIXED_DECIMAL_DIGITS(x, d) std::fixed << std::setprecision(d) << (x)
 
-
-//#define FLIP_USE_CUDA
 #include "../FLIP.h"
 
 #include "imagehelpers.h"

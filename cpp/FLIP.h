@@ -1,14 +1,18 @@
 // TODO: single header FLIP
-// * Make sure everything works for CPU and for CUDA.
+//
 // * Make simpler functions for FLIP, i.e., if you want to get HDR-FLIP, then that should
 //   just be one call. Even HDR-FLIP should be a single call.
+//
 // * Also, we use color3 now, but it would be nice (for PBRT) to be able to use
 //   float* threeChannelImage, uint width, uint height for the paramt to FLIP().
+//
+// * Simplify FLIP-tool.cpp so that it has less code and calls into the single header.
 // * Check performance
 // * Check output with test.py (CPU ok so far).
+// * Make sure all features work for CPU and for CUDA.
 // * Fix new directory structure.
-// * Change to a single FLIP namespace in the singleheader.
 // * Search for TODO in the entire project.
+// * Update headers (Copyright (c) 2020-2023, NVIDIA CORPORATION etc)!
 
 #pragma once
 #include <algorithm>
@@ -31,7 +35,6 @@
 #define HOST_DEVICE_FOR_CUDA
 #endif 
 
-// color.h
 namespace FLIP
 {
 #define Max(x, y) ((x) > (y) ? (x) : (y))
@@ -784,11 +787,7 @@ namespace FLIP
         {0.926106f, 0.897330f, 0.104071f}, {0.935904f, 0.898570f, 0.108131f}, {0.945636f, 0.899815f, 0.112838f}, {0.955300f, 0.901065f, 0.118128f}, {0.964894f, 0.902323f, 0.123941f}, {0.974417f, 0.903590f, 0.130215f}, {0.983868f, 0.904867f, 0.136897f}, {0.993248f, 0.906157f, 0.143936f}
     };
 
-}
-
-namespace FLIP
-{
-    const float PI = 3.14159265358979f;
+    const float PI = 3.14159265358979f;     // TODO: move all types of constants to the beginning of the file?!
 
     static const struct xFLIPConstants
     {
@@ -1074,7 +1073,7 @@ namespace FLIP
 
         if (x >= dim.x || y >= dim.y) return;
 
-        const float halfFilterWidth = filterDim.x / 2;  // TODO: should be int, right?!
+        const int halfFilterWidth = filterDim.x / 2;
 
         float dxReference = 0.0f, dxTest = 0.0f, ddxReference = 0.0f, ddxTest = 0.0f;
         float gaussianFilteredReference = 0.0f, gaussianFilteredTest = 0.0f;
@@ -1124,7 +1123,7 @@ namespace FLIP
 
         const float normalizationFactor = 1.0f / std::sqrt(2.0f);
 
-        const float halfFilterWidth = filterDim.x / 2;  // TODO: should be int, right?!
+        const int halfFilterWidth = filterDim.x / 2;
 
         float dxReference = 0.0f, dxTest = 0.0f, ddxReference = 0.0f, ddxTest = 0.0f;
         float dyReference = 0.0f, dyTest = 0.0f, ddyReference = 0.0f, ddyTest = 0.0f;
@@ -1178,7 +1177,7 @@ namespace FLIP
 
         if (x >= dim.x || y >= dim.y) return;
 
-        const float halfFilterWidth = filterDim.x / 2; // TODO: should be int, right?!
+        const int halfFilterWidth = filterDim.x / 2;
 
         // Filter in x direction.
         color3 intermediateYCxReference = { 0.0f, 0.0f, 0.0f };
@@ -1221,7 +1220,7 @@ namespace FLIP
 
         if (x >= dim.x || y >= dim.y) return;
 
-        const float halfFilterWidth = filterDim.x / 2; // TODO: should be int, right?!
+        const int halfFilterWidth = filterDim.x / 2;
 
         // Filter in y direction.
         color3 filteredYCxReference = { 0.0f, 0.0f, 0.0f };
@@ -1282,11 +1281,6 @@ namespace FLIP
         colorDifferenceImage[dstIndex] = color3(colorDifference, 0.0f, 0.0f);
     }
 #endif
-}
-
-// tensor.h
-namespace FLIP
-{
 
 #ifndef FLIP_USE_CUDA
     static const float ToneMappingCoefficients[3][6] =
@@ -1740,7 +1734,7 @@ namespace FLIP
         void colorMap(tensor<float>& srcImage, tensor<color3>& colorMap)
         {
             srcImage.synchronizeDevice();
-            FLIP::kernelColorMap << <this->mGridDim, this->mBlockDim >> > (this->getDeviceData(), srcImage.getDeviceData(), colorMap.getDeviceData(), this->mDim, colorMap.getWidth());
+            FLIP::kernelColorMap <<<this->mGridDim, this->mBlockDim >>> (this->getDeviceData(), srcImage.getDeviceData(), colorMap.getDeviceData(), this->mDim, colorMap.getWidth());
             checkStatus("kernelColorMap");
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
@@ -1846,12 +1840,7 @@ namespace FLIP
         }
 #endif
     };
-}
 
-
-// image.h
-namespace FLIP
-{
     template<typename T>
     class image: public tensor<T>
     {
@@ -1908,6 +1897,9 @@ namespace FLIP
         {
         }
 #else // FLIP_USE_CUDA
+        image()
+        {}
+
         image(std::string fileName, const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
         {
             this->mBlockDim = blockDim;

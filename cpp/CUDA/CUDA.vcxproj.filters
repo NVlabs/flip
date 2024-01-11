@@ -1,10 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="color.cuh" />
-    <ClInclude Include="cudaImage.cuh" />
-    <ClInclude Include="cudaKernels.cuh" />
-    <ClInclude Include="cudaTensor.cuh" />
     <ClInclude Include="..\common\commandline.h">
       <Filter>common</Filter>
     </ClInclude>
@@ -21,7 +17,6 @@
       <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="..\FLIP.h" />
-    <ClInclude Include="..\FLIP.cuh" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="common">
@@ -29,8 +24,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\common\FLIP.cpp">
+    <CudaCompile Include="..\common\FLIP-tool.cpp">
       <Filter>common</Filter>
     </CudaCompile>
+    <CudaCompile Include="FLIP-tool.cu" />
   </ItemGroup>
 </Project>

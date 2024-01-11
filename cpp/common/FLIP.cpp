@@ -409,7 +409,7 @@ int main(int argc, char** argv)
             pngResult.pngSave(destinationDirectory + "/" + flipFileName.toString());
         }
 
-        pooling<float> pooledValues;
+        FLIP::pooling<float> pooledValues;
         for (int y = 0; y < errorMapFLIP.getHeight(); y++)
         {
             for (int x = 0; x < errorMapFLIP.getWidth(); x++)

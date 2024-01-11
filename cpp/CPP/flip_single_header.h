@@ -372,6 +372,7 @@ namespace FLIP
 {
     const float PI = 3.14159265358979f;
 
+#ifndef FLIP_USE_CUDA
     static const struct xFLIPConstants
     {
         xFLIPConstants() = default;
@@ -381,6 +382,16 @@ namespace FLIP
         float gw = 0.082f;
         float gqf = 0.5f;
     } FLIPConstants;
+#else
+    __constant__ struct
+    {
+        float gqc = 0.7f;
+        float gpc = 0.4f;
+        float gpt = 0.95f;
+        float gw = 0.082f;
+        float gqf = 0.5f;
+    } DeviceFLIPConstants;
+#endif
 
     static const struct xGaussianConstants
     {
@@ -436,23 +447,452 @@ namespace FLIP
 
         return radius;
     }
-}
 
-// tensor.h
-namespace FLIP
-{
+    // CUDA kernels.
+#ifdef FLIP_USE_CUDA
+    __global__ static void kernelColorMap(color3* pDstImage, const float* pSrcImage, const color3* pColorMap, const int3 dim, const int mapSize)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int i = (z * dim.y + y) * dim.x + x;
 
-    static const float ToneMappingCoefficients[3][6] =
+        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+
+        pDstImage[i] = pColorMap[int(pSrcImage[i] * 255.0f + 0.5f) % mapSize];
+    }
+
+    __global__ static void kernelFloat2Color3(color3* pDstImage, float* pSrcImage, const int3 dim)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int i = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+
+        pDstImage[i] = color3(pSrcImage[i]);
+    }
+
+    __global__ static void kernelFinalError(float* pDstImage, color3* pColorFeatureDifference, const int3 dim)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int i = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+
+        const float cdiff = pColorFeatureDifference[i].x;
+        const float fdiff = pColorFeatureDifference[i].y;
+        const float errorFLIP = std::pow(cdiff, 1.0f - fdiff);
+
+        pDstImage[i] = errorFLIP;
+    }
+
+    __global__ static void kernelSetMaxExposure(float* pDstErrorMap, float* pSrcErrorMap, float* pExposureMap, const int3 dim, float exposure)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int i = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+
+        float srcValue = pSrcErrorMap[i];
+        float dstValue = pDstErrorMap[i];
+
+        if (srcValue > dstValue)
+        {
+            pExposureMap[i] = exposure;
+            pDstErrorMap[i] = srcValue;
+        }
+    }
+
+    __global__ static void kernelsRGB2YCxCz(color3* pImage, const int3 dim)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int i = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+
+        pImage[i] = color3::XYZ2YCxCz(color3::LinearRGB2XYZ(color3::sRGB2LinearRGB(pImage[i])));
+    }
+
+    __global__ static void kernelLinearRGB2sRGB(color3* pImage, const int3 dim)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int i = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+
+        pImage[i] = color3::LinearRGB2sRGB(pImage[i]);
+    }
+
+
+    //  General kernels
+
+    __global__ static void kernelClear(color3* pImage, const int3 dim, const color3 color = { 0.0f, 0.0f, 0.0f })
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int i = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+
+        pImage[i] = color;
+    }
+
+
+    __global__ static void kernelClear(float* pImage, const int3 dim, const float color = 0.0f)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int i = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+
+        pImage[i] = color;
+    }
+
+
+    __global__ static void kernelMultiplyAndAdd(color3* pImage, const int3 dim, color3 m, color3 a)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int i = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+
+        pImage[i] = pImage[i] * m + a;
+    }
+
+
+    __global__ static void kernelMultiplyAndAdd(color3* pImage, const int3 dim, float m, float a)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int i = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+
+        pImage[i] = pImage[i] * m + a;
+    }
+
+
+    __global__ static void kernelMultiplyAndAdd(float* pImage, const int3 dim, float m, float a)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int i = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+
+        pImage[i] = pImage[i] * m + a;
+    }
+
+
+    __device__ const float ToneMappingCoefficients[3][6] =
     {
         { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f },                                                 // Reinhard.
         { 0.6f * 0.6f * 2.51f, 0.6f * 0.03f, 0.0f, 0.6f * 0.6f * 2.43f, 0.6f * 0.59f, 0.14f },  // ACES, 0.6 is pre-exposure cancellation.
         { 0.231683f, 0.013791f, 0.0f, 0.18f, 0.3f, 0.018f },                                    // Hable.
     };
 
+
+    __global__ static void kernelToneMap(color3* pImage, const int3 dim, int toneMapper)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int i = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+
+        if (toneMapper == 0)
+        {
+            color3 color = pImage[i];
+            float luminance = color3::linearRGB2Luminance(color);
+            pImage[i] /= (1.0f + luminance);
+            return;
+        }
+
+        const float* tc = ToneMappingCoefficients[toneMapper];
+        color3 color = pImage[i];
+        pImage[i] = color3(((color * color) * tc[0] + color * tc[1] + tc[2]) / (color * color * tc[3] + color * tc[4] + tc[5]));
+    }
+
+
+    __global__ static void kernelClamp(color3* pImage, const int3 dim, float low, float high)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int i = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+
+        pImage[i] = color3::clamp(pImage[i], low, high);
+    }
+
+    // Convolve in x direction (1st and 2nd derivative for filter in x direction, Gaussian in y direction).
+    // For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
+    // We filter both reference and test image simultaneously (for better performance).
+    // referenceImage and testImage are expected to be in YCxCz space.
+    __global__ static void kernelFeatureFilterFirstDir(color3* intermediateFeaturesImageReference, color3* referenceImage, color3* intermediateFeaturesImageTest, color3* testImage, color3* pFilter, const int3 dim, const int3 filterDim)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int dstIndex = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y) return;
+
+        const float halfFilterWidth = filterDim.x / 2;
+
+        float dxReference = 0.0f, dxTest = 0.0f, ddxReference = 0.0f, ddxTest = 0.0f;
+        float gaussianFilteredReference = 0.0f, gaussianFilteredTest = 0.0f;
+
+        const float oneOver116 = 1.0f / 116.0f;
+        const float sixteenOver116 = 16.0f / 116.0f;
+        for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
+        {
+            int xx = Min(Max(0, x + ix), dim.x - 1);
+
+            int filterIndex = ix + halfFilterWidth;
+            int srcIndex = y * dim.x + xx;
+            const color3 featureWeights = pFilter[filterIndex];
+            float yReference = referenceImage[srcIndex].x;
+            float yTest = testImage[srcIndex].x;
+
+            // Normalize the Y values to [0,1].
+            float yReferenceNormalized = yReference * oneOver116 + sixteenOver116;
+            float yTestNormalized = yTest * oneOver116 + sixteenOver116;
+
+            // Image multiplied by 1st and 2nd x-derivatives of Gaussian.
+            dxReference += featureWeights.y * yReferenceNormalized;
+            dxTest += featureWeights.y * yTestNormalized;
+            ddxReference += featureWeights.z * yReferenceNormalized;
+            ddxTest += featureWeights.z * yTestNormalized;
+
+            // Image multiplied by Gaussian.
+            gaussianFilteredReference += featureWeights.x * yReferenceNormalized;
+            gaussianFilteredTest += featureWeights.x * yTestNormalized;
+        }
+
+        intermediateFeaturesImageReference[dstIndex] = color3(dxReference, ddxReference, gaussianFilteredReference);
+        intermediateFeaturesImageTest[dstIndex] = color3(dxTest, ddxTest, gaussianFilteredTest);
+    }
+
+    // Convolve in y direction (1st and 2nd derivative for filter in y direction, Gaussian in x direction), then compute difference.
+    // For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
+    // We filter both reference and test image simultaneously (for better performance).
+    __global__ static void kernelFeatureFilterSecondDirAndFeatureDifference(color3* featureDifferenceImage, color3* intermediateFeaturesImageReference, color3* intermediateFeaturesImageTest, color3* pFilter, const int3 dim, const int3 filterDim)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int dstIndex = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y) return;
+
+        const float normalizationFactor = 1.0f / std::sqrt(2.0f);
+
+        const float halfFilterWidth = filterDim.x / 2;
+
+        float dxReference = 0.0f, dxTest = 0.0f, ddxReference = 0.0f, ddxTest = 0.0f;
+        float dyReference = 0.0f, dyTest = 0.0f, ddyReference = 0.0f, ddyTest = 0.0f;
+
+        for (int iy = -halfFilterWidth; iy <= halfFilterWidth; iy++)
+        {
+            int yy = Min(Max(0, y + iy), dim.y - 1);
+
+            int filterIndex = iy + halfFilterWidth;
+            int srcIndex = yy * dim.x + x;
+            const color3 featureWeights = pFilter[filterIndex];
+            const color3 intermediateFeaturesReference = intermediateFeaturesImageReference[srcIndex];
+            const color3 intermediateFeatureTest = intermediateFeaturesImageTest[srcIndex];
+
+            // Intermediate images (1st and 2nd derivative in x) multiplied by Gaussian.
+            dxReference += featureWeights.x * intermediateFeaturesReference.x;
+            dxTest += featureWeights.x * intermediateFeatureTest.x;
+            ddxReference += featureWeights.x * intermediateFeaturesReference.y;
+            ddxTest += featureWeights.x * intermediateFeatureTest.y;
+
+            // Intermediate image (Gaussian) multiplied by 1st and 2nd y-derivatives of Gaussian.
+            dyReference += featureWeights.y * intermediateFeaturesReference.z;
+            dyTest += featureWeights.y * intermediateFeatureTest.z;
+            ddyReference += featureWeights.z * intermediateFeaturesReference.z;
+            ddyTest += featureWeights.z * intermediateFeatureTest.z;
+        }
+
+        const float edgeValueRef = std::sqrt(dxReference * dxReference + dyReference * dyReference);
+        const float edgeValueTest = std::sqrt(dxTest * dxTest + dyTest * dyTest);
+        const float pointValueRef = std::sqrt(ddxReference * ddxReference + ddyReference * ddyReference);
+        const float pointValueTest = std::sqrt(ddxTest * ddxTest + ddyTest * ddyTest);
+
+        const float edgeDifference = std::abs(edgeValueRef - edgeValueTest);
+        const float pointDifference = std::abs(pointValueRef - pointValueTest);
+
+        const float featureDifference = std::pow(normalizationFactor * Max(edgeDifference, pointDifference), DeviceFLIPConstants.gqf);
+
+        featureDifferenceImage[dstIndex].y = featureDifference;
+    }
+
+    // Performs spatial filtering in the x direction on both the reference and test image at the same time (for better performance).
+    // Filtering has been changed to using separable filtering for better performance.
+    // For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
+    // referenceImage and testImage are expected to be in YCxCz space.
+    __global__ static void kernelSpatialFilterFirstDir(color3* intermediateYCxImageReference, color3* intermediateCzImageReference, color3* referenceImage, color3* intermediateYCxImageTest, color3* intermediateCzImageTest, color3* testImage, color3* pFilterYCx, color3* pFilterCz, const int3 dim, const int3 filterDim)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int dstIndex = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y) return;
+
+        const float halfFilterWidth = filterDim.x / 2;
+
+        // Filter in x direction.
+        color3 intermediateYCxReference = { 0.0f, 0.0f, 0.0f };
+        color3 intermediateYCxTest = { 0.0f, 0.0f, 0.0f };
+        color3 intermediateCzReference = { 0.0f, 0.0f, 0.0f };
+        color3 intermediateCzTest = { 0.0f, 0.0f, 0.0f };
+
+        for (int ix = -halfFilterWidth; ix <= halfFilterWidth; ix++)
+        {
+            int xx = Min(Max(0, x + ix), dim.x - 1);
+
+            int filterIndex = ix + halfFilterWidth;
+            int srcIndex = y * dim.x + xx;
+            const color3 weightsYCx = pFilterYCx[filterIndex];
+            const color3 weightsCz = pFilterCz[filterIndex];
+            const color3 referenceColor = referenceImage[srcIndex];
+            const color3 testColor = testImage[srcIndex];
+
+            intermediateYCxReference += color3(weightsYCx.x * referenceColor.x, weightsYCx.y * referenceColor.y, 0.0f);
+            intermediateYCxTest += color3(weightsYCx.x * testColor.x, weightsYCx.y * testColor.y, 0.0f);
+            intermediateCzReference += color3(weightsCz.x * referenceColor.z, weightsCz.y * referenceColor.z, 0.0f);
+            intermediateCzTest += color3(weightsCz.x * testColor.z, weightsCz.y * testColor.z, 0.0f);
+        }
+
+        intermediateYCxImageReference[dstIndex] = color3(intermediateYCxReference.x, intermediateYCxReference.y, 0.0f);
+        intermediateYCxImageTest[dstIndex] = color3(intermediateYCxTest.x, intermediateYCxTest.y, 0.0f);
+        intermediateCzImageReference[dstIndex] = color3(intermediateCzReference.x, intermediateCzReference.y, 0.0f);
+        intermediateCzImageTest[dstIndex] = color3(intermediateCzTest.x, intermediateCzTest.y, 0.0f);
+    }
+
+    // Performs spatial filtering in the y direction (and clamps the results) on both the reference and test image at the same time (for better performance).
+    // Filtering has been changed to using separable filtering for better performance. For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
+    // After filtering, compute color differences.
+    __global__ static void kernelSpatialFilterSecondDirAndColorDifference(color3* colorDifferenceImage, color3* intermediateYCxImageReference, color3* intermediateCzImageReference, color3* intermediateYCxImageTest, color3* intermediateCzImageTest, color3* pFilterYCx, color3* pFilterCz, const int3 dim, const int3 filterDim, const float cmax, const float pccmax)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int dstIndex = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y) return;
+
+        const float halfFilterWidth = filterDim.x / 2;
+
+        // Filter in y direction.
+        color3 filteredYCxReference = { 0.0f, 0.0f, 0.0f };
+        color3 filteredYCxTest = { 0.0f, 0.0f, 0.0f };
+        color3 filteredCzReference = { 0.0f, 0.0f, 0.0f };
+        color3 filteredCzTest = { 0.0f, 0.0f, 0.0f };
+
+        for (int iy = -halfFilterWidth; iy <= halfFilterWidth; iy++)
+        {
+            int yy = Min(Max(0, y + iy), dim.y - 1);
+
+            int filterIndex = iy + halfFilterWidth;
+            int srcIndex = yy * dim.x + x;
+            const color3 weightsYCx = pFilterYCx[filterIndex];
+            const color3 weightsCz = pFilterCz[filterIndex];
+            const color3 intermediateYCxReference = intermediateYCxImageReference[srcIndex];
+            const color3 intermediateYCxTest = intermediateYCxImageTest[srcIndex];
+            const color3 intermediateCzReference = intermediateCzImageReference[srcIndex];
+            const color3 intermediateCzTest = intermediateCzImageTest[srcIndex];
+
+            filteredYCxReference += color3(weightsYCx.x * intermediateYCxReference.x, weightsYCx.y * intermediateYCxReference.y, 0.0f);
+            filteredYCxTest += color3(weightsYCx.x * intermediateYCxTest.x, weightsYCx.y * intermediateYCxTest.y, 0.0f);
+            filteredCzReference += color3(weightsCz.x * intermediateCzReference.x, weightsCz.y * intermediateCzReference.y, 0.0f);
+            filteredCzTest += color3(weightsCz.x * intermediateCzTest.x, weightsCz.y * intermediateCzTest.y, 0.0f);
+        }
+
+        // Clamp to [0,1] in linear RGB.
+        color3 filteredYCxCzReference = color3(filteredYCxReference.x, filteredYCxReference.y, filteredCzReference.x + filteredCzReference.y);
+        color3 filteredYCxCzTest = color3(filteredYCxTest.x, filteredYCxTest.y, filteredCzTest.x + filteredCzTest.y);
+        filteredYCxCzReference = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(filteredYCxCzReference)));
+        filteredYCxCzTest = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(filteredYCxCzTest)));
+
+        // Move from linear RGB to CIELab.
+        filteredYCxCzReference = color3::XYZ2CIELab(color3::LinearRGB2XYZ(filteredYCxCzReference));
+        filteredYCxCzTest = color3::XYZ2CIELab(color3::LinearRGB2XYZ(filteredYCxCzTest));
+
+        // Apply Hunt adjustment.
+        filteredYCxCzReference.y = color3::Hunt(filteredYCxCzReference.x, filteredYCxCzReference.y);
+        filteredYCxCzReference.z = color3::Hunt(filteredYCxCzReference.x, filteredYCxCzReference.z);
+        filteredYCxCzTest.y = color3::Hunt(filteredYCxCzTest.x, filteredYCxCzTest.y);
+        filteredYCxCzTest.z = color3::Hunt(filteredYCxCzTest.x, filteredYCxCzTest.z);
+
+        float colorDifference = color3::HyAB(filteredYCxCzReference, filteredYCxCzTest);
+
+        colorDifference = powf(colorDifference, DeviceFLIPConstants.gqc);
+
+        // Re-map error to the [0, 1] range. Values between 0 and pccmax are mapped to the range [0, gpt],
+        // while the rest are mapped to the range (gpt, 1].
+        if (colorDifference < pccmax)
+        {
+            colorDifference *= DeviceFLIPConstants.gpt / pccmax;
+        }
+        else
+        {
+            colorDifference = DeviceFLIPConstants.gpt + ((colorDifference - pccmax) / (cmax - pccmax)) * (1.0f - DeviceFLIPConstants.gpt);
+        }
+
+        colorDifferenceImage[dstIndex] = color3(colorDifference, 0.0f, 0.0f);
+    }
+#endif
+}
+
+// tensor.h
+namespace FLIP
+{
+
+#ifndef FLIP_USE_CUDA
+    static const float ToneMappingCoefficients[3][6] =
+    {
+        { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f },                                                 // Reinhard.
+        { 0.6f * 0.6f * 2.51f, 0.6f * 0.03f, 0.0f, 0.6f * 0.6f * 2.43f, 0.6f * 0.59f, 0.14f },  // ACES, 0.6 is pre-exposure cancellation.
+        { 0.231683f, 0.013791f, 0.0f, 0.18f, 0.3f, 0.018f },                                    // Hable.
+    };
     union int3
     {
         struct { int x, y, z; };
     };
+#else  // FLIP_USE_CUDA
+    const dim3 DEFAULT_KERNEL_BLOCK_DIM = { 32, 32, 1 };
+    enum class CudaTensorState
+    {
+        UNINITIALIZED,
+        ALLOCATED,
+        HOST_ONLY,
+        DEVICE_ONLY,
+        SYNCHRONIZED
+    };
+#endif
 
     template<typename T = color3>
     class tensor
@@ -461,6 +901,11 @@ namespace FLIP
         int3 mDim;
         int mArea, mVolume;
         T* mvpHostData;
+#ifdef FLIP_USE_CUDA
+        T* mvpDeviceData;
+        CudaTensorState mState = CudaTensorState::UNINITIALIZED;
+        dim3 mBlockDim, mGridDim;
+#endif
 
     protected:
 
@@ -476,12 +921,44 @@ namespace FLIP
             return true;
         }
 
+#ifdef FLIP_USE_CUDA
+        bool allocateDevice(void)
+        {
+            int deviceVolume = this->mGridDim.x * this->mGridDim.y * this->mGridDim.z * this->mBlockDim.x * this->mBlockDim.y * this->mBlockDim.z;
+            cudaError cudaError = cudaMalloc((void**)&(this->mvpDeviceData), deviceVolume * sizeof(T));
+
+            if (cudaError != cudaSuccess)
+            {
+                std::cerr << "cudaMalloc() failed: " << cudaGetErrorString(cudaError) << "\n";
+                this->~tensor();
+                return false;
+            }
+
+            return true;
+        }
+#endif
         void init(const int3 dim, bool bClear = false, T clearColor = T(0.0f))
         {
             this->mDim = dim;
             this->mArea = dim.x * dim.y;
             this->mVolume = dim.x * dim.y * dim.z;
 
+#ifdef FLIP_USE_CUDA
+            this->mGridDim.x = (this->mDim.x + this->mBlockDim.x - 1) / this->mBlockDim.x;
+            this->mGridDim.y = (this->mDim.y + this->mBlockDim.y - 1) / this->mBlockDim.y;
+            this->mGridDim.z = (this->mDim.z + this->mBlockDim.z - 1) / this->mBlockDim.z;
+
+            cudaError_t cudaError = cudaSetDevice(0);
+            if (cudaError != cudaSuccess)
+            {
+                std::cerr << "cudaSetDevice() failed: " << cudaGetErrorString(cudaError) << "\n";
+                this->~tensor();
+                exit(-1);
+            }
+
+            allocateDevice();
+            this->mState = CudaTensorState::ALLOCATED; 
+#endif
             allocateHost();
 
             if (bClear)
@@ -492,6 +969,8 @@ namespace FLIP
 
     public:
 
+#ifndef FLIP_USE_CUDA
+        // Constructors for the CPU side.
         tensor()
         {
         }
@@ -522,11 +1001,76 @@ namespace FLIP
             this->init({ size, 1, 1 });
             memcpy(this->mvpHostData, pColorMap, size * sizeof(color3));
         }
+#else   // FLIP_USE_CUDA
+        // Constructors for the CUDA side.
+        tensor(const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
+        {
+            this->mBlockDim = blockDim;
+        }
 
+        tensor(const int width, const int height, const int depth, const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
+        {
+            this->mBlockDim = blockDim;
+            this->init({ width, height, depth });
+        }
+
+        tensor(const int width, const int height, const int depth, const T clearColor, const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
+        {
+            this->mBlockDim = blockDim;
+            this->init({ width, height, depth }, true, clearColor);
+        }
+
+        tensor(const int3 dim, const T clearColor, const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
+        {
+            this->mBlockDim = blockDim;
+            this->init(dim, true, clearColor);
+        }
+
+        tensor(tensor& image, const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
+        {
+            this->mBlockDim = blockDim;
+            this->init(image.mDim);
+            this->copy(image);
+        }
+
+        tensor(const color3* pColorMap, int size, const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
+        {
+            this->mBlockDim = blockDim;
+            this->init({ size, 1, 1 });
+
+            cudaError_t cudaError = cudaMemcpy(this->mvpDeviceData, pColorMap, size * sizeof(color3), cudaMemcpyHostToDevice);
+            if (cudaError != cudaSuccess)
+            {
+                std::cout << "copy() failed: " << cudaGetErrorString(cudaError) << "\n";
+                exit(-1);
+            }
+            this->mState = CudaTensorState::DEVICE_ONLY;
+        }
+#endif
         ~tensor(void)
         {
             free(this->mvpHostData);
+#ifdef FLIP_USE_CUDA
+            cudaFree(this->mvpDeviceData);
+#endif
         }
+
+#ifdef FLIP_USE_CUDA
+        T* getDeviceData(const int z = 0)
+        {
+            return this->mvpDeviceData + z * this->mArea;
+        }
+
+        inline dim3 getBlockDim() const
+        {
+            return mBlockDim;
+        }
+
+        inline dim3 getGridDim() const
+        {
+            return mGridDim;
+        }
+#endif
 
         T* getHostData(void)
         {
@@ -538,15 +1082,32 @@ namespace FLIP
             return (z * this->mDim.y + y) * mDim.x + x;
         }
 
-        T get(int x, int y, int z) const
+        T get(int x, int y, int z)
         {
+#ifdef FLIP_USE_CUDA
+            this->synchronizeHost();
+#endif
             return this->mvpHostData[this->index(x, y, z)];
         }
 
+#ifndef FLIP_USE_CUDA
         void set(int x, int y, int z, T value)
         {
             this->mvpHostData[this->index(x, y, z)] = value;
         }
+#else
+        void set(int x, int y, int z, T value)
+        {
+            this->synchronizeHost();
+            this->mvpHostData[this->index(x, y, z)] = value;
+            this->mState = CudaTensorState::HOST_ONLY;
+        }
+
+        inline void setState(CudaTensorState state)
+        {
+            this->mState = state;
+        }
+#endif
 
         int3 getDimensions(void) const
         {
@@ -568,6 +1129,7 @@ namespace FLIP
             return this->mDim.z;
         }
 
+#ifndef FLIP_USE_CUDA
         void colorMap(tensor<float>& srcImage, tensor<color3>& colorMap)
         {
             for (int z = 0; z < this->getDepth(); z++)
@@ -706,6 +1268,143 @@ namespace FLIP
                 }
             }
         }
+#else  // FLIP_USE_CUDA
+        void synchronizeHost(void)
+        {
+            if (this->mState == CudaTensorState::DEVICE_ONLY)
+            {
+                cudaError_t cudaError = cudaMemcpy(this->mvpHostData, this->mvpDeviceData, this->mVolume * sizeof(T), cudaMemcpyDeviceToHost);
+                if (cudaError != cudaSuccess)
+                {
+                    std::cout << "cudaMemcpy(), DEVICE -> HOST, failed: " << cudaGetErrorString(cudaError) << "\n";
+                    exit(-1);
+                }
+                this->mState = CudaTensorState::SYNCHRONIZED;
+            }
+        }
+
+        void synchronizeDevice(void)
+        {
+            if (this->mState == CudaTensorState::HOST_ONLY)
+            {
+                cudaError_t cudaError = cudaMemcpy(this->mvpDeviceData, this->mvpHostData, this->mVolume * sizeof(T), cudaMemcpyHostToDevice);
+                if (cudaError != cudaSuccess)
+                {
+                    std::cout << "cudaMemcpy(), HOST -> DEVICE, failed: " << cudaGetErrorString(cudaError) << "\n";
+                    exit(-1);
+                }
+                this->mState = CudaTensorState::SYNCHRONIZED;
+            }
+        }
+
+        void colorMap(tensor<float>& srcImage, tensor<color3>& colorMap)
+        {
+            srcImage.synchronizeDevice();
+            FLIP::kernelColorMap << <this->mGridDim, this->mBlockDim >> > (this->getDeviceData(), srcImage.getDeviceData(), colorMap.getDeviceData(), this->mDim, colorMap.getWidth());
+            checkStatus("kernelColorMap");
+            this->mState = CudaTensorState::DEVICE_ONLY;
+        }
+
+        void sRGB2YCxCz(void)
+        {
+            this->synchronizeDevice();
+            kernelsRGB2YCxCz << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
+            checkStatus("kernelsRGB2YCxCz");
+            this->mState = CudaTensorState::DEVICE_ONLY;
+        }
+
+        void LinearRGB2sRGB(void)
+        {
+            this->synchronizeDevice();
+            FLIP::kernelLinearRGB2sRGB << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
+            checkStatus("kernelLinearRGB2sRGB");
+            this->mState = CudaTensorState::DEVICE_ONLY;
+        }
+
+        static void checkStatus(std::string kernelName)
+        {
+            cudaError_t cudaError = cudaGetLastError();
+            if (cudaError != cudaSuccess)
+            {
+                std::cerr << kernelName << "() failed: " << cudaGetErrorString(cudaError) << "\n";
+                exit(-1);
+            }
+
+            // Used if debugging.
+            if (true)
+            {
+                deviceSynchronize(kernelName);
+            }
+        }
+
+        // Used if debugging.
+        static void deviceSynchronize(std::string kernelName)
+        {
+            cudaError_t cudaError = cudaDeviceSynchronize();
+            if (cudaError != cudaSuccess)
+            {
+                std::cerr << kernelName << "(): cudeDeviceSynchronize: " << cudaGetErrorString(cudaError) << "\n";
+                exit(-1);
+            }
+        }
+
+        void clear(const T color = T(0.0f))
+        {
+            FLIP::kernelClear << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim, color);
+            checkStatus("kernelClear");
+            this->mState = CudaTensorState::DEVICE_ONLY;
+        }
+
+        void clamp(float low = 0.0f, float high = 1.0f)
+        {
+            this->synchronizeDevice();
+            FLIP::kernelClamp << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim, low, high);
+            checkStatus("kernelClamp");
+            this->mState = CudaTensorState::DEVICE_ONLY;
+        }
+
+        void toneMap(std::string tm)
+        {
+            int toneMapper = 1;
+            if (tm == "reinhard")
+                toneMapper = 0;
+            if (tm == "aces")
+                toneMapper = 1;
+            if (tm == "hable")
+                toneMapper = 2;
+
+            FLIP::kernelToneMap << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim, toneMapper);
+            checkStatus("kernelToneMap");
+            this->mState = CudaTensorState::DEVICE_ONLY;
+        }
+
+        void copy(tensor<T>& srcImage)
+        {
+            srcImage.synchronizeDevice();
+            if (this->mDim.x == srcImage.getWidth() && this->mDim.y == srcImage.getHeight() && this->mDim.z == srcImage.getDepth())
+            {
+                cudaError_t cudaError = cudaMemcpy(this->mvpDeviceData, srcImage.getDeviceData(), this->mVolume * sizeof(T), cudaMemcpyDeviceToDevice);
+                if (cudaError != cudaSuccess)
+                {
+                    std::cout << "copy() failed: " << cudaGetErrorString(cudaError) << "\n";
+                    exit(-1);
+                }
+            }
+            else
+            {
+                kernelBilinearCopy << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, srcImage.getDeviceData(), this->mDim, srcImage.getDimensions());
+            }
+            this->mState = CudaTensorState::DEVICE_ONLY;
+        }
+
+        void copyFloat2Color3(tensor<float>& srcImage)
+        {
+            srcImage.synchronizeDevice();
+            FLIP::kernelFloat2Color3 << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, srcImage.getDeviceData(), this->mDim);
+            checkStatus("kernelFloat2Color3");
+            this->mState = CudaTensorState::DEVICE_ONLY;
+        }
+#endif
 
         bool load(const std::string& fileName, const int z = 0)
         {
@@ -732,7 +1431,14 @@ namespace FLIP
                 return false;
             }
 
+#ifndef FLIP_USE_CUDA
             this->init({ width, height, z + 1 });
+#else
+            if (this->mState == CudaTensorState::UNINITIALIZED)
+            {
+                this->init({ width, height, z + 1 });
+            }
+#endif
 
 #pragma omp parallel for
             for (int y = 0; y < this->mDim.y; y++)
@@ -752,6 +1458,10 @@ namespace FLIP
         bool pngSave(const std::string& filename, int z = 0)
         {
             unsigned char* pixels = new unsigned char[3 * this->mDim.x * this->mDim.y];
+
+#ifdef FLIP_USE_CUDA
+            this->synchronizeHost();
+#endif
 
 #pragma omp parallel for
             for (int y = 0; y < this->mDim.y; y++)
@@ -817,8 +1527,14 @@ namespace FLIP
 
             width = exrImage.width;
             height = exrImage.height;
-
+#ifndef FLIP_USE_CUDA
             this->init({ width, height, z + 1 });
+#else
+            if (this->mState == CudaTensorState::UNINITIALIZED)
+            {
+                this->init({ width, height, z + 1 });
+            }
+#endif
 
             int idxR = -1;
             int idxG = -1;
@@ -962,8 +1678,7 @@ namespace FLIP
 {
 
     template<typename T>
-    class image :
-        public tensor<T>
+    class image: public tensor<T>
     {
     public:
 

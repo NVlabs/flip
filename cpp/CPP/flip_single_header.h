@@ -1676,12 +1676,11 @@ namespace FLIP
 // image.h
 namespace FLIP
 {
-
     template<typename T>
     class image: public tensor<T>
     {
     public:
-
+#ifndef FLIP_USE_CUDA
         image(std::string fileName)
         {
             bool bOk = this->load(fileName);
@@ -1728,6 +1727,58 @@ namespace FLIP
             : tensor<T>(pColorMap, size)
         {
         }
+#else // FLIP_USE_CUDA
+        image(std::string fileName, const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
+        {
+            this->mBlockDim = blockDim;
+            bool bOk = this->load(fileName);
+            if (!bOk)
+            {
+                std::cout << "Failed to load image <" << fileName << ">" << std::endl;
+                exit(-1);
+            }
+            this->setState(CudaTensorState::HOST_ONLY);
+        }
+
+        image(const int width, const int height, const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
+            : tensor<T>(width, height, 1, blockDim)
+        {
+        }
+
+        image(const int width, const int height, const T clearColor, const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
+            : tensor<T>(width, height, 1, clearColor, blockDim)
+        {
+        }
+
+        image(const int3 dim, const T clearColor, const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
+            : tensor<T>(dim.x, dim.y, 1, blockDim)
+        {
+        }
+
+        image(const int3 dim, const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
+            : tensor<T>(dim.x, dim.y, 1, blockDim)
+        {
+        }
+
+        image(image& image, const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
+        {
+            this->mBlockDim = blockDim;
+            this->init(image.mDim);
+            this->copy(image);
+        }
+
+        image(tensor<T>& tensor, const int offset, const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
+        {
+            this->mBlockDim = blockDim;
+            this->init(tensor.getDimensions());
+            this->copy(tensor, offset);
+        }
+
+        image(const color3* pColorMap, int size, const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
+            : tensor<T>(pColorMap, size, blockDim)
+        {
+        }
+#endif
 
         ~image(void)
         {
@@ -1735,14 +1786,25 @@ namespace FLIP
 
         T get(int x, int y) const
         {
+#ifdef FLIP_USE_CUDA
+            this->synchronizeHost();
+#endif
             return this->mvpHostData[this->index(x, y)];
         }
 
+#ifndef FLIP_USE_CUDA
         void set(int x, int y, T value)
         {
             this->mvpHostData[this->index(x, y)] = value;
         }
-
+#else
+        void set(int x, int y, T value)
+        {
+            this->synchronizeHost();
+            this->mvpHostData[this->index(x, y)] = value;
+            this->setState(CudaTensorState::HOST_ONLY);
+        }
+#endif
 
         //////////////////////////////////////////////////////////////////////////////////
 
@@ -1828,38 +1890,6 @@ namespace FLIP
             }
         }
 
-        void FLIP(image<color3>& reference, image<color3>& test, float ppd)
-        {
-            int width = reference.getWidth();
-            int height = reference.getHeight();
-
-            // Transform from sRGB to YCxCz.
-            reference.sRGB2YCxCz();
-            test.sRGB2YCxCz();
-
-            // Prepare separated spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
-            // (YCx for the Achromatic and Red-Green channels and Cz for the Blue-Yellow channel).
-            int spatialFilterRadius = calculateSpatialFilterRadius(ppd);
-            int spatialFilterWidth = 2 * spatialFilterRadius + 1;
-            image<color3> spatialFilterYCx(spatialFilterWidth, 1);
-            image<color3> spatialFilterCz(spatialFilterWidth, 1);
-            setSpatialFilters(spatialFilterYCx, spatialFilterCz, ppd, spatialFilterRadius);
-
-            // The next call performs spatial filtering on both the reference and test image at the same time (for better performance).
-            // It then computes the color difference between the images. "this" is an image<float> here, so we store the color difference in that image.
-            this->computeColorDifference(reference, test, spatialFilterYCx, spatialFilterCz);
-
-            // Prepare separated feature (edge/point) detection filters.
-            const float stdDev = 0.5f * FLIPConstants.gw * ppd;
-            const int featureFilterRadius = int(std::ceil(3.0f * stdDev));
-            int featureFilterWidth = 2 * featureFilterRadius + 1;
-            image<color3> featureFilter(featureFilterWidth, 1);
-            setFeatureFilter(featureFilter, ppd);
-
-            // The following call convolves referenceImage and testImage with the edge and point detection filters and performs additional
-            // computations for the final feature differences, and then computes the final FLIP error and stores in "this".
-            this->computeFeatureDifferenceAndFinalError(reference, test, featureFilter);
-        }
 
         // Performs spatial filtering (and clamps the results) on both the reference and test image at the same time (for better performance).
         // Filtering has been changed to separable filtering for better performance. For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
@@ -2220,6 +2250,39 @@ namespace FLIP
             free(exrHeader.requested_pixel_types);
 
             return true;
+        }
+
+        void FLIP(image<color3>& reference, image<color3>& test, float ppd)
+        {
+            int width = reference.getWidth();
+            int height = reference.getHeight();
+
+            // Transform from sRGB to YCxCz.
+            reference.sRGB2YCxCz();
+            test.sRGB2YCxCz();
+
+            // Prepare separated spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
+            // (YCx for the Achromatic and Red-Green channels and Cz for the Blue-Yellow channel).
+            int spatialFilterRadius = calculateSpatialFilterRadius(ppd);
+            int spatialFilterWidth = 2 * spatialFilterRadius + 1;
+            image<color3> spatialFilterYCx(spatialFilterWidth, 1);
+            image<color3> spatialFilterCz(spatialFilterWidth, 1);
+            setSpatialFilters(spatialFilterYCx, spatialFilterCz, ppd, spatialFilterRadius);
+
+            // The next call performs spatial filtering on both the reference and test image at the same time (for better performance).
+            // It then computes the color difference between the images. "this" is an image<float> here, so we store the color difference in that image.
+            this->computeColorDifference(reference, test, spatialFilterYCx, spatialFilterCz);
+
+            // Prepare separated feature (edge/point) detection filters.
+            const float stdDev = 0.5f * FLIPConstants.gw * ppd;
+            const int featureFilterRadius = int(std::ceil(3.0f * stdDev));
+            int featureFilterWidth = 2 * featureFilterRadius + 1;
+            image<color3> featureFilter(featureFilterWidth, 1);
+            setFeatureFilter(featureFilter, ppd);
+
+            // The following call convolves referenceImage and testImage with the edge and point detection filters and performs additional
+            // computations for the final feature differences, and then computes the final FLIP error and stores in "this".
+            this->computeFeatureDifferenceAndFinalError(reference, test, featureFilter);
         }
 
     };

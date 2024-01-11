@@ -12,6 +12,7 @@
 // * Remove all files that are not used any longer: 
 // * Change to a single FLIP namespace in the singleheader.
 // * Rename single header to FLIP.h
+// * Search for TODO in the entire project.
 
 #pragma once
 #include <algorithm>
@@ -22,13 +23,6 @@
 #include <vector>
 #include <sstream>
 #include <fstream>
-
-#define TINYEXR_IMPLEMENTATION
-#include "tinyexr.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
 
 #ifdef FLIP_USE_CUDA
 #include "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3\include\cuda_runtime.h"                  // TODO: fix these two lines later.
@@ -1520,6 +1514,13 @@ namespace FLIP
         {
             this->mvpHostData[this->index(x, y, z)] = value;
         }
+
+        void setThreeChannelImage(const float* pPixels, const int width, const int height)  // This assume that T is a color3.
+        {
+            this->init({ width, height, 1 });
+            memcpy(this->mvpHostData, pPixels, size_t(width) * height * sizeof(float) * 3);
+        }
+
 #else
         T get(int x, int y, int z)
         {
@@ -1836,270 +1837,6 @@ namespace FLIP
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 #endif
-
-        bool load(const std::string& fileName, const int z = 0)
-        {
-            bool bOk = false;
-            std::string extension = fileName.substr(fileName.find_last_of(".") + 1);
-            if (extension == "png" || extension == "bmp" || extension == "tga")
-            {
-                bOk = this->imageLoad(fileName, z);
-            }
-            else if (extension == "exr")
-            {
-                bOk = this->exrLoad(fileName, z);
-            }
-
-            return bOk;
-        }
-
-        bool imageLoad(const std::string& filename, const int z = 0)
-        {
-            int width, height, bpp;
-            unsigned char* pixels = stbi_load(filename.c_str(), &width, &height, &bpp, 3);
-            if (!pixels)
-            {
-                return false;
-            }
-
-#ifndef FLIP_USE_CUDA
-            this->init({ width, height, z + 1 });
-#else
-            if (this->mState == CudaTensorState::UNINITIALIZED)
-            {
-                this->init({ width, height, z + 1 });
-            }
-#endif
-
-#pragma omp parallel for
-            for (int y = 0; y < this->mDim.y; y++)
-            {
-                for (int x = 0; x < this->mDim.x; x++)
-                {
-                    this->set(x, y, z, color3(&pixels[3 * this->index(x, y)]));
-                }
-            }
-            delete[] pixels;
-
-            return true;
-        }
-
-        inline static float fClamp(float value) { return std::max(0.0f, std::min(1.0f, value)); }
-
-        bool pngSave(const std::string& filename, int z = 0)
-        {
-            unsigned char* pixels = new unsigned char[3 * this->mDim.x * this->mDim.y];
-
-#ifdef FLIP_USE_CUDA
-            this->synchronizeHost();
-#endif
-
-#pragma omp parallel for
-            for (int y = 0; y < this->mDim.y; y++)
-            {
-                for (int x = 0; x < this->mDim.x; x++)
-                {
-                    int index = this->index(x, y);
-                    color3 color = this->mvpHostData[this->index(x, y, z)];
-                    pixels[3 * index + 0] = (unsigned char)(255.0f * fClamp(color.x) + 0.5f);
-                    pixels[3 * index + 1] = (unsigned char)(255.0f * fClamp(color.y) + 0.5f);
-                    pixels[3 * index + 2] = (unsigned char)(255.0f * fClamp(color.z) + 0.5f);
-                }
-            }
-
-            int ok = stbi_write_png(filename.c_str(), this->mDim.x, this->mDim.y, 3, pixels, 3 * this->mDim.x);
-            delete[] pixels;
-
-            return (ok != 0);
-        }
-
-        bool exrLoad(const std::string& fileName, const int z = 0)
-        {
-            EXRVersion exrVersion;
-            EXRImage exrImage;
-            EXRHeader exrHeader;
-            InitEXRHeader(&exrHeader);
-            InitEXRImage(&exrImage);
-            int width, height;
-
-            {
-                int ret;
-                const char* errorString;
-
-                ret = ParseEXRVersionFromFile(&exrVersion, fileName.c_str());
-                if (ret != TINYEXR_SUCCESS || exrVersion.multipart || exrVersion.non_image)
-                {
-                    std::cerr << "Unsupported EXR version or type!" << std::endl;
-                    return false;
-                }
-
-                ret = ParseEXRHeaderFromFile(&exrHeader, &exrVersion, fileName.c_str(), &errorString);
-                if (ret != TINYEXR_SUCCESS)
-                {
-                    std::cerr << "Error loading EXR header: " << errorString << std::endl;
-                    return false;
-                }
-
-                for (int i = 0; i < exrHeader.num_channels; i++)
-                {
-                    if (exrHeader.pixel_types[i] == TINYEXR_PIXELTYPE_HALF)
-                    {
-                        exrHeader.requested_pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT;
-                    }
-                }
-
-                ret = LoadEXRImageFromFile(&exrImage, &exrHeader, fileName.c_str(), &errorString);
-                if (ret != TINYEXR_SUCCESS)
-                {
-                    std::cerr << "Error loading EXR file: " << errorString << std::endl;
-                    return false;
-                }
-            }
-
-            width = exrImage.width;
-            height = exrImage.height;
-#ifndef FLIP_USE_CUDA
-            this->init({ width, height, z + 1 });
-#else
-            if (this->mState == CudaTensorState::UNINITIALIZED)
-            {
-                this->init({ width, height, z + 1 });
-            }
-#endif
-
-            int idxR = -1;
-            int idxG = -1;
-            int idxB = -1;
-            int numRecognizedChannels = 0;
-            for (int c = 0; c < exrHeader.num_channels; c++)
-            {
-                std::string channelName = exrHeader.channels[c].name;
-                std::transform(channelName.begin(), channelName.end(), channelName.begin(), ::tolower);
-                if (channelName == "r")
-                {
-                    idxR = c;
-                    ++numRecognizedChannels;
-                }
-                else if (channelName == "g")
-                {
-                    idxG = c;
-                    ++numRecognizedChannels;
-                }
-                else if (channelName == "b")
-                {
-                    idxB = c;
-                    ++numRecognizedChannels;
-                }
-                else if (channelName == "a")
-                {
-                    ++numRecognizedChannels;
-                }
-                else
-                {
-                    std::cerr << "Undefined EXR channel name: " << exrHeader.channels[c].name << std::endl;
-                }
-            }
-            if (numRecognizedChannels < exrHeader.num_channels)
-            {
-                std::cerr << "EXR channels may be loaded in the wrong order." << std::endl;
-                idxR = 0;
-                idxG = 1;
-                idxB = 2;
-            }
-
-            auto rawImgChn = reinterpret_cast<float**>(exrImage.images);
-            bool loaded = false;
-
-            // 1 channel images can be loaded into either scalar or vector formats.
-            if (exrHeader.num_channels == 1)
-            {
-                for (int y = 0; y < this->mDim.y; y++)
-                {
-                    for (int x = 0; x < this->mDim.x; x++)
-                    {
-                        float color(rawImgChn[0][this->index(x, y)]);
-                        this->set(x, y, z, color3(color));
-                    }
-                }
-                loaded = true;
-            }
-
-            // 2 channel images can only be loaded into vector2/3/4 formats.
-            if (exrHeader.num_channels == 2)
-            {
-                assert(idxR != -1 && idxG != -1);
-
-#pragma omp parallel for
-                for (int y = 0; y < this->mDim.y; y++)
-                {
-                    for (int x = 0; x < this->mDim.x; x++)
-                    {
-                        size_t linearIdx = this->index(x, y);
-                        color3 color;
-                        color.x = rawImgChn[idxR][linearIdx];
-                        color.y = rawImgChn[idxG][linearIdx];
-                        this->set(x, y, z, color);
-                    }
-                }
-                loaded = true;
-            }
-
-            // 3 channel images can only be loaded into vector3/4 formats.
-            if (exrHeader.num_channels == 3)
-            {
-                assert(idxR != -1 && idxG != -1 && idxB != -1);
-
-#pragma omp parallel for
-                for (int y = 0; y < this->mDim.y; y++)
-                {
-                    for (int x = 0; x < this->mDim.x; x++)
-                    {
-                        size_t linearIdx = this->index(x, y);
-                        color3 color;
-                        color.x = rawImgChn[idxR][linearIdx];
-                        color.y = rawImgChn[idxG][linearIdx];
-                        color.z = rawImgChn[idxB][linearIdx];
-                        this->set(x, y, z, color);
-                    }
-                }
-                loaded = true;
-            }
-
-            // 4 channel images can only be loaded into vector4 formats.
-            if (exrHeader.num_channels == 4)
-            {
-                assert(idxR != -1 && idxG != -1 && idxB != -1);
-
-#pragma omp parallel for
-                for (int y = 0; y < this->mDim.y; y++)
-                {
-                    for (int x = 0; x < this->mDim.x; x++)
-                    {
-                        size_t linearIdx = this->index(x, y);
-                        color3 color;
-                        color.x = rawImgChn[idxR][linearIdx];
-                        color.y = rawImgChn[idxG][linearIdx];
-                        color.z = rawImgChn[idxB][linearIdx];
-                        this->set(x, y, z, color);
-                    }
-                }
-                loaded = true;
-            }
-
-            FreeEXRHeader(&exrHeader);
-            FreeEXRImage(&exrImage);
-
-            if (!loaded)
-            {
-                std::cerr << "Insufficient target channels when loading EXR: need " << exrHeader.num_channels << std::endl;
-                return false;
-            }
-            else
-            {
-                return true;
-            }
-        }
-
     };
 }
 
@@ -2112,6 +1849,9 @@ namespace FLIP
     {
     public:
 #ifndef FLIP_USE_CUDA
+        image()
+        {}
+#if 0
         image(std::string fileName)
         {
             bool bOk = this->load(fileName);
@@ -2121,6 +1861,7 @@ namespace FLIP
                 exit(-1);
             }
         }
+#endif
 
         image(const int width, const int height)
             : tensor<T>(width, height, 1)
@@ -2736,6 +2477,7 @@ namespace FLIP
             stopExposure = log2(xMax / Ymedian);
         }
 
+#if 0
         bool exrSave(const std::string& fileName)
         {
 #ifdef FLIP_USE_CUDA
@@ -2803,6 +2545,8 @@ namespace FLIP
 
             return true;
         }
+#endif
+
 #ifndef FLIP_USE_CUDA
         void FLIP(image<color3>& reference, image<color3>& test, float ppd)
         {
@@ -2883,6 +2627,7 @@ namespace FLIP
     }
 #endif
 
+#if 0
     template <>
     bool image<float>::exrSave(const std::string& fileName)
     {
@@ -2923,4 +2668,5 @@ namespace FLIP
 
         return true;
     }
+#endif
 }

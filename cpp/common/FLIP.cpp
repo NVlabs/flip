@@ -60,8 +60,9 @@
 
 
 //#define FLIP_USE_CUDA
-#include "../FLIP.cuh"
+#include "../FLIP.h"
 
+#include "imagehelpers.h"
 #include "commandline.h"
 #include "filename.h"
 
@@ -193,7 +194,10 @@ int main(int argc, char** argv)
         gFLIPOptions.PPD = calculatePPD(gFLIPOptions.monitorDistance, gFLIPOptions.monitorResolutionX, gFLIPOptions.monitorWidth);
     }
 
-    FLIP::image<FLIP::color3> referenceImage(referenceFileName.toString());
+
+//    FLIP::image<FLIP::color3> referenceImage(referenceFileName.toString());
+    FLIP::image<FLIP::color3> referenceImage;
+    ImageHelpers::load(referenceImage, referenceFileName.toString());
 
 
     std::cout << "Invoking " << (bUseHDR ? "HDR" : "LDR") << "-FLIP\n";
@@ -283,7 +287,10 @@ int main(int argc, char** argv)
             flipFileName.setName("flip." + flipFileName.getName());
         }
 
-        FLIP::image<FLIP::color3> testImage(testFileName.toString());
+//        FLIP::image<FLIP::color3> testImage(testFileName.toString());
+        FLIP::image<FLIP::color3> testImage;
+        ImageHelpers::load(testImage, testFileName.toString());
+
 
         FLIP::image<FLIP::color3> viridisMap(FLIP::MapViridis, 256);
         FLIP::image<float> errorMapFLIP(referenceImage.getWidth(), referenceImage.getHeight(), 0.0f);
@@ -340,8 +347,10 @@ int main(int argc, char** argv)
                         rFileName.setName(basename + ".reference." + "." + expCount);
                         tFileName.setName(basename + ".test." + "." + expCount);
                     }
-                    rImage.pngSave(destinationDirectory + "/" + rFileName.toString());
-                    tImage.pngSave(destinationDirectory + "/" + tFileName.toString());
+                    ImageHelpers::pngSave(destinationDirectory + "/" + rFileName.toString(), rImage);
+                    ImageHelpers::pngSave(destinationDirectory + "/" + tFileName.toString(), tImage);
+//                    rImage.pngSave(destinationDirectory + "/" + rFileName.toString());
+//                    tImage.pngSave(destinationDirectory + "/" + tFileName.toString());
                 }
 
                 tmpErrorMap.FLIP(rImage, tImage, gFLIPOptions.PPD);
@@ -362,15 +371,17 @@ int main(int argc, char** argv)
 
                     if (basename == "")
                     {
-                        pngResult.pngSave(destinationDirectory + "/" + "flip." + referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(gFLIPOptions.PPD))) + "ppd.ldr." + optionTonemapper + "." + expCount + "." + expString + ".png");
+                        //pngResult.pngSave(destinationDirectory + "/" + "flip." + referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(gFLIPOptions.PPD))) + "ppd.ldr." + optionTonemapper + "." + expCount + "." + expString + ".png");
+                        ImageHelpers::pngSave(destinationDirectory + "/" + "flip." + referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(gFLIPOptions.PPD))) + "ppd.ldr." + optionTonemapper + "." + expCount + "." + expString + ".png", pngResult);
                     }
                     else
                     {
-                        pngResult.pngSave(destinationDirectory + "/" + basename + "." + expCount + ".png");
+                        //pngResult.pngSave(destinationDirectory + "/" + basename + "." + expCount + ".png");
+                        ImageHelpers::pngSave(destinationDirectory + "/" + basename + "." + expCount + ".png", pngResult);
 
                     }
-
-                    pngResult.pngSave(destinationDirectory + "/" + flipFileName.toString());
+                    //pngResult.pngSave(destinationDirectory + "/" + flipFileName.toString());
+                    ImageHelpers::pngSave(destinationDirectory + "/" + flipFileName.toString(), pngResult);
                 }
 
             }
@@ -380,7 +391,9 @@ int main(int argc, char** argv)
             {
                 FLIP::image<FLIP::color3> pngMaxErrorExposureMap(referenceImage.getWidth(), referenceImage.getHeight());
                 pngMaxErrorExposureMap.colorMap(maxErrorExposureMap, viridisMap);
-                pngMaxErrorExposureMap.pngSave(destinationDirectory + "/" + exposureFileName.toString());
+                //pngMaxErrorExposureMap.pngSave(destinationDirectory + "/" + exposureFileName.toString());
+                ImageHelpers::pngSave(destinationDirectory + "/" + exposureFileName.toString(), pngMaxErrorExposureMap);
+
             }
         }
         else
@@ -405,7 +418,8 @@ int main(int argc, char** argv)
             {
                 pngResult.colorMap(errorMapFLIP, magmaMap);
             }
-            pngResult.pngSave(destinationDirectory + "/" + flipFileName.toString());
+            //pngResult.pngSave(destinationDirectory + "/" + flipFileName.toString());
+            ImageHelpers::pngSave(destinationDirectory + "/" + flipFileName.toString(), pngResult);
         }
 
         FLIP::pooling<float> pooledValues;

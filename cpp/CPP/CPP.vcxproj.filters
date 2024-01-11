@@ -21,7 +21,10 @@
     <ClInclude Include="..\common\tinyexr.h">
       <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="..\FLIP.cuh" />
+    <ClInclude Include="..\FLIP.h" />
+    <ClInclude Include="..\common\imagehelpers.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\common\FLIP.cpp">

@@ -91,6 +91,196 @@ static void setupPixelsPerDegree(commandline& commandLine, FLIP::Parameters& par
     }
 }
 
+static void saveErrorAndExposureMaps(const bool useHDR, commandline& commandLine, FLIP::Parameters& parameters, FLIP::image<float>& errorMapFLIP,
+    FLIP::image<float>& maxErrorExposureMap, const std::string& destinationDirectory, FLIP::filename& flipFileName, FLIP::filename& exposureFileName)
+{
+    if(useHDR) // Updating the flipFileName here, since the computation of FLIP may have updated the exposure parameters.
+    {
+        flipFileName.setName(flipFileName.getName() + ".hdr." + parameters.tonemapper + "." + f2s(parameters.startExposure) + "_to_" + f2s(parameters.stopExposure) + "." + std::to_string(parameters.numExposures));
+    }
+
+    if (!commandLine.optionSet("no-error-map"))
+    {
+        FLIP::image<FLIP::color3> pngResult(errorMapFLIP.getWidth(), errorMapFLIP.getHeight());
+        pngResult.copyFloat2Color3(errorMapFLIP);
+        if (!commandLine.optionSet("no-magma"))
+        {
+            pngResult.colorMap(errorMapFLIP, FLIP::magmaMap);
+        }
+        ImageHelpers::pngSave(destinationDirectory + "/" + flipFileName.toString(), pngResult);
+    }
+
+    if (useHDR)
+    {
+        if (!commandLine.optionSet("no-exposure-map"))
+        {
+            FLIP::image<FLIP::color3> pngMaxErrorExposureMap(maxErrorExposureMap.getWidth(), maxErrorExposureMap.getHeight());
+            pngMaxErrorExposureMap.colorMap(maxErrorExposureMap, FLIP::viridisMap);
+            ImageHelpers::pngSave(destinationDirectory + "/" + exposureFileName.toString(), pngMaxErrorExposureMap);   
+        }
+    }
+}
+
+static void gatherStatisticsAndSaveOutput(commandline& commandLine, FLIP::image<float>& errorMapFLIP, const std::string& destinationDirectory,
+    FLIP::filename& referenceFileName, FLIP::filename& testFileName, FLIP::filename& histogramFileName, const std::string& FLIPString, const float time,
+    const uint32_t testFileCount)
+{
+    FLIP::pooling<float> pooledValues;
+    for (int y = 0; y < errorMapFLIP.getHeight(); y++)
+    {
+        for (int x = 0; x < errorMapFLIP.getWidth(); x++)
+        {
+            pooledValues.update(x, y, errorMapFLIP.get(x, y));
+        }
+    }
+
+    if (commandLine.optionSet("histogram"))
+    {
+        bool optionLog = commandLine.optionSet("log");
+        bool optionExcludeValues = commandLine.optionSet("exclude-pooled-values");
+        float yMax = (commandLine.optionSet("y-max") ? std::stof(commandLine.getOptionValue("y-max")) : 0.0f);
+        pooledValues.save(destinationDirectory + "/" + histogramFileName.toString(), errorMapFLIP.getWidth(), errorMapFLIP.getHeight(), optionLog, referenceFileName.toString(), testFileName.toString(), !optionExcludeValues, yMax);
+    }
+
+    if (commandLine.optionSet("csv"))
+    {
+        FLIP::filename csvFileName(commandLine.getOptionValue("csv"));
+
+        std::fstream csv;
+        csv.open(csvFileName.toString(), std::ios::app);
+        if (csv.is_open())
+        {
+            csv.seekp(0, std::ios_base::end);
+
+            if (csv.tellp() <= 0)
+                csv << "\"Reference\",\"Test\",\"Mean\",\"Weighted median\",\"1st weighted quartile\",\"3rd weighted quartile\",\"Min\",\"Max\",\"Evaluation time\"\n";
+
+            csv << "\"" << referenceFileName.toString() << "\",";
+            csv << "\"" << testFileName.toString() << "\",";
+            csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getMean(), 6) << "\",";
+            csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getPercentile(0.5f, true), 6) << "\",";
+            csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getPercentile(0.25f, true), 6) << "\",";
+            csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getPercentile(0.75f, true), 6) << "\",";
+            csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getMinValue(), 6) << "\",";
+            csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getMaxValue(), 6) << "\",";
+            csv << "\"" << FIXED_DECIMAL_DIGITS(time, 4) << "\"\n";
+
+            csv.close();
+        }
+        else
+        {
+            std::cout << "\nError: Could not write csv file " << csvFileName.toString() << "\n";
+        }
+    }
+
+    std::cout << FLIPString << " between reference image <" << referenceFileName.toString() << "> and test image <" << testFileName.toString() << ">\n";
+    std::cout << "     Mean: " << FIXED_DECIMAL_DIGITS(pooledValues.getMean(), 6) << "\n";
+    std::cout << "     Weighted median: " << FIXED_DECIMAL_DIGITS(pooledValues.getPercentile(0.5f, true), 6) << "\n";
+    std::cout << "     1st weighted quartile: " << FIXED_DECIMAL_DIGITS(pooledValues.getPercentile(0.25f, true), 6) << "\n";
+    std::cout << "     3rd weighted quartile: " << FIXED_DECIMAL_DIGITS(pooledValues.getPercentile(0.75f, true), 6) << "\n";
+    std::cout << "     Min: " << FIXED_DECIMAL_DIGITS(pooledValues.getMinValue(), 6) << "\n";
+    std::cout << "     Max: " << FIXED_DECIMAL_DIGITS(pooledValues.getMaxValue(), 6) << "\n";
+    std::cout << "     Evaluation time: " << FIXED_DECIMAL_DIGITS(time, 4) << " seconds\n";
+    std::cout << ((testFileCount < commandLine.getOptionValues("test").size()) ? "\n" : "");
+
+    if (commandLine.optionSet("exit-on-test"))
+    {
+        std::string exitOnTestQuantity = "mean";
+        float exitOnTestThresholdValue = 0.05f;
+        if (commandLine.optionSet("exit-test-parameters"))
+        {
+            exitOnTestQuantity = commandLine.getOptionValue("exit-test-parameters", 0);
+            std::transform(exitOnTestQuantity.begin(), exitOnTestQuantity.end(), exitOnTestQuantity.begin(), [](unsigned char c) { return std::tolower(c); });
+            if (exitOnTestQuantity != "mean" && exitOnTestQuantity != "weighted-median" && exitOnTestQuantity != "max")
+            {
+                std::cout << "For --exit-test-parameters / -etp, the first paramter needs to be {MEAN | WEIGHTED-MEDIAN | MAX}\n";
+                exit(EXIT_FAILURE);
+            }
+            exitOnTestThresholdValue = std::stof(commandLine.getOptionValue("exit-test-parameters", 1));
+            if (exitOnTestThresholdValue < 0.0f || exitOnTestThresholdValue > 1.0f)
+            {
+                std::cout << "For --exit-test-parameters / -etp, the second paramter needs to be in [0,1]\n";
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        float testQuantity;
+        if (exitOnTestQuantity == "mean")
+        {
+            testQuantity = pooledValues.getMean();
+        }
+        else if (exitOnTestQuantity == "weighted-median")
+        {
+            testQuantity = pooledValues.getPercentile(0.5f, true);
+        }
+        else if (exitOnTestQuantity == "max")
+        {
+            testQuantity = pooledValues.getMaxValue();
+        }
+
+        if (testQuantity > exitOnTestThresholdValue)
+        {
+            std::cout << "Exiting with failure code because the " << exitOnTestQuantity << " of the FLIP error map is " << FIXED_DECIMAL_DIGITS(testQuantity, 6) << ", while the threshold for success is " << FIXED_DECIMAL_DIGITS(exitOnTestThresholdValue, 6) << ".\n";
+            exit(EXIT_FAILURE);     // From stdlib.h: equal to 1.
+        }
+    }
+}
+
+static void setFileNames(const bool useHDR, commandline& commandLine, const FLIP::Parameters& parameters, const std::string& basename, 
+    FLIP::filename& referenceFileName, FLIP::filename& testFileName, const std::string& testFileNameString, FLIP::filename& flipFileName,
+    FLIP::filename& histogramFileName, FLIP::filename& exposureFileName)
+{
+    testFileName = testFileNameString;
+
+    if (basename != "" && commandLine.getOptionValues("test").size() == 1)
+    {
+        flipFileName.setName(basename);
+        histogramFileName.setName(basename);
+        exposureFileName.setName(basename + ".exposure_map");
+    }
+    else
+    {
+        flipFileName.setName(referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(parameters.PPD))) + "ppd");
+        if (!useHDR)
+        {
+            flipFileName.setName(flipFileName.getName() + ".ldr");  // Note that the HDR filename is not complete until after FLIP has been computed, since FLIP may update the exposure parameters.
+        }
+        histogramFileName.setName("weighted_histogram." + flipFileName.getName());
+        exposureFileName.setName("exposure_map." + flipFileName.getName());
+        flipFileName.setName("flip." + flipFileName.getName());
+    }
+}
+
+static void getExposureParameters(const bool useHDR, commandline& commandLine, FLIP::Parameters& parameters)
+{
+    if (useHDR)
+    {
+        if (commandLine.optionSet("tone-mapper"))   // The default in FLIP::Parameters.tonemapper is "aces".
+        {
+            std::string tonemapper = commandLine.getOptionValue("tone-mapper");
+            std::transform(tonemapper.begin(), tonemapper.end(), tonemapper.begin(), [](unsigned char c) { return std::tolower(c); });
+            if (tonemapper != "aces" && tonemapper != "reinhard" && tonemapper != "hable")
+            {
+                std::cout << "\nError: unknown tonemapper, should be one of \"aces\", \"reinhard\", or \"hable\"\n";
+                exit(-1);
+            }
+            parameters.tonemapper = tonemapper;
+        }
+        if (commandLine.optionSet("start-exposure"))
+        {
+            parameters.startExposure = std::stof(commandLine.getOptionValue("start-exposure"));
+        }
+        if (commandLine.optionSet("stop-exposure"))
+        {
+            parameters.stopExposure = std::stof(commandLine.getOptionValue("stop-exposure"));
+        }
+        if (commandLine.optionSet("num-exposures"))
+        {
+            parameters.numExposures = atoi(commandLine.getOptionValue("num-exposures").c_str());
+        }
+    }
+}
+
 int main(int argc, char** argv)
 {
     std::string FLIPString = "FLIP";
@@ -141,25 +331,6 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    std::string exitOnTestQuantity = "mean";
-    float exitOnTestThresholdValue = 0.05f;
-    if (commandLine.optionSet("exit-on-test") && commandLine.optionSet("exit-test-parameters"))
-    {
-        exitOnTestQuantity = commandLine.getOptionValue("exit-test-parameters", 0);
-        std::transform(exitOnTestQuantity.begin(), exitOnTestQuantity.end(), exitOnTestQuantity.begin(), [](unsigned char c) { return std::tolower(c); });
-        if (exitOnTestQuantity != "mean" && exitOnTestQuantity != "weighted-median" && exitOnTestQuantity != "max")
-        {
-            std::cout << "For --exit-test-parameters / -etp, the first paramter needs to be {MEAN | WEIGHTED-MEDIAN | MAX}\n";
-            exit(EXIT_FAILURE);
-        }
-        exitOnTestThresholdValue = std::stof(commandLine.getOptionValue("exit-test-parameters", 1));
-        if (exitOnTestThresholdValue < 0.0f || exitOnTestThresholdValue > 1.0f)
-        {
-            std::cout << "For --exit-test-parameters / -etp, the second paramter needs to be in [0,1]\n";
-            exit(EXIT_FAILURE);
-        }
-    }
-
     FLIP::filename referenceFileName(commandLine.getOptionValue("reference"));
     std::vector<std::string>& testFileNames = commandLine.getOptionValues("test");
     bool bUseHDR = (referenceFileName.getExtension() == "exr");
@@ -182,317 +353,94 @@ int main(int argc, char** argv)
         }
     }
 
-    FLIP::image<FLIP::color3> magmaMap(FLIP::MapMagma, 256);
-
     setupPixelsPerDegree(commandLine, parameters);
+    getExposureParameters(bUseHDR, commandLine, parameters);
+    std::cout << "Invoking " << (bUseHDR ? "HDR" : "LDR") << "-FLIP\n";
+    std::cout << "     Pixels per degree: " << int(std::round(parameters.PPD)) << "\n" << (!bUseHDR ? "\n" : "");
+
 
     FLIP::image<FLIP::color3> referenceImage;
     ImageHelpers::load(referenceImage, referenceFileName.toString());
 
-    std::cout << "Invoking " << (bUseHDR ? "HDR" : "LDR") << "-FLIP\n";
-    std::cout << "     Pixels per degree: " << int(std::round(parameters.PPD)) << "\n" << (!bUseHDR ? "\n" : "");
-
-    bool bStartexp = commandLine.optionSet("start-exposure");
-    bool bStopexp = commandLine.optionSet("stop-exposure");
-
-    //  Set HDR-FLIP parameters.
-    //std::string optionTonemapper = "aces";
-    if (bUseHDR)
-    {
-        if (commandLine.optionSet("tone-mapper"))   // The default in FLIP::Parameters.tonemapper is "aces".
-        {
-            std::string tonemapper = commandLine.getOptionValue("tone-mapper");
-            std::transform(tonemapper.begin(), tonemapper.end(), tonemapper.begin(), [](unsigned char c) { return std::tolower(c); });
-            if (tonemapper != "aces" && tonemapper != "reinhard" && tonemapper != "hable")
-            {
-                std::cout << "\nError: unknown tonemapper, should be one of \"aces\", \"reinhard\", or \"hable\"\n";
-                exit(-1);
-            }
-            parameters.tonemapper = tonemapper;
-        }
-
-        if (!bStartexp || !bStopexp)
-        {
-            // TODO: this should be computed inside the FLIP() call.
-            referenceImage.computeExposures(parameters.tonemapper, parameters.startExposure, parameters.stopExposure);
-        }
-        if (bStartexp)
-        {
-            parameters.startExposure = std::stof(commandLine.getOptionValue("start-exposure"));
-        }
-        if (bStopexp)
-        {
-            parameters.stopExposure = std::stof(commandLine.getOptionValue("stop-exposure"));
-        }
-
-        if (parameters.startExposure > parameters.stopExposure)
-        {
-            // TODO: This should be moved to the FLIP() call.
-            std::cout << "Start exposure must be smaller than stop exposure!\n";
-            exit(-1);
-        }
-
-        if (commandLine.optionSet("num-exposures"))
-        {
-            parameters.numExposures = atoi(commandLine.getOptionValue("num-exposures").c_str());
-        }
-        else
-        {
-            // TODO: this should be computed inside the FLIP() call.
-            parameters.numExposures = int(std::max(2.0f, std::ceil(parameters.stopExposure - parameters.startExposure)));
-        }
-
-        // This should be part of the FLIP call as well, with a verbose paramters.
-        std::cout << "     Assumed tone mapper: " << ((parameters.tonemapper == "aces") ? "ACES" : (parameters.tonemapper == "hable" ? "Hable" : "Reinhard")) << "\n";
-        std::cout << "     Start exposure: " << FIXED_DECIMAL_DIGITS(parameters.startExposure, 4) << "\n";
-        std::cout << "     Stop exposure: " << FIXED_DECIMAL_DIGITS(parameters.stopExposure, 4) << "\n";
-        std::cout << "     Number of exposures: " << parameters.numExposures << "\n\n";
-    }
-
     std::string basename = (commandLine.optionSet("basename") ? commandLine.getOptionValue("basename") : "");
-    FLIP::filename flipFileName("tmp.png");
+    FLIP::filename flipFileName("tmp.png"); // Dummy file name, but it keeps the file extension (.png).
     FLIP::filename histogramFileName("tmp.py");
     FLIP::filename exposureFileName("tmp.png");
+    FLIP::filename testFileName;
 
     uint32_t testFileCount = 0;
-    uint32_t maxTestFileCount = uint32_t(commandLine.getOptionValues("test").size());
-    FLIP::image<FLIP::color3> originalReferenceImage(referenceImage.getWidth(), referenceImage.getHeight());
-
+    // Loop over the test images files to be FLIP:ed against the reference image.
     for (auto& testFileNameString : commandLine.getOptionValues("test"))
     {
-        FLIP::filename testFileName = testFileNameString;
-
-        if (basename != "" && commandLine.getOptionValues("test").size() == 1)
-        {
-            flipFileName.setName(basename);
-            histogramFileName.setName(basename);
-            exposureFileName.setName(basename + ".exposure_map");
-        }
-        else
-        {
-            flipFileName.setName(referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(parameters.PPD))) + "ppd");
-            if (bUseHDR)
-            {
-                flipFileName.setName(flipFileName.getName() + ".hdr." + parameters.tonemapper + "." + f2s(parameters.startExposure) + "_to_" + f2s(parameters.stopExposure) + "." + std::to_string(parameters.numExposures));
-            }
-            else
-            {
-                flipFileName.setName(flipFileName.getName() + ".ldr");
-            }
-            histogramFileName.setName("weighted_histogram." + flipFileName.getName());
-            exposureFileName.setName("exposure_map." + flipFileName.getName());
-            flipFileName.setName("flip." + flipFileName.getName());
-        }
+        setFileNames(bUseHDR, commandLine, parameters, basename, referenceFileName, testFileName, testFileNameString, flipFileName, histogramFileName, exposureFileName);
 
         FLIP::image<FLIP::color3> testImage;
         ImageHelpers::load(testImage, testFileName.toString());
 
-
-        FLIP::image<FLIP::color3> viridisMap(FLIP::MapViridis, 256);
         FLIP::image<float> errorMapFLIP(referenceImage.getWidth(), referenceImage.getHeight(), 0.0f);
+        FLIP::image<float> maxErrorExposureMap(referenceImage.getWidth(), referenceImage.getHeight());
 
         auto t0 = std::chrono::high_resolution_clock::now();
-        auto t = t0;
-        if (bUseHDR)
-        {
-            FLIP::image<FLIP::color3> rImage(referenceImage.getWidth(), referenceImage.getHeight());
-            FLIP::image<FLIP::color3> tImage(referenceImage.getWidth(), referenceImage.getHeight());
-            FLIP::image<float> tmpErrorMap(referenceImage.getWidth(), referenceImage.getHeight(), 0.0f);
-            FLIP::image<float> prevTmpErrorMap(referenceImage.getWidth(), referenceImage.getHeight());
+        FLIP::computeFLIP(bUseHDR, referenceImage, testImage, parameters, errorMapFLIP, maxErrorExposureMap, true);
+        auto t = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration_cast<std::chrono::microseconds>(t - t0).count() / 1000000.0f;
 
-            FLIP::image<float> maxErrorExposureMap(referenceImage.getWidth(), referenceImage.getHeight());
-
-            FLIP::filename rFileName("tmp.png");
-            FLIP::filename tFileName("tmp.png");
-
-            float exposureStepSize = (parameters.stopExposure - parameters.startExposure) / (parameters.numExposures - 1);
-
-            for (int i = 0; i < parameters.numExposures; i++)
-            {
-                float exposure = parameters.startExposure + i * exposureStepSize;
-
-                std::stringstream ss;
-                ss << std::setfill('0') << std::setw(3) << i;
-                std::string expCount = ss.str();
-                ss.str(std::string());
-                ss << std::string(exposure < 0.0f ? "m" : "p") << std::to_string(std::abs(exposure));
-                std::string expString = ss.str();
-
-                rImage.copy(referenceImage);
-                tImage.copy(testImage);
-
-                rImage.expose(exposure);
-                tImage.expose(exposure);
-
-                rImage.toneMap(parameters.tonemapper);
-                tImage.toneMap(parameters.tonemapper);
-
-                rImage.clamp();
-                tImage.clamp();
-
-                rImage.LinearRGB2sRGB();
-                tImage.LinearRGB2sRGB();
-
-                if (commandLine.optionSet("save-ldr-images"))
-                {
-                    if (basename == "")
-                    {
-                        rFileName.setName(referenceFileName.getName() + "." + parameters.tonemapper + "." + expCount + "." + expString);
-                        tFileName.setName(testFileName.getName() + "." + parameters.tonemapper + "." + expCount + "." + expString);
-                    }
-                    else
-                    {
-                        rFileName.setName(basename + ".reference." + "." + expCount);
-                        tFileName.setName(basename + ".test." + "." + expCount);
-                    }
-                    ImageHelpers::pngSave(destinationDirectory + "/" + rFileName.toString(), rImage);
-                    ImageHelpers::pngSave(destinationDirectory + "/" + tFileName.toString(), tImage);
-                }
-
-                tmpErrorMap.FLIP(rImage, tImage, parameters.PPD);
-
-                errorMapFLIP.setMaxExposure(tmpErrorMap, maxErrorExposureMap, float(i) / (parameters.numExposures - 1));
-
-                if (commandLine.optionSet("save-ldrflip"))
-                {
-                    FLIP::image<FLIP::color3> pngResult(referenceImage.getWidth(), referenceImage.getHeight());
-                    if (!commandLine.optionSet("no-magma"))
-                    {
-                        pngResult.colorMap(tmpErrorMap, magmaMap);
-                    }
-                    else
-                    {
-                        pngResult.copyFloat2Color3(tmpErrorMap);
-                    }
-
-                    if (basename == "")
-                    {
-                        ImageHelpers::pngSave(destinationDirectory + "/" + "flip." + referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(parameters.PPD))) + "ppd.ldr." + parameters.tonemapper + "." + expCount + "." + expString + ".png", pngResult);
-                    }
-                    else
-                    {
-                        ImageHelpers::pngSave(destinationDirectory + "/" + basename + "." + expCount + ".png", pngResult);
-
-                    }
-                    ImageHelpers::pngSave(destinationDirectory + "/" + flipFileName.toString(), pngResult);
-                }
-
-            }
-            t = std::chrono::high_resolution_clock::now();
-
-            if (!commandLine.optionSet("no-exposure-map"))
-            {
-                FLIP::image<FLIP::color3> pngMaxErrorExposureMap(referenceImage.getWidth(), referenceImage.getHeight());
-                pngMaxErrorExposureMap.colorMap(maxErrorExposureMap, viridisMap);
-                ImageHelpers::pngSave(destinationDirectory + "/" + exposureFileName.toString(), pngMaxErrorExposureMap);
-
-            }
-        }
-        else    // Not HDR, i.e., LDR.
-        {
-            if (maxTestFileCount > 1 && testFileCount == 0)     // Are we testing more than one image, and are we testing the first image?
-            {
-                originalReferenceImage.copy(referenceImage);    // If so, then store the referenceImage in originalReferenceImage, since FLIP() destroys referenceImage, i.e., in the errorMapFLIP.FLIP() just below.
-            }
-            errorMapFLIP.FLIP(referenceImage, testImage, parameters.PPD);
-            t = std::chrono::high_resolution_clock::now();
-            if (maxTestFileCount > 1)
-            {
-                referenceImage.copy(originalReferenceImage);    // Restore the original referenceImage for the second test, and all images after.
-            }
-        }
-
-        if (!commandLine.optionSet("no-error-map"))
-        {
-            FLIP::image<FLIP::color3> pngResult(referenceImage.getWidth(), referenceImage.getHeight());
-            pngResult.copyFloat2Color3(errorMapFLIP);
-            if (!commandLine.optionSet("no-magma"))
-            {
-                pngResult.colorMap(errorMapFLIP, magmaMap);
-            }
-            ImageHelpers::pngSave(destinationDirectory + "/" + flipFileName.toString(), pngResult);
-        }
-
-        FLIP::pooling<float> pooledValues;
-        for (int y = 0; y < errorMapFLIP.getHeight(); y++)
-        {
-            for (int x = 0; x < errorMapFLIP.getWidth(); x++)
-            {
-                pooledValues.update(x, y, errorMapFLIP.get(x, y));
-            }
-        }
-
-        if (commandLine.optionSet("histogram"))
-        {
-            bool optionLog = commandLine.optionSet("log");
-            bool optionExcludeValues = commandLine.optionSet("exclude-pooled-values");
-            float yMax = (commandLine.optionSet("y-max") ? std::stof(commandLine.getOptionValue("y-max")) : 0.0f);
-            pooledValues.save(destinationDirectory + "/" + histogramFileName.toString(), errorMapFLIP.getWidth(), errorMapFLIP.getHeight(), optionLog, referenceFileName.toString(), testFileName.toString(), !optionExcludeValues, yMax);
-        }
-
-        if (commandLine.optionSet("csv"))
-        {
-            FLIP::filename csvFileName(commandLine.getOptionValue("csv"));
-
-            std::fstream csv;
-            csv.open(csvFileName.toString(), std::ios::app);
-            if (csv.is_open())
-            {
-                csv.seekp(0, std::ios_base::end);
-
-                if (csv.tellp() <= 0)
-                    csv << "\"Reference\",\"Test\",\"Mean\",\"Weighted median\",\"1st weighted quartile\",\"3rd weighted quartile\",\"Min\",\"Max\",\"Evaluation time\"\n";
-
-                csv << "\"" << referenceFileName.toString() << "\",";
-                csv << "\"" << testFileName.toString() << "\",";
-                csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getMean(), 6) << "\",";
-                csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getPercentile(0.5f, true), 6) << "\",";
-                csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getPercentile(0.25f, true), 6) << "\",";
-                csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getPercentile(0.75f, true), 6) << "\",";
-                csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getMinValue(), 6) << "\",";
-                csv << "\"" << FIXED_DECIMAL_DIGITS(pooledValues.getMaxValue(), 6) << "\",";
-                csv << "\"" << FIXED_DECIMAL_DIGITS(std::chrono::duration_cast<std::chrono::microseconds>(t - t0).count() / 1000000.0f, 4) << "\"\n";
-
-                csv.close();
-            }
-            else
-            {
-                std::cout << "\nError: Could not write csv file " << csvFileName.toString() << "\n";
-            }
-        }
-
-        std::cout << FLIPString << " between reference image <" << referenceFileName.toString() << "> and test image <" << testFileName.toString() << ">\n";
-        std::cout << "     Mean: " << FIXED_DECIMAL_DIGITS(pooledValues.getMean(), 6) << "\n";
-        std::cout << "     Weighted median: " << FIXED_DECIMAL_DIGITS(pooledValues.getPercentile(0.5f, true), 6) << "\n";
-        std::cout << "     1st weighted quartile: " << FIXED_DECIMAL_DIGITS(pooledValues.getPercentile(0.25f, true), 6) << "\n";
-        std::cout << "     3rd weighted quartile: " << FIXED_DECIMAL_DIGITS(pooledValues.getPercentile(0.75f, true), 6) << "\n";
-        std::cout << "     Min: " << FIXED_DECIMAL_DIGITS(pooledValues.getMinValue(), 6) << "\n";
-        std::cout << "     Max: " << FIXED_DECIMAL_DIGITS(pooledValues.getMaxValue(), 6) << "\n";
-        std::cout << "     Evaluation time: " << FIXED_DECIMAL_DIGITS(std::chrono::duration_cast<std::chrono::microseconds>(t - t0).count() / 1000000.0f, 4) << " seconds\n";
-        std::cout << (((++testFileCount) < commandLine.getOptionValues("test").size()) ? "\n" : "");
-
-        if (commandLine.optionSet("exit-on-test"))
-        {
-            float testQuantity;
-            if (exitOnTestQuantity == "mean")
-            {
-                testQuantity = pooledValues.getMean();
-            }
-            else if (exitOnTestQuantity == "weighted-median")
-            {
-                testQuantity = pooledValues.getPercentile(0.5f, true);
-            }
-            else if (exitOnTestQuantity == "max")
-            {
-                testQuantity = pooledValues.getMaxValue();
-            }
-
-            if (testQuantity > exitOnTestThresholdValue)
-            {
-                std::cout << "Exiting with failure code because the " << exitOnTestQuantity << " of the FLIP error map is " << FIXED_DECIMAL_DIGITS(testQuantity, 6) << ", while the threshold for success is " << FIXED_DECIMAL_DIGITS(exitOnTestThresholdValue, 6) << ".\n";
-                exit(EXIT_FAILURE);     // From stdlib.h: equal to 1.
-            }
-        }
+        saveErrorAndExposureMaps(bUseHDR, commandLine, parameters, errorMapFLIP, maxErrorExposureMap, destinationDirectory, flipFileName, exposureFileName);
+        gatherStatisticsAndSaveOutput(commandLine, errorMapFLIP, destinationDirectory, referenceFileName, testFileName, histogramFileName, FLIPString, time, ++testFileCount);
     }
     exit(EXIT_SUCCESS);                 // From stdlib.h: equal to 0.
 }
+
+
+//if (commandLine.optionSet("save-ldrflip"))
+//{
+//    FLIP::image<FLIP::color3> pngResult(referenceImage.getWidth(), referenceImage.getHeight());
+//    if (!commandLine.optionSet("no-magma"))
+//    {
+//        pngResult.colorMap(tmpErrorMap, magmaMap);
+//    }
+//    else
+//    {
+//        pngResult.copyFloat2Color3(tmpErrorMap);
+//    }
+//
+//    if (basename == "")
+//    {
+//        ImageHelpers::pngSave(destinationDirectory + "/" + "flip." + referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(parameters.PPD))) + "ppd.ldr." + parameters.tonemapper + "." + expCount + "." + expString + ".png", pngResult);
+//    }
+//    else
+//    {
+//        ImageHelpers::pngSave(destinationDirectory + "/" + basename + "." + expCount + ".png", pngResult);
+//
+//    }
+//    ImageHelpers::pngSave(destinationDirectory + "/" + flipFileName.toString(), pngResult);
+//}
+
+//FLIP::filename rFileName("tmp.png");
+//FLIP::filename tFileName("tmp.png");
+
+//std::stringstream ss;
+//ss << std::setfill('0') << std::setw(3) << i;
+//std::string expCount = ss.str();
+//ss.str(std::string());
+//ss << std::string(exposure < 0.0f ? "m" : "p") << std::to_string(std::abs(exposure));
+//std::string expString = ss.str();
+
+
+//if (commandLine.optionSet("save-ldr-images"))
+//{
+//    if (basename == "")
+//    {
+//        rFileName.setName(referenceFileName.getName() + "." + parameters.tonemapper + "." + expCount + "." + expString);
+//        tFileName.setName(testFileName.getName() + "." + parameters.tonemapper + "." + expCount + "." + expString);
+//    }
+//    else
+//    {
+//        rFileName.setName(basename + ".reference." + "." + expCount);
+//        tFileName.setName(basename + ".test." + "." + expCount);
+//    }
+//    ImageHelpers::pngSave(destinationDirectory + "/" + rFileName.toString(), rImage);
+//    ImageHelpers::pngSave(destinationDirectory + "/" + tFileName.toString(), tImage);
+//}
+
+

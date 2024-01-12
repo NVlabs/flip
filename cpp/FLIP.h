@@ -4,8 +4,10 @@
 // * Also, we use color3 now, but it would be nice (for PBRT) to be able to use float* threeChannelImage, uint width, uint height for the paramt to FLIP().
 // * Simplify FLIP-tool.cpp so that it has less code and calls into the single header, i.e., uses the stuff in the two bullets above.
 // * If bUseHDR is false, should we clamp input images?!
-// 
+// * Document FLIP::computeFLIP() and explain here in the header what it does and how it can be used.
 // TESTING
+// * Seems that min on LDR FLIP is slightly off with the new single header... debug!
+// 
 // * Check performance (1 sec for CPU, 0.1 for GPU, approximately).
 // * Check output with test.py.
 // * Make sure all features work (pooling, diagrams output, exposure maps, multiple image input etc) for CPU and for CUDA.
@@ -2179,6 +2181,9 @@ namespace FLIP
 #endif
     };
 
+    static FLIP::image<FLIP::color3> magmaMap = FLIP::image<FLIP::color3>(FLIP::MapMagma, 256);
+    static FLIP::image<FLIP::color3> viridisMap = FLIP::image<FLIP::color3>(FLIP::MapViridis, 256);
+
 #ifdef FLIP_USE_CUDA
     template<typename T>
     inline void image<T>::FLIP(image<color3>& reference, image<color3>& test, float ppd)
@@ -2222,4 +2227,90 @@ namespace FLIP
         this->finalError(colorFeatureDifference);
     }
 #endif
+
+    static void computeFLIP(const bool useHDR, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+        FLIP::Parameters& parameters, FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap, const bool verbose = false)
+    {
+        FLIP::image<FLIP::color3> referenceImage(referenceImageInput.getWidth(), referenceImageInput.getHeight());
+        FLIP::image<FLIP::color3> testImage(referenceImageInput.getWidth(), referenceImageInput.getHeight());
+        referenceImage.copy(referenceImageInput);               // Make a copy, since image::FLIP() destroys the input images.
+        testImage.copy(testImageInput);
+
+        if (useHDR)
+        {
+            // If startExposure/stopExposure are inf, they have not been set by the user. If so, compute from referenceImage.
+            if (parameters.startExposure == std::numeric_limits<float>::infinity() || parameters.stopExposure == std::numeric_limits<float>::infinity())
+            {
+                float startExp, stopExp;
+                referenceImage.computeExposures(parameters.tonemapper, startExp, stopExp);
+                if (parameters.startExposure == std::numeric_limits<float>::infinity())
+                {
+                    parameters.startExposure = startExp;
+                }
+                if (parameters.stopExposure == std::numeric_limits<float>::infinity())
+                {
+                    parameters.stopExposure = stopExp;
+                }
+            }
+            if (parameters.startExposure > parameters.stopExposure)
+            {
+                std::cout << "Start exposure must be smaller than stop exposure!\n";
+                exit(-1);
+            }
+            if (parameters.numExposures == -1)  // -1 means it has not been set by the user, so then we compute it.
+            {
+                parameters.numExposures = int(std::max(2.0f, std::ceil(parameters.stopExposure - parameters.startExposure)));
+            }
+            if (verbose)
+            {
+                std::cout << "     Assumed tone mapper: " << ((parameters.tonemapper == "aces") ? "ACES" : (parameters.tonemapper == "hable" ? "Hable" : "Reinhard")) << "\n";
+                std::cout << "     Start exposure: " << FIXED_DECIMAL_DIGITS(parameters.startExposure, 4) << "\n";
+                std::cout << "     Stop exposure: " << FIXED_DECIMAL_DIGITS(parameters.stopExposure, 4) << "\n";
+                std::cout << "     Number of exposures: " << parameters.numExposures << "\n\n";
+            }
+        }
+
+        if (useHDR)
+        {
+            FLIP::image<FLIP::color3> rImage(referenceImage.getWidth(), referenceImage.getHeight());
+            FLIP::image<FLIP::color3> tImage(referenceImage.getWidth(), referenceImage.getHeight());
+            FLIP::image<float> tmpErrorMap(referenceImage.getWidth(), referenceImage.getHeight(), 0.0f);
+            FLIP::image<float> prevTmpErrorMap(referenceImage.getWidth(), referenceImage.getHeight());
+            FLIP::image<float> maxErrorExposureMap(referenceImage.getWidth(), referenceImage.getHeight());
+
+            float exposureStepSize = (parameters.stopExposure - parameters.startExposure) / (parameters.numExposures - 1);
+            for (int i = 0; i < parameters.numExposures; i++)
+            {
+                float exposure = parameters.startExposure + i * exposureStepSize;
+                rImage.copy(referenceImage);
+                tImage.copy(testImage);
+                rImage.expose(exposure);
+                tImage.expose(exposure);
+                rImage.toneMap(parameters.tonemapper);
+                tImage.toneMap(parameters.tonemapper);
+                rImage.clamp();
+                tImage.clamp();
+                rImage.LinearRGB2sRGB();
+                tImage.LinearRGB2sRGB();
+                tmpErrorMap.FLIP(rImage, tImage, parameters.PPD);
+                errorMapFLIPOutput.setMaxExposure(tmpErrorMap, maxErrorExposureMap, float(i) / (parameters.numExposures - 1));
+            }
+        }
+        else    // Not HDR, i.e., LDR.
+        {
+            errorMapFLIPOutput.FLIP(referenceImage, testImage, parameters.PPD);
+        }
+    }
+
+    // TODO: add output image as well.
+    static void computeFLIP(const bool useHDR, const int imageWidth, const int imageHeight, float* referenceThreeChannelImage, float* testThreeChannelImage,
+                            FLIP::Parameters& parameters)
+    {
+        FLIP::image<FLIP::color3> referenceImage;
+        FLIP::image<FLIP::color3> testImage;
+        referenceImage.setThreeChannelImage(referenceThreeChannelImage, imageWidth, imageHeight);
+        testImage.setThreeChannelImage(testThreeChannelImage, imageWidth, imageHeight);
+
+        // TODO: call computeFLIP with referenceImage and testImage
+    }
 }

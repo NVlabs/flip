@@ -96,8 +96,15 @@ static void saveErrorAndExposureMaps(const bool useHDR, commandline& commandLine
 {
     if(useHDR) // Updating the flipFileName here, since the computation of FLIP may have updated the exposure parameters.
     {
+        std::cout << "     Assumed tone mapper: " << ((parameters.tonemapper == "aces") ? "ACES" : (parameters.tonemapper == "hable" ? "Hable" : "Reinhard")) << "\n";
+        std::cout << "     Start exposure: " << FIXED_DECIMAL_DIGITS(parameters.startExposure, 4) << "\n";
+        std::cout << "     Stop exposure: " << FIXED_DECIMAL_DIGITS(parameters.stopExposure, 4) << "\n";
+        std::cout << "     Number of exposures: " << parameters.numExposures << "\n\n";
+
         flipFileName.setName(flipFileName.getName() + ".hdr." + parameters.tonemapper + "." + f2s(parameters.startExposure) + "_to_" + f2s(parameters.stopExposure) + "." + std::to_string(parameters.numExposures));
+        exposureFileName.setName("exposure_map." + flipFileName.getName());
     }
+    flipFileName.setName("flip." + flipFileName.getName());
 
     if (!commandLine.optionSet("no-error-map"))
     {
@@ -246,8 +253,6 @@ static void setFileNames(const bool useHDR, commandline& commandLine, const FLIP
             flipFileName.setName(flipFileName.getName() + ".ldr");  // Note that the HDR filename is not complete until after FLIP has been computed, since FLIP may update the exposure parameters.
         }
         histogramFileName.setName("weighted_histogram." + flipFileName.getName());
-        exposureFileName.setName("exposure_map." + flipFileName.getName());
-        flipFileName.setName("flip." + flipFileName.getName());
     }
 }
 
@@ -386,7 +391,7 @@ int main(int argc, char** argv)
         FLIP::image<float> maxErrorExposureMap(referenceImage.getWidth(), referenceImage.getHeight());
 
         auto t0 = std::chrono::high_resolution_clock::now();
-        FLIP::computeFLIP(bUseHDR, referenceImage, testImage, parameters, errorMapFLIP, maxErrorExposureMap, true);
+        FLIP::computeFLIP(bUseHDR, referenceImage, testImage, parameters, errorMapFLIP, maxErrorExposureMap);
         float time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count() / 1000000.0f;
 
         saveErrorAndExposureMaps(bUseHDR, commandLine, parameters, errorMapFLIP, maxErrorExposureMap, destinationDirectory, flipFileName, exposureFileName);

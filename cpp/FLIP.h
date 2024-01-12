@@ -1,10 +1,9 @@
 // TODO: single header FLIP
-//
+// 
 // * For PBRT, we need a call 
 //   void computeFLIP(const bool useHDR, const float *threeChanneltestRGB, const float *threeChannelReferenceRGB, float* threeChannelFlipError, int xRes, int yRes, FLIP::Parameters parameters, const bool verbose=false);
 //   # return the flip image with Magma already applied (or perhaps a bool?).
 // 
-// * If bUseHDR is false, should we clamp input images?!
 // * Document FLIP::computeFLIP() and explain here in the header what it does and how it can be used.
 //
 // * save-ldrflip and save-ldr-images need to be handled. All that is currently commented out and needs to be returned from the computeFLIP() call.
@@ -12,9 +11,12 @@
 // TESTING
 // * Both the old and the single header CUDA returns min = 0.000117 for reference.exr/test.exr, while CPU return min = 0.000120. Could be the new CUDA version??
 // 
-// * Check performance (1 sec for CPU, 0.1 for GPU, approximately).
+// * Check performance (1 sec for CPU, 0.1 for GPU, approximately). I now include new copies of ref/test, + clamp, so might be a little slower. + timing of computeExposures.
 // * Check output with test.py.
 // * Make sure all features work (pooling, diagrams output, exposure maps, multiple image input etc) for CPU and for CUDA.
+//
+// LOW PRIO:
+// * add error message if LDR images are outside [0,1]. Do it at load time?
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /*
@@ -2117,7 +2119,6 @@ namespace FLIP
 #else
             const float* tc = ToneMappingCoefficients[toneMapper];
 #endif
-
             float t = 0.85f;
             float a = tc[0] - t * tc[3];
             float b = tc[1] - t * tc[4];
@@ -2134,7 +2135,7 @@ namespace FLIP
             {
                 for (int x = 0; x < this->mDim.x; x++)
                 {
-                    float luminance = color3::linearRGB2Luminance(this->mvpHostData[this->index(x, y)]);
+                    float luminance = color3::linearRGB2Luminance(this->get(x, y));
                     luminances.push_back(luminance);
                     if (luminance != 0.0f)
                     {
@@ -2235,7 +2236,7 @@ namespace FLIP
 #endif
 
     static void computeFLIP(const bool useHDR, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
-        FLIP::Parameters& parameters, FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap, const bool verbose = false)
+        FLIP::Parameters& parameters, FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap)
     {
         FLIP::image<FLIP::color3> referenceImage(referenceImageInput.getWidth(), referenceImageInput.getHeight());
         FLIP::image<FLIP::color3> testImage(referenceImageInput.getWidth(), referenceImageInput.getHeight());
@@ -2267,13 +2268,6 @@ namespace FLIP
             {
                 parameters.numExposures = int(std::max(2.0f, std::ceil(parameters.stopExposure - parameters.startExposure)));
             }
-            if (verbose)
-            {
-                std::cout << "     Assumed tone mapper: " << ((parameters.tonemapper == "aces") ? "ACES" : (parameters.tonemapper == "hable" ? "Hable" : "Reinhard")) << "\n";
-                std::cout << "     Start exposure: " << FIXED_DECIMAL_DIGITS(parameters.startExposure, 4) << "\n";
-                std::cout << "     Stop exposure: " << FIXED_DECIMAL_DIGITS(parameters.stopExposure, 4) << "\n";
-                std::cout << "     Number of exposures: " << parameters.numExposures << "\n\n";
-            }
         }
 
         if (useHDR)
@@ -2282,7 +2276,6 @@ namespace FLIP
             FLIP::image<FLIP::color3> tImage(referenceImage.getWidth(), referenceImage.getHeight());
             FLIP::image<float> tmpErrorMap(referenceImage.getWidth(), referenceImage.getHeight(), 0.0f);
             FLIP::image<float> prevTmpErrorMap(referenceImage.getWidth(), referenceImage.getHeight());
-            FLIP::image<float> maxErrorExposureMap(referenceImage.getWidth(), referenceImage.getHeight());
 
             float exposureStepSize = (parameters.stopExposure - parameters.startExposure) / (parameters.numExposures - 1);
             for (int i = 0; i < parameters.numExposures; i++)
@@ -2304,6 +2297,8 @@ namespace FLIP
         }
         else    // Not HDR, i.e., LDR.
         {
+            referenceImage.clamp();     // The input images should always be in [0,1], but we clamp them here to avoid any problems.
+            testImage.clamp();
             errorMapFLIPOutput.FLIP(referenceImage, testImage, parameters.PPD);
         }
     }

@@ -63,6 +63,7 @@
 #include "imagehelpers.h"
 #include "commandline.h"
 #include "filename.h"
+#include "pooling.h"
 
 inline std::string f2s(float value, size_t decimals = 4)
 {
@@ -191,53 +192,61 @@ int main(int argc, char** argv)
     std::cout << "Invoking " << (bUseHDR ? "HDR" : "LDR") << "-FLIP\n";
     std::cout << "     Pixels per degree: " << int(std::round(parameters.PPD)) << "\n" << (!bUseHDR ? "\n" : "");
 
-    float startExposure = 0.0f, stopExposure = 0.0f;
-    size_t numExposures = 0;
-    float exposureStepSize = 0.0f;
     bool bStartexp = commandLine.optionSet("start-exposure");
     bool bStopexp = commandLine.optionSet("stop-exposure");
 
     //  Set HDR-FLIP parameters.
-    std::string optionTonemapper = "aces";
+    //std::string optionTonemapper = "aces";
     if (bUseHDR)
     {
-        if (commandLine.optionSet("tone-mapper"))
+        if (commandLine.optionSet("tone-mapper"))   // The default in FLIP::Parameters.tonemapper is "aces".
         {
-            optionTonemapper = commandLine.getOptionValue("tone-mapper");
-            std::transform(optionTonemapper.begin(), optionTonemapper.end(), optionTonemapper.begin(), [](unsigned char c) { return std::tolower(c); });
-            if (optionTonemapper != "aces" && optionTonemapper != "reinhard" && optionTonemapper != "hable")
+            std::string tonemapper = commandLine.getOptionValue("tone-mapper");
+            std::transform(tonemapper.begin(), tonemapper.end(), tonemapper.begin(), [](unsigned char c) { return std::tolower(c); });
+            if (tonemapper != "aces" && tonemapper != "reinhard" && tonemapper != "hable")
             {
                 std::cout << "\nError: unknown tonemapper, should be one of \"aces\", \"reinhard\", or \"hable\"\n";
                 exit(-1);
             }
+            parameters.tonemapper = tonemapper;
         }
 
         if (!bStartexp || !bStopexp)
         {
-            referenceImage.computeExposures(optionTonemapper, startExposure, stopExposure);
+            // TODO: this should be computed inside the FLIP() call.
+            referenceImage.computeExposures(parameters.tonemapper, parameters.startExposure, parameters.stopExposure);
         }
         if (bStartexp)
         {
-            startExposure = std::stof(commandLine.getOptionValue("start-exposure"));
+            parameters.startExposure = std::stof(commandLine.getOptionValue("start-exposure"));
         }
         if (bStopexp)
         {
-            stopExposure = std::stof(commandLine.getOptionValue("stop-exposure"));
+            parameters.stopExposure = std::stof(commandLine.getOptionValue("stop-exposure"));
         }
 
-        if (startExposure > stopExposure)
+        if (parameters.startExposure > parameters.stopExposure)
         {
+            // TODO: This should be moved to the FLIP() call.
             std::cout << "Start exposure must be smaller than stop exposure!\n";
             exit(-1);
         }
 
-        numExposures = (commandLine.optionSet("num-exposures") ? atoi(commandLine.getOptionValue("num-exposures").c_str()) : size_t(std::max(2.0f, ceil(stopExposure - startExposure))));
-        exposureStepSize = (stopExposure - startExposure) / (numExposures - 1);
+        if (commandLine.optionSet("num-exposures"))
+        {
+            parameters.numExposures = atoi(commandLine.getOptionValue("num-exposures").c_str());
+        }
+        else
+        {
+            // TODO: this should be computed inside the FLIP() call.
+            parameters.numExposures = int(std::max(2.0f, std::ceil(parameters.stopExposure - parameters.startExposure)));
+        }
 
-        std::cout << "     Assumed tone mapper: " << ((optionTonemapper == "aces") ? "ACES" : (optionTonemapper == "hable" ? "Hable" : "Reinhard")) << "\n";
-        std::cout << "     Start exposure: " << FIXED_DECIMAL_DIGITS(startExposure, 4) << "\n";
-        std::cout << "     Stop exposure: " << FIXED_DECIMAL_DIGITS(stopExposure, 4) << "\n";
-        std::cout << "     Number of exposures: " << numExposures << "\n\n";
+        // This should be part of the FLIP call as well, with a verbose paramters.
+        std::cout << "     Assumed tone mapper: " << ((parameters.tonemapper == "aces") ? "ACES" : (parameters.tonemapper == "hable" ? "Hable" : "Reinhard")) << "\n";
+        std::cout << "     Start exposure: " << FIXED_DECIMAL_DIGITS(parameters.startExposure, 4) << "\n";
+        std::cout << "     Stop exposure: " << FIXED_DECIMAL_DIGITS(parameters.stopExposure, 4) << "\n";
+        std::cout << "     Number of exposures: " << parameters.numExposures << "\n\n";
     }
 
     std::string basename = (commandLine.optionSet("basename") ? commandLine.getOptionValue("basename") : "");
@@ -264,7 +273,7 @@ int main(int argc, char** argv)
             flipFileName.setName(referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(parameters.PPD))) + "ppd");
             if (bUseHDR)
             {
-                flipFileName.setName(flipFileName.getName() + ".hdr." + optionTonemapper + "." + f2s(startExposure) + "_to_" + f2s(stopExposure) + "." + std::to_string(numExposures));
+                flipFileName.setName(flipFileName.getName() + ".hdr." + parameters.tonemapper + "." + f2s(parameters.startExposure) + "_to_" + f2s(parameters.stopExposure) + "." + std::to_string(parameters.numExposures));
             }
             else
             {
@@ -296,9 +305,11 @@ int main(int argc, char** argv)
             FLIP::filename rFileName("tmp.png");
             FLIP::filename tFileName("tmp.png");
 
-            for (size_t i = 0; i < numExposures; i++)
+            float exposureStepSize = (parameters.stopExposure - parameters.startExposure) / (parameters.numExposures - 1);
+
+            for (int i = 0; i < parameters.numExposures; i++)
             {
-                float exposure = startExposure + i * exposureStepSize;
+                float exposure = parameters.startExposure + i * exposureStepSize;
 
                 std::stringstream ss;
                 ss << std::setfill('0') << std::setw(3) << i;
@@ -313,8 +324,8 @@ int main(int argc, char** argv)
                 rImage.expose(exposure);
                 tImage.expose(exposure);
 
-                rImage.toneMap(optionTonemapper);
-                tImage.toneMap(optionTonemapper);
+                rImage.toneMap(parameters.tonemapper);
+                tImage.toneMap(parameters.tonemapper);
 
                 rImage.clamp();
                 tImage.clamp();
@@ -326,8 +337,8 @@ int main(int argc, char** argv)
                 {
                     if (basename == "")
                     {
-                        rFileName.setName(referenceFileName.getName() + "." + optionTonemapper + "." + expCount + "." + expString);
-                        tFileName.setName(testFileName.getName() + "." + optionTonemapper + "." + expCount + "." + expString);
+                        rFileName.setName(referenceFileName.getName() + "." + parameters.tonemapper + "." + expCount + "." + expString);
+                        tFileName.setName(testFileName.getName() + "." + parameters.tonemapper + "." + expCount + "." + expString);
                     }
                     else
                     {
@@ -340,7 +351,7 @@ int main(int argc, char** argv)
 
                 tmpErrorMap.FLIP(rImage, tImage, parameters.PPD);
 
-                errorMapFLIP.setMaxExposure(tmpErrorMap, maxErrorExposureMap, float(i) / (numExposures - 1));
+                errorMapFLIP.setMaxExposure(tmpErrorMap, maxErrorExposureMap, float(i) / (parameters.numExposures - 1));
 
                 if (commandLine.optionSet("save-ldrflip"))
                 {
@@ -356,7 +367,7 @@ int main(int argc, char** argv)
 
                     if (basename == "")
                     {
-                        ImageHelpers::pngSave(destinationDirectory + "/" + "flip." + referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(parameters.PPD))) + "ppd.ldr." + optionTonemapper + "." + expCount + "." + expString + ".png", pngResult);
+                        ImageHelpers::pngSave(destinationDirectory + "/" + "flip." + referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(parameters.PPD))) + "ppd.ldr." + parameters.tonemapper + "." + expCount + "." + expString + ".png", pngResult);
                     }
                     else
                     {

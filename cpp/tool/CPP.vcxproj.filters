@@ -20,6 +20,9 @@
     <ClInclude Include="tinyexr.h">
       <Filter>tool</Filter>
     </ClInclude>
+    <ClInclude Include="pooling.h">
+      <Filter>tool</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="tool">

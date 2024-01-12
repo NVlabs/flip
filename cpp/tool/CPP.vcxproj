@@ -92,6 +92,7 @@
     <ClInclude Include="commandline.h" />
     <ClInclude Include="filename.h" />
     <ClInclude Include="imagehelpers.h" />
+    <ClInclude Include="pooling.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="stb_image_write.h" />
     <ClInclude Include="tinyexr.h" />

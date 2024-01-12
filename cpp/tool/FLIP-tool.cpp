@@ -281,6 +281,25 @@ static void getExposureParameters(const bool useHDR, commandline& commandLine, F
     }
 }
 
+static void setupDestinationDirectory(const bool useHDR, commandline& commandLine, std::string& destinationDirectory)
+{
+    if (commandLine.optionSet("directory"))
+    {
+        destinationDirectory = commandLine.getOptionValue("directory");
+        std::replace(destinationDirectory.begin(), destinationDirectory.end(), '\\', '/');      // Replace backslash with forwardslash.
+        const bool bNoExposureMap = useHDR ? commandLine.optionSet("no-exposure-map") : true;
+        const bool bSaveLDRImages = useHDR ? commandLine.optionSet("save-ldr-images") : false;
+        const bool bSaveLDRFLIP = useHDR ? commandLine.optionSet("save-ldrflip") : false;
+        const bool willCreateOutput = (!commandLine.optionSet("no-error-map")) || (!bNoExposureMap) || bSaveLDRImages || bSaveLDRFLIP || commandLine.optionSet("histogram");
+
+        if (!std::filesystem::exists(destinationDirectory) && willCreateOutput)     // Create directories if the parameters indicate that some files will be saved.
+        {
+            std::cout << "Creating new directory(s): <" << destinationDirectory << ">.\n";
+            std::filesystem::create_directories(destinationDirectory);
+        }
+    }
+}
+
 int main(int argc, char** argv)
 {
     std::string FLIPString = "FLIP";
@@ -331,42 +350,26 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
+    FLIP::Parameters parameters;
     FLIP::filename referenceFileName(commandLine.getOptionValue("reference"));
     std::vector<std::string>& testFileNames = commandLine.getOptionValues("test");
     bool bUseHDR = (referenceFileName.getExtension() == "exr");
-    FLIP::Parameters parameters;
-
     std::string destinationDirectory = ".";
-    if (commandLine.optionSet("directory"))
-    {
-        destinationDirectory = commandLine.getOptionValue("directory");
-        std::replace(destinationDirectory.begin(), destinationDirectory.end(), '\\', '/');      // Replace backslash with forwardslash.
-        const bool bNoExposureMap = bUseHDR ? commandLine.optionSet("no-exposure-map") : true;
-        const bool bSaveLDRImages = bUseHDR ? commandLine.optionSet("save-ldr-images") : false;
-        const bool bSaveLDRFLIP   = bUseHDR ? commandLine.optionSet("save-ldrflip") : false;
-        const bool willCreateOutput = (!commandLine.optionSet("no-error-map")) || (!bNoExposureMap) || bSaveLDRImages || bSaveLDRFLIP || commandLine.optionSet("histogram");
-
-        if (!std::filesystem::exists(destinationDirectory) && willCreateOutput)     // Create directories if the parameters indicate that some files will be saved.
-        {
-            std::cout << "Creating new directory(s): <" << destinationDirectory << ">.\n";
-            std::filesystem::create_directories(destinationDirectory);
-        }
-    }
-
-    setupPixelsPerDegree(commandLine, parameters);
-    getExposureParameters(bUseHDR, commandLine, parameters);
-    std::cout << "Invoking " << (bUseHDR ? "HDR" : "LDR") << "-FLIP\n";
-    std::cout << "     Pixels per degree: " << int(std::round(parameters.PPD)) << "\n" << (!bUseHDR ? "\n" : "");
-
-
-    FLIP::image<FLIP::color3> referenceImage;
-    ImageHelpers::load(referenceImage, referenceFileName.toString());
-
     std::string basename = (commandLine.optionSet("basename") ? commandLine.getOptionValue("basename") : "");
     FLIP::filename flipFileName("tmp.png"); // Dummy file name, but it keeps the file extension (.png).
     FLIP::filename histogramFileName("tmp.py");
     FLIP::filename exposureFileName("tmp.png");
     FLIP::filename testFileName;
+
+    setupDestinationDirectory(bUseHDR, commandLine, destinationDirectory);
+    setupPixelsPerDegree(commandLine, parameters);
+    getExposureParameters(bUseHDR, commandLine, parameters);
+
+    std::cout << "Invoking " << (bUseHDR ? "HDR" : "LDR") << "-FLIP\n";
+    std::cout << "     Pixels per degree: " << int(std::round(parameters.PPD)) << "\n" << (!bUseHDR ? "\n" : "");
+
+    FLIP::image<FLIP::color3> referenceImage;
+    ImageHelpers::load(referenceImage, referenceFileName.toString());   // Load reference image.
 
     uint32_t testFileCount = 0;
     // Loop over the test images files to be FLIP:ed against the reference image.
@@ -375,15 +378,14 @@ int main(int argc, char** argv)
         setFileNames(bUseHDR, commandLine, parameters, basename, referenceFileName, testFileName, testFileNameString, flipFileName, histogramFileName, exposureFileName);
 
         FLIP::image<FLIP::color3> testImage;
-        ImageHelpers::load(testImage, testFileName.toString());
+        ImageHelpers::load(testImage, testFileName.toString());     // Load test image.
 
         FLIP::image<float> errorMapFLIP(referenceImage.getWidth(), referenceImage.getHeight(), 0.0f);
         FLIP::image<float> maxErrorExposureMap(referenceImage.getWidth(), referenceImage.getHeight());
 
         auto t0 = std::chrono::high_resolution_clock::now();
         FLIP::computeFLIP(bUseHDR, referenceImage, testImage, parameters, errorMapFLIP, maxErrorExposureMap, true);
-        auto t = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration_cast<std::chrono::microseconds>(t - t0).count() / 1000000.0f;
+        float time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count() / 1000000.0f;
 
         saveErrorAndExposureMaps(bUseHDR, commandLine, parameters, errorMapFLIP, maxErrorExposureMap, destinationDirectory, flipFileName, exposureFileName);
         gatherStatisticsAndSaveOutput(commandLine, errorMapFLIP, destinationDirectory, referenceFileName, testFileName, histogramFileName, FLIPString, time, ++testFileCount);

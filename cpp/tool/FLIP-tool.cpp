@@ -278,6 +278,8 @@ static void getExposureParameters(const bool useHDR, commandline& commandLine, F
         {
             parameters.numExposures = atoi(commandLine.getOptionValue("num-exposures").c_str());
         }
+        parameters.returnLDRFLIPImages = commandLine.optionSet("save-ldrflip");
+        parameters.returnLDRImages = commandLine.optionSet("save-ldr-images");
     }
 }
 

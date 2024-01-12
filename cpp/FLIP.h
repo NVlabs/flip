@@ -1,12 +1,16 @@
 // TODO: single header FLIP
 //
-// * Make simpler functions for FLIP, i.e., if you want to get HDR-FLIP, then that should just be one call. 
-// * Also, we use color3 now, but it would be nice (for PBRT) to be able to use float* threeChannelImage, uint width, uint height for the paramt to FLIP().
-// * Simplify FLIP-tool.cpp so that it has less code and calls into the single header, i.e., uses the stuff in the two bullets above.
+// * For PBRT, we need a call 
+//   void computeFLIP(const bool useHDR, const float *threeChanneltestRGB, const float *threeChannelReferenceRGB, float* threeChannelFlipError, int xRes, int yRes, FLIP::Parameters parameters, const bool verbose=false);
+//   # return the flip image with Magma already applied (or perhaps a bool?).
+// 
 // * If bUseHDR is false, should we clamp input images?!
 // * Document FLIP::computeFLIP() and explain here in the header what it does and how it can be used.
+//
+// * save-ldrflip and save-ldr-images need to be handled. All that is currently commented out and needs to be returned from the computeFLIP() call.
+// 
 // TESTING
-// * Seems that min on LDR FLIP is slightly off with the new single header... debug!
+// * Both the old and the single header CUDA returns min = 0.000117 for reference.exr/test.exr, while CPU return min = 0.000120. Could be the new CUDA version??
 // 
 // * Check performance (1 sec for CPU, 0.1 for GPU, approximately).
 // * Check output with test.py.
@@ -109,6 +113,8 @@ namespace FLIP
         float stopExposure = std::numeric_limits<float>::infinity();    // Used when the input is HDR.
         int numExposures = -1;                                          // Used when the input is HDR.
         std::string tonemapper = "aces";                                // Default tonemapper (used for HDR).
+        bool returnLDRImages = false;                                   // Can only happen for HDR.
+        bool returnLDRFLIPImages = false;                               // Can only happen for HDR.
     };
 
     static const struct xFLIPConstants

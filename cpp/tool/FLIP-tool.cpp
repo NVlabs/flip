@@ -64,25 +64,30 @@
 #include "commandline.h"
 #include "filename.h"
 
-struct
-{
-    float PPD = 0;                          // If PPD==0.0, then it will be computed from the parameters below.
-    float monitorDistance = 0.7f;           // Unit: meters.
-    float monitorWidth = 0.7f;              // Unit: meters.
-    float monitorResolutionX = 3840.0f;     // Unit: pixels.
-} gFLIPOptions;
-
-//  Pixels per degree (PPD).
-inline float calculatePPD(const float dist, const float resolutionX, const float monitorWidth)
-{
-    return dist * (resolutionX / monitorWidth) * (float(FLIP::PI) / 180.0f);
-}
-
 inline std::string f2s(float value, size_t decimals = 4)
 {
     std::stringstream ss;
     ss << std::string(value < 0.0f ? "m" : "p") << FIXED_DECIMAL_DIGITS(std::abs(value), decimals);
     return ss.str();
+}
+
+// Here follows a set of helps functions for differet setups in order to avoid clutter in main().
+
+// Compute PPD and store in parameters.PPD.
+static void setupPixelsPerDegree(commandline& commandLine, FLIP::Parameters& parameters)
+{
+    // The default value in parameters.PPD is computed as FLIP::calculatePPD(0.7f, 3840.0f, 0.7f); in FLIP.h.
+    if (commandLine.optionSet("pixels-per-degree"))
+    {
+        parameters.PPD = std::stof(commandLine.getOptionValue("pixels-per-degree"));
+    }
+    else if (commandLine.optionSet("viewing-conditions"))
+    {
+        const float monitorDistance = std::stof(commandLine.getOptionValue("viewing-conditions", 0));
+        const float monitorWidth = std::stof(commandLine.getOptionValue("viewing-conditions", 1));
+        const float monitorResolutionX = std::stof(commandLine.getOptionValue("viewing-conditions", 2));
+        parameters.PPD = FLIP::calculatePPD(monitorDistance, monitorResolutionX, monitorWidth);
+    }
 }
 
 int main(int argc, char** argv)
@@ -157,6 +162,7 @@ int main(int argc, char** argv)
     FLIP::filename referenceFileName(commandLine.getOptionValue("reference"));
     std::vector<std::string>& testFileNames = commandLine.getOptionValues("test");
     bool bUseHDR = (referenceFileName.getExtension() == "exr");
+    FLIP::Parameters parameters;
 
     std::string destinationDirectory = ".";
     if (commandLine.optionSet("directory"))
@@ -177,29 +183,13 @@ int main(int argc, char** argv)
 
     FLIP::image<FLIP::color3> magmaMap(FLIP::MapMagma, 256);
 
-    if (commandLine.optionSet("pixels-per-degree"))
-    {
-        gFLIPOptions.PPD = std::stof(commandLine.getOptionValue("pixels-per-degree"));
-    }
-    else
-    {
-        if (commandLine.optionSet("viewing-conditions"))
-        {
-            gFLIPOptions.monitorDistance = std::stof(commandLine.getOptionValue("viewing-conditions", 0));
-            gFLIPOptions.monitorWidth = std::stof(commandLine.getOptionValue("viewing-conditions", 1));
-            gFLIPOptions.monitorResolutionX = std::stof(commandLine.getOptionValue("viewing-conditions", 2));
-        }
-        gFLIPOptions.PPD = calculatePPD(gFLIPOptions.monitorDistance, gFLIPOptions.monitorResolutionX, gFLIPOptions.monitorWidth);
-    }
+    setupPixelsPerDegree(commandLine, parameters);
 
-
-//    FLIP::image<FLIP::color3> referenceImage(referenceFileName.toString());
     FLIP::image<FLIP::color3> referenceImage;
     ImageHelpers::load(referenceImage, referenceFileName.toString());
 
-
     std::cout << "Invoking " << (bUseHDR ? "HDR" : "LDR") << "-FLIP\n";
-    std::cout << "     Pixels per degree: " << int(std::round(gFLIPOptions.PPD)) << "\n" << (!bUseHDR ? "\n" : "");
+    std::cout << "     Pixels per degree: " << int(std::round(parameters.PPD)) << "\n" << (!bUseHDR ? "\n" : "");
 
     float startExposure = 0.0f, stopExposure = 0.0f;
     size_t numExposures = 0;
@@ -271,7 +261,7 @@ int main(int argc, char** argv)
         }
         else
         {
-            flipFileName.setName(referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(gFLIPOptions.PPD))) + "ppd");
+            flipFileName.setName(referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(parameters.PPD))) + "ppd");
             if (bUseHDR)
             {
                 flipFileName.setName(flipFileName.getName() + ".hdr." + optionTonemapper + "." + f2s(startExposure) + "_to_" + f2s(stopExposure) + "." + std::to_string(numExposures));
@@ -285,7 +275,6 @@ int main(int argc, char** argv)
             flipFileName.setName("flip." + flipFileName.getName());
         }
 
-//        FLIP::image<FLIP::color3> testImage(testFileName.toString());
         FLIP::image<FLIP::color3> testImage;
         ImageHelpers::load(testImage, testFileName.toString());
 
@@ -347,11 +336,9 @@ int main(int argc, char** argv)
                     }
                     ImageHelpers::pngSave(destinationDirectory + "/" + rFileName.toString(), rImage);
                     ImageHelpers::pngSave(destinationDirectory + "/" + tFileName.toString(), tImage);
-//                    rImage.pngSave(destinationDirectory + "/" + rFileName.toString());
-//                    tImage.pngSave(destinationDirectory + "/" + tFileName.toString());
                 }
 
-                tmpErrorMap.FLIP(rImage, tImage, gFLIPOptions.PPD);
+                tmpErrorMap.FLIP(rImage, tImage, parameters.PPD);
 
                 errorMapFLIP.setMaxExposure(tmpErrorMap, maxErrorExposureMap, float(i) / (numExposures - 1));
 
@@ -369,16 +356,13 @@ int main(int argc, char** argv)
 
                     if (basename == "")
                     {
-                        //pngResult.pngSave(destinationDirectory + "/" + "flip." + referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(gFLIPOptions.PPD))) + "ppd.ldr." + optionTonemapper + "." + expCount + "." + expString + ".png");
-                        ImageHelpers::pngSave(destinationDirectory + "/" + "flip." + referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(gFLIPOptions.PPD))) + "ppd.ldr." + optionTonemapper + "." + expCount + "." + expString + ".png", pngResult);
+                        ImageHelpers::pngSave(destinationDirectory + "/" + "flip." + referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(parameters.PPD))) + "ppd.ldr." + optionTonemapper + "." + expCount + "." + expString + ".png", pngResult);
                     }
                     else
                     {
-                        //pngResult.pngSave(destinationDirectory + "/" + basename + "." + expCount + ".png");
                         ImageHelpers::pngSave(destinationDirectory + "/" + basename + "." + expCount + ".png", pngResult);
 
                     }
-                    //pngResult.pngSave(destinationDirectory + "/" + flipFileName.toString());
                     ImageHelpers::pngSave(destinationDirectory + "/" + flipFileName.toString(), pngResult);
                 }
 
@@ -389,18 +373,17 @@ int main(int argc, char** argv)
             {
                 FLIP::image<FLIP::color3> pngMaxErrorExposureMap(referenceImage.getWidth(), referenceImage.getHeight());
                 pngMaxErrorExposureMap.colorMap(maxErrorExposureMap, viridisMap);
-                //pngMaxErrorExposureMap.pngSave(destinationDirectory + "/" + exposureFileName.toString());
                 ImageHelpers::pngSave(destinationDirectory + "/" + exposureFileName.toString(), pngMaxErrorExposureMap);
 
             }
         }
-        else
+        else    // Not HDR, i.e., LDR.
         {
             if (maxTestFileCount > 1 && testFileCount == 0)     // Are we testing more than one image, and are we testing the first image?
             {
                 originalReferenceImage.copy(referenceImage);    // If so, then store the referenceImage in originalReferenceImage, since FLIP() destroys referenceImage, i.e., in the errorMapFLIP.FLIP() just below.
             }
-            errorMapFLIP.FLIP(referenceImage, testImage, gFLIPOptions.PPD);
+            errorMapFLIP.FLIP(referenceImage, testImage, parameters.PPD);
             t = std::chrono::high_resolution_clock::now();
             if (maxTestFileCount > 1)
             {
@@ -416,7 +399,6 @@ int main(int argc, char** argv)
             {
                 pngResult.colorMap(errorMapFLIP, magmaMap);
             }
-            //pngResult.pngSave(destinationDirectory + "/" + flipFileName.toString());
             ImageHelpers::pngSave(destinationDirectory + "/" + flipFileName.toString(), pngResult);
         }
 

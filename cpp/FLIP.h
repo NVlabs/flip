@@ -3,8 +3,6 @@
 // * Make simpler functions for FLIP, i.e., if you want to get HDR-FLIP, then that should just be one call. 
 // * Also, we use color3 now, but it would be nice (for PBRT) to be able to use float* threeChannelImage, uint width, uint height for the paramt to FLIP().
 // * Simplify FLIP-tool.cpp so that it has less code and calls into the single header, i.e., uses the stuff in the two bullets above.
-//
-// * fix so we do not need absolute path to cuda_runtime.h and device_launch_parameters.h.
 
 // TESTING
 // * Check performance (1 sec for CPU, 0.1 for GPU, approximately).
@@ -73,8 +71,8 @@
 #include <fstream>
 
 #ifdef FLIP_USE_CUDA
-#include "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3\include\cuda_runtime.h"
-#include "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.3\include\device_launch_parameters.h"
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
 #endif
 
 #ifdef FLIP_USE_CUDA
@@ -85,13 +83,25 @@
 
 namespace FLIP
 {
+    const float PI = 3.14159265358979f;
+
 #define Max(x, y) ((x) > (y) ? (x) : (y))
 #define Min(x, y) ((x) > (y) ? (y) : (x))
 
 #define DEFAULT_ILLUMINANT { 0.950428545f, 1.000000000f, 1.088900371f }
 #define INV_DEFAULT_ILLUMINANT { 1.052156925f, 1.000000000f, 0.918357670f }
 
-    const float PI = 3.14159265358979f;
+    //  Pixels per degree (PPD).
+    inline float calculatePPD(const float dist, const float resolutionX, const float monitorWidth)
+    {
+        return dist * (resolutionX / monitorWidth) * (float(FLIP::PI) / 180.0f);
+    }
+
+    struct Parameters
+    {
+        Parameters() = default;
+        float PPD = FLIP::calculatePPD(0.7f, 3840.0f, 0.7f); // Populate PPD with default values based on 0.7 meters = distance to screen, 3840 pixels screen width, 0.7 meters monitor width.
+    };
 
     static const struct xFLIPConstants
     {

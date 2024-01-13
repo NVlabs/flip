@@ -141,12 +141,12 @@ public:
         parse(argc, argv, allowedOptions);
     }
 
-    bool getError(void)
+    bool getError(void) const 
     {
         return mError;
     }
 
-    std::string getErrorString(void)
+    std::string getErrorString(void) const
     {
         return mErrorString;
     }
@@ -284,17 +284,13 @@ public:
         return this->mArguments;
     }
 
-    std::string& getOptionValue(const std::string& option, size_t n = 0)
+    const std::string& getOptionValue(const std::string& option, size_t n = 0) const
     {
-        static const std::string emptyValue;
-
         return this->mOptions.at(option)[n];
     }
 
     std::vector<std::string>& getOptionValues(const std::string& option)
     {
-        static const std::vector<std::string> emptyValues;
-
         return (std::vector<std::string>&)this->mOptions.at(option);
     }
 

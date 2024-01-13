@@ -290,7 +290,7 @@ namespace ImageHelpers
         float* pixels;
         if (loadImage(fileName, imgWidth, imgHeight, pixels))
         {
-            dstImage.setThreeChannelImage(pixels, imgWidth, imgHeight);
+            dstImage.setPixels(pixels, imgWidth, imgHeight);
         }
         return false;
     }

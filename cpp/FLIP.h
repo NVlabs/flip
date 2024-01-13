@@ -1,11 +1,10 @@
 // TODO: single header FLIP
-// 
+//  
 // TESTING
 // * Make sure all features work (pooling, diagrams output, exposure maps, multiple image input etc) for CPU and for CUDA.
 // * Test whether the new CUDA version is the one that makes for a few pixel differences. If so, update references in tests/ and write that we use CUDA 12.5.
 // * Check performance (1 sec for CPU, 0.1 for GPU, approximately). I now include new copies of ref/test, + clamp, so might be a little slower. + timing of computeExposures.
 // * Check output with test.py for cpp and cuda.
-// * Test so that computeFLIP() for PBRT really works. BOTH CUDA and CPU! We can test it inside FLIP-tool.cpp, I think.
 //
 // LOW PRIO:
 // * add error message if LDR images are outside [0,1]. Do it at load time?
@@ -1193,10 +1192,10 @@ namespace FLIP
             this->mvpHostData[this->index(x, y, z)] = value;
         }
 
-        void setThreeChannelImage(const float* pPixels, const int width, const int height)  // This assume that T is a color3.
+        void setPixels(const float* pPixels, const int width, const int height)
         {
             this->init({ width, height, 1 });
-            memcpy(this->mvpHostData, pPixels, size_t(width) * height * sizeof(float) * 3);
+            memcpy(this->mvpHostData, pPixels, size_t(width) * height * sizeof(T));
         }
 #else
         T get(int x, int y, int z)
@@ -1217,13 +1216,13 @@ namespace FLIP
             this->mState = state;
         }
 
-        void setThreeChannelImage(const float* pPixels, const int width, const int height)  // This assume that T is a color3.
+        void setPixels(const float* pPixels, const int width, const int height)  // This assume that T is a color3.
         {
             if (this->mState == CudaTensorState::UNINITIALIZED)
             {
                 this->init({ width, height, 1});
             }
-            memcpy(this->mvpHostData, pPixels, size_t(width) * height * sizeof(float) * 3); 
+            memcpy(this->mvpHostData, pPixels, size_t(width) * height * sizeof(T)); 
             this->mState = CudaTensorState::HOST_ONLY;
         }
 #endif
@@ -2354,8 +2353,8 @@ namespace FLIP
     {
         FLIP::image<FLIP::color3> referenceImage;
         FLIP::image<FLIP::color3> testImage;
-        referenceImage.setThreeChannelImage(referenceThreeChannelImage, imageWidth, imageHeight);
-        testImage.setThreeChannelImage(testThreeChannelImage, imageWidth, imageHeight);
+        referenceImage.setPixels(referenceThreeChannelImage, imageWidth, imageHeight);
+        testImage.setPixels(testThreeChannelImage, imageWidth, imageHeight);
 
         parameters.returnLDRFLIPImages = false;
         parameters.returnLDRImages = false;

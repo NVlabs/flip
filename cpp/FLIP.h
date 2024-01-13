@@ -3,10 +3,11 @@
 // * Test whether the new CUDA version is the one that makes for a few pixel differences. If so, update references in tests/ and write that we use CUDA 12.5.
 // * Check performance (1 sec for CPU, 0.1 for GPU, approximately). I now include new copies of ref/test, + clamp, so might be a little slower. + timing of computeExposures.
 // * Check output with test.py for cpp and cuda.
+// * Explain on github that we have switched to a single header style flip with a separate tool. 
 //
 // LOW PRIO:
 // * add error message if LDR images are outside [0,1]. Do it at load time?
-// * Add to github page how the user can call FLIP::computeFLIP() ?!
+// * Add to github page how the user can call FLIP::computeFLIP() ?! 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /*

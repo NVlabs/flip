@@ -74,7 +74,25 @@ inline std::string f2s(float value, size_t decimals = 4)
 
 // Here follows a set of helps functions for differet setups in order to avoid clutter in main().
 
-// Compute PPD and store in parameters.PPD.
+static void setupDestinationDirectory(const bool useHDR, const commandline& commandLine, std::string& destinationDirectory)
+{
+    if (commandLine.optionSet("directory"))
+    {
+        destinationDirectory = commandLine.getOptionValue("directory");
+        std::replace(destinationDirectory.begin(), destinationDirectory.end(), '\\', '/');      // Replace backslash with forwardslash.
+        const bool bNoExposureMap = useHDR ? commandLine.optionSet("no-exposure-map") : true;
+        const bool bSaveLDRImages = useHDR ? commandLine.optionSet("save-ldr-images") : false;
+        const bool bSaveLDRFLIP = useHDR ? commandLine.optionSet("save-ldrflip") : false;
+        const bool willCreateOutput = (!commandLine.optionSet("no-error-map")) || (!bNoExposureMap) || bSaveLDRImages || bSaveLDRFLIP || commandLine.optionSet("histogram");
+
+        if (!std::filesystem::exists(destinationDirectory) && willCreateOutput)     // Create directories if the parameters indicate that some files will be saved.
+        {
+            std::cout << "Creating new directory(s): <" << destinationDirectory << ">.\n";
+            std::filesystem::create_directories(destinationDirectory);
+        }
+    }
+}
+
 static void setupPixelsPerDegree(const commandline& commandLine, FLIP::Parameters& parameters)
 {
     // The default value in parameters.PPD is computed as FLIP::calculatePPD(0.7f, 3840.0f, 0.7f); in FLIP.h.
@@ -88,6 +106,61 @@ static void setupPixelsPerDegree(const commandline& commandLine, FLIP::Parameter
         const float monitorWidth = std::stof(commandLine.getOptionValue("viewing-conditions", 1));
         const float monitorResolutionX = std::stof(commandLine.getOptionValue("viewing-conditions", 2));
         parameters.PPD = FLIP::calculatePPD(monitorDistance, monitorResolutionX, monitorWidth);
+    }
+}
+
+static void getExposureParameters(const bool useHDR, const commandline& commandLine, FLIP::Parameters& parameters)
+{
+    if (useHDR)
+    {
+        if (commandLine.optionSet("tone-mapper"))   // The default in FLIP::Parameters.tonemapper is "aces".
+        {
+            std::string tonemapper = commandLine.getOptionValue("tone-mapper");
+            std::transform(tonemapper.begin(), tonemapper.end(), tonemapper.begin(), [](unsigned char c) { return std::tolower(c); });
+            if (tonemapper != "aces" && tonemapper != "reinhard" && tonemapper != "hable")
+            {
+                std::cout << "\nError: unknown tonemapper, should be one of \"aces\", \"reinhard\", or \"hable\"\n";
+                exit(-1);
+            }
+            parameters.tonemapper = tonemapper;
+        }
+        if (commandLine.optionSet("start-exposure"))
+        {
+            parameters.startExposure = std::stof(commandLine.getOptionValue("start-exposure"));
+        }
+        if (commandLine.optionSet("stop-exposure"))
+        {
+            parameters.stopExposure = std::stof(commandLine.getOptionValue("stop-exposure"));
+        }
+        if (commandLine.optionSet("num-exposures"))
+        {
+            parameters.numExposures = atoi(commandLine.getOptionValue("num-exposures").c_str());
+        }
+        parameters.returnLDRFLIPImages = commandLine.optionSet("save-ldrflip");
+        parameters.returnLDRImages = commandLine.optionSet("save-ldr-images");
+    }
+}
+
+static void setFileNames(const bool useHDR, commandline& commandLine, const FLIP::Parameters& parameters, const std::string& basename,
+    const FLIP::filename& referenceFileName, FLIP::filename& testFileName, const std::string& testFileNameString, FLIP::filename& flipFileName,
+    FLIP::filename& histogramFileName, FLIP::filename& exposureFileName)
+{
+    testFileName = testFileNameString;
+
+    if (basename != "" && commandLine.getOptionValues("test").size() == 1)
+    {
+        flipFileName.setName(basename);
+        histogramFileName.setName(basename);
+        exposureFileName.setName(basename + ".exposure_map");
+    }
+    else
+    {
+        flipFileName.setName(referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(parameters.PPD))) + "ppd");
+        if (!useHDR)
+        {
+            flipFileName.setName(flipFileName.getName() + ".ldr");  // Note that the HDR filename is not complete until after FLIP has been computed, since FLIP may update the exposure parameters.
+        }
+        histogramFileName.setName("weighted_histogram." + flipFileName.getName());
     }
 }
 
@@ -124,6 +197,97 @@ static void saveErrorAndExposureMaps(const bool useHDR, commandline& commandLine
             FLIP::image<FLIP::color3> pngMaxErrorExposureMap(maxErrorExposureMap.getWidth(), maxErrorExposureMap.getHeight());
             pngMaxErrorExposureMap.colorMap(maxErrorExposureMap, FLIP::viridisMap);
             ImageHelpers::pngSave(destinationDirectory + "/" + exposureFileName.toString(), pngMaxErrorExposureMap);   
+        }
+    }
+}
+
+static void setExposureStrings(const int exposureCount, const float exposure, std::string& expCount, std::string& expString)
+{
+    std::stringstream ss;
+    ss << std::setfill('0') << std::setw(3) << exposureCount;
+    expCount = ss.str();
+    ss.str(std::string());
+    ss << std::string(exposure < 0.0f ? "m" : "p") << std::to_string(std::abs(exposure));
+    expString = ss.str();
+}
+
+static void saveHDROutputLDRImages(const commandline& commandLine, const FLIP::Parameters& parameters, const std::string& basename, const FLIP::filename& flipFileName,
+    const FLIP::filename& referenceFileName, const FLIP::filename& testFileName, const std::string& destinationDirectory,
+    std::vector<FLIP::image<float>*> hdrOutputFlipLDRImages, std::vector<FLIP::image<FLIP::color3>*> hdrOutputLDRImages)
+{
+    if (hdrOutputLDRImages.size() > 0)
+    {
+        FLIP::filename rFileName("tmp.png");
+        FLIP::filename tFileName("tmp.png");
+        if (hdrOutputLDRImages.size() != parameters.numExposures * 2)
+        {
+            std::cout << "FLIP tool error: the number of LDR images from HDR-FLIP is not the expected number.\nExiting.\n";
+            exit(EXIT_FAILURE);
+        }
+
+        const float exposureStepSize = (parameters.stopExposure - parameters.startExposure) / (parameters.numExposures - 1);
+        for (int i = 0; i < parameters.numExposures; i++)
+        {
+            std::string expCount, expString;
+            setExposureStrings(i, parameters.startExposure + i * exposureStepSize, expCount, expString);
+
+            if (basename == "")
+            {
+                rFileName.setName(referenceFileName.getName() + "." + parameters.tonemapper + "." + expCount + "." + expString);
+                tFileName.setName(testFileName.getName() + "." + parameters.tonemapper + "." + expCount + "." + expString);
+            }
+            else
+            {
+                rFileName.setName(basename + ".reference." + "." + expCount);
+                tFileName.setName(basename + ".test." + "." + expCount);
+            }
+            FLIP::image<FLIP::color3>* rImage = hdrOutputLDRImages[0];
+            FLIP::image<FLIP::color3>* tImage = hdrOutputLDRImages[1];
+            hdrOutputLDRImages.erase(hdrOutputLDRImages.begin());
+            hdrOutputLDRImages.erase(hdrOutputLDRImages.begin());
+            ImageHelpers::pngSave(destinationDirectory + "/" + rFileName.toString(), *rImage);
+            ImageHelpers::pngSave(destinationDirectory + "/" + tFileName.toString(), *tImage);
+            delete rImage;
+            delete tImage;
+        }
+    }
+    if (hdrOutputFlipLDRImages.size() > 0)
+    {
+        if (hdrOutputFlipLDRImages.size() != parameters.numExposures)
+        {
+            std::cout << "FLIP tool error: the number of FLIP LDR images from HDR-FLIP is not the expected number.\nExiting.\n";
+            exit(EXIT_FAILURE);
+        }
+
+        const float exposureStepSize = (parameters.stopExposure - parameters.startExposure) / (parameters.numExposures - 1);
+        for (int i = 0; i < parameters.numExposures; i++)
+        {
+            std::string expCount, expString;
+            setExposureStrings(i, parameters.startExposure + i * exposureStepSize, expCount, expString);
+
+            FLIP::image<float>* flipImage = hdrOutputFlipLDRImages[0];
+            hdrOutputFlipLDRImages.erase(hdrOutputFlipLDRImages.begin());
+
+            FLIP::image<FLIP::color3> pngResult(flipImage->getWidth(), flipImage->getHeight());
+
+            if (!commandLine.optionSet("no-magma"))
+            {
+                pngResult.colorMap(*flipImage, FLIP::magmaMap);
+            }
+            else
+            {
+                pngResult.copyFloat2Color3(*flipImage);
+            }
+            if (basename == "")
+            {
+                ImageHelpers::pngSave(destinationDirectory + "/" + "flip." + referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(parameters.PPD))) + "ppd.ldr." + parameters.tonemapper + "." + expCount + "." + expString + ".png", pngResult);
+            }
+            else
+            {
+                ImageHelpers::pngSave(destinationDirectory + "/" + basename + "." + expCount + ".png", pngResult);
+            }
+            ImageHelpers::pngSave(destinationDirectory + "/" + flipFileName.toString(), pngResult);
+            delete flipImage;
         }
     }
 }
@@ -229,171 +393,6 @@ static void gatherStatisticsAndSaveOutput(commandline& commandLine, FLIP::image<
         {
             std::cout << "Exiting with failure code because the " << exitOnTestQuantity << " of the FLIP error map is " << FIXED_DECIMAL_DIGITS(testQuantity, 6) << ", while the threshold for success is " << FIXED_DECIMAL_DIGITS(exitOnTestThresholdValue, 6) << ".\n";
             exit(EXIT_FAILURE);     // From stdlib.h: equal to 1.
-        }
-    }
-}
-
-static void setFileNames(const bool useHDR, commandline& commandLine, const FLIP::Parameters& parameters, const std::string& basename, 
-    const FLIP::filename& referenceFileName, FLIP::filename& testFileName, const std::string& testFileNameString, FLIP::filename& flipFileName,
-    FLIP::filename& histogramFileName, FLIP::filename& exposureFileName)
-{
-    testFileName = testFileNameString;
-
-    if (basename != "" && commandLine.getOptionValues("test").size() == 1)
-    {
-        flipFileName.setName(basename);
-        histogramFileName.setName(basename);
-        exposureFileName.setName(basename + ".exposure_map");
-    }
-    else
-    {
-        flipFileName.setName(referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(parameters.PPD))) + "ppd");
-        if (!useHDR)
-        {
-            flipFileName.setName(flipFileName.getName() + ".ldr");  // Note that the HDR filename is not complete until after FLIP has been computed, since FLIP may update the exposure parameters.
-        }
-        histogramFileName.setName("weighted_histogram." + flipFileName.getName());
-    }
-}
-
-static void getExposureParameters(const bool useHDR, const commandline& commandLine, FLIP::Parameters& parameters)
-{
-    if (useHDR)
-    {
-        if (commandLine.optionSet("tone-mapper"))   // The default in FLIP::Parameters.tonemapper is "aces".
-        {
-            std::string tonemapper = commandLine.getOptionValue("tone-mapper");
-            std::transform(tonemapper.begin(), tonemapper.end(), tonemapper.begin(), [](unsigned char c) { return std::tolower(c); });
-            if (tonemapper != "aces" && tonemapper != "reinhard" && tonemapper != "hable")
-            {
-                std::cout << "\nError: unknown tonemapper, should be one of \"aces\", \"reinhard\", or \"hable\"\n";
-                exit(-1);
-            }
-            parameters.tonemapper = tonemapper;
-        }
-        if (commandLine.optionSet("start-exposure"))
-        {
-            parameters.startExposure = std::stof(commandLine.getOptionValue("start-exposure"));
-        }
-        if (commandLine.optionSet("stop-exposure"))
-        {
-            parameters.stopExposure = std::stof(commandLine.getOptionValue("stop-exposure"));
-        }
-        if (commandLine.optionSet("num-exposures"))
-        {
-            parameters.numExposures = atoi(commandLine.getOptionValue("num-exposures").c_str());
-        }
-        parameters.returnLDRFLIPImages = commandLine.optionSet("save-ldrflip");
-        parameters.returnLDRImages = commandLine.optionSet("save-ldr-images");
-    }
-}
-
-static void setupDestinationDirectory(const bool useHDR, const commandline& commandLine, std::string& destinationDirectory)
-{
-    if (commandLine.optionSet("directory"))
-    {
-        destinationDirectory = commandLine.getOptionValue("directory");
-        std::replace(destinationDirectory.begin(), destinationDirectory.end(), '\\', '/');      // Replace backslash with forwardslash.
-        const bool bNoExposureMap = useHDR ? commandLine.optionSet("no-exposure-map") : true;
-        const bool bSaveLDRImages = useHDR ? commandLine.optionSet("save-ldr-images") : false;
-        const bool bSaveLDRFLIP = useHDR ? commandLine.optionSet("save-ldrflip") : false;
-        const bool willCreateOutput = (!commandLine.optionSet("no-error-map")) || (!bNoExposureMap) || bSaveLDRImages || bSaveLDRFLIP || commandLine.optionSet("histogram");
-
-        if (!std::filesystem::exists(destinationDirectory) && willCreateOutput)     // Create directories if the parameters indicate that some files will be saved.
-        {
-            std::cout << "Creating new directory(s): <" << destinationDirectory << ">.\n";
-            std::filesystem::create_directories(destinationDirectory);
-        }
-    }
-}
-
-static void saveHDROutputLDRImages(const commandline& commandLine, const FLIP::Parameters& parameters, const std::string& basename, const FLIP::filename& flipFileName,
-    const FLIP::filename& referenceFileName, const FLIP::filename& testFileName, const std::string& destinationDirectory,
-    std::vector<FLIP::image<float>*> hdrOutputFlipLDRImages, std::vector<FLIP::image<FLIP::color3>*> hdrOutputLDRImages)
-{
-    if (hdrOutputLDRImages.size() > 0)
-    {
-        FLIP::filename rFileName("tmp.png");
-        FLIP::filename tFileName("tmp.png");
-        if (hdrOutputLDRImages.size() != parameters.numExposures * 2)
-        {
-            std::cout << "FLIP tool error: the number of LDR images from HDR-FLIP is not the expected number.\nExiting.\n";
-            exit(EXIT_FAILURE);
-        }
-
-        const float exposureStepSize = (parameters.stopExposure - parameters.startExposure) / (parameters.numExposures - 1);
-        for (int i = 0; i < parameters.numExposures; i++)
-        {
-            float exposure = parameters.startExposure + i * exposureStepSize;
-            std::stringstream ss;
-            ss << std::setfill('0') << std::setw(3) << i;
-            std::string expCount = ss.str();
-            ss.str(std::string());
-            ss << std::string(exposure < 0.0f ? "m" : "p") << std::to_string(std::abs(exposure));
-            std::string expString = ss.str();
-
-            if (basename == "")
-            {
-                rFileName.setName(referenceFileName.getName() + "." + parameters.tonemapper + "." + expCount + "." + expString);
-                tFileName.setName(testFileName.getName() + "." + parameters.tonemapper + "." + expCount + "." + expString);
-            }
-            else
-            {
-                rFileName.setName(basename + ".reference." + "." + expCount);
-                tFileName.setName(basename + ".test." + "." + expCount);
-            }
-            FLIP::image<FLIP::color3>* rImage = hdrOutputLDRImages[0];
-            FLIP::image<FLIP::color3>* tImage = hdrOutputLDRImages[1];
-            hdrOutputLDRImages.erase(hdrOutputLDRImages.begin());
-            hdrOutputLDRImages.erase(hdrOutputLDRImages.begin());
-            ImageHelpers::pngSave(destinationDirectory + "/" + rFileName.toString(), *rImage);
-            ImageHelpers::pngSave(destinationDirectory + "/" + tFileName.toString(), *tImage);
-            delete rImage;
-            delete tImage;
-        }
-    }
-    if (hdrOutputFlipLDRImages.size() > 0)
-    {
-        if (hdrOutputFlipLDRImages.size() != parameters.numExposures)
-        {
-            std::cout << "FLIP tool error: the number of FLIP LDR images from HDR-FLIP is not the expected number.\nExiting.\n";
-            exit(EXIT_FAILURE);
-        }
-
-        const float exposureStepSize = (parameters.stopExposure - parameters.startExposure) / (parameters.numExposures - 1);
-        for (int i = 0; i < parameters.numExposures; i++)
-        {
-            float exposure = parameters.startExposure + i * exposureStepSize;
-            std::stringstream ss;
-            ss << std::setfill('0') << std::setw(3) << i;
-            std::string expCount = ss.str();
-            ss.str(std::string());
-            ss << std::string(exposure < 0.0f ? "m" : "p") << std::to_string(std::abs(exposure));
-            std::string expString = ss.str();
-
-            FLIP::image<float>* flipImage = hdrOutputFlipLDRImages[0];
-            hdrOutputFlipLDRImages.erase(hdrOutputFlipLDRImages.begin());
-
-            FLIP::image<FLIP::color3> pngResult(flipImage->getWidth(), flipImage->getHeight());
-
-            if (!commandLine.optionSet("no-magma"))
-            {
-                pngResult.colorMap(*flipImage, FLIP::magmaMap);
-            }
-            else
-            {
-                pngResult.copyFloat2Color3(*flipImage);
-            }
-            if (basename == "")
-            {
-                ImageHelpers::pngSave(destinationDirectory + "/" + "flip." + referenceFileName.getName() + "." + testFileName.getName() + "." + std::to_string(int(std::round(parameters.PPD))) + "ppd.ldr." + parameters.tonemapper + "." + expCount + "." + expString + ".png", pngResult);
-            }
-            else
-            {
-                ImageHelpers::pngSave(destinationDirectory + "/" + basename + "." + expCount + ".png", pngResult);
-            }
-            ImageHelpers::pngSave(destinationDirectory + "/" + flipFileName.toString(), pngResult);
-            delete flipImage;
         }
     }
 }

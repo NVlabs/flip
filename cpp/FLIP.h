@@ -6,11 +6,9 @@
 //   void computeFLIP(const bool useHDR, const float *threeChanneltestRGB, const float *threeChannelReferenceRGB, float* threeChannelFlipError, int xRes, int yRes, FLIP::Parameters parameters, const bool verbose=false);
 //   # return the flip image with Magma already applied (or perhaps a bool?).
 // 
-// * Document FLIP::computeFLIP() and explain here in the header what it does and how it can be used.
-//
 // * Make simple computeFLIP() function, e.g., that do not have these parameters: maxErrorExposureMap, hdrOutputFlipLDRImages, hdrOutputLDRImages
 //
-// * in FLIP-tool.cpp, make sure parameters to functions are const when they can be.
+// * exrsave.
 // 
 // * Search for TODO. Fix.
 // 

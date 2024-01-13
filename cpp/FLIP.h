@@ -1,7 +1,5 @@
-// TODO: single header FLIP
-//  
+// TODO:
 // TESTING
-// * Make sure all features work (pooling, diagrams output, exposure maps, multiple image input etc) for CPU and for CUDA.
 // * Test whether the new CUDA version is the one that makes for a few pixel differences. If so, update references in tests/ and write that we use CUDA 12.5.
 // * Check performance (1 sec for CPU, 0.1 for GPU, approximately). I now include new copies of ref/test, + clamp, so might be a little slower. + timing of computeExposures.
 // * Check output with test.py for cpp and cuda.
@@ -59,7 +57,29 @@
  // Magnus Oskarsson, Kalle Astrom, and Mark D. Fairchild.
  // Pointer to the paper: https://research.nvidia.com/publication/2020-07_FLIP.
 
- // Single header code by Pontus Andersson and Tomas Akenine-Moller.
+// Single header code by Pontus Andersson and Tomas Akenine-Moller.
+// We provide the following FLIP::computeFLIP() functions (with different in/out parameters):
+// 1. computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+//                FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap,
+//                std::vector<FLIP::image<float>*>& hdrOutputFlipLDRImages, std::vector<FLIP::image<FLIP::color3>*>& hdrOutputLDRImages);
+//
+//    # This is the one with most parameters and is used by FLIP-tool.cpp in main().
+//    # See the function at the bottom of this file for detailed description of the parameters.
+// 
+// 2. computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+//                FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap);
+//
+//    # We do not expect that many user will want the LDR-FLIP images and the tonemappe LDR images computed during HDR-FLIP, so provide this simpler function.
+//
+// 3.computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+//               FLIP::image<float>& errorMapFLIPOutput);
+//
+//    # This one also excludes the exposure map for HDR-FLIP, in case they are not used.
+//
+// 4. computeFLIP(const bool useHDR, FLIP::Parameters& parameters, const int imageWidth, const int imageHeight,
+//                const float* referenceThreeChannelImage, const float* testThreeChannelImage, float* errorMapFLIPOutputOneChannel);
+//
+//    # An even simpler function that does not use any of our image classes to send in the images.
 
 #pragma once
 #include <algorithm>

@@ -164,8 +164,9 @@ static void setFileNames(const bool useHDR, commandline& commandLine, const FLIP
     }
 }
 
-static void saveErrorAndExposureMaps(const bool useHDR, commandline& commandLine, const FLIP::Parameters& parameters, FLIP::image<float>& errorMapFLIP,
-    FLIP::image<float>& maxErrorExposureMap, const std::string& destinationDirectory, FLIP::filename& flipFileName, FLIP::filename& exposureFileName)
+static void saveErrorAndExposureMaps(const bool useHDR, commandline& commandLine, const FLIP::Parameters& parameters, const std::string basename,
+    FLIP::image<float>& errorMapFLIP, FLIP::image<float>& maxErrorExposureMap, const std::string& destinationDirectory,
+    FLIP::filename& flipFileName, FLIP::filename& exposureFileName)
 {
     if(useHDR) // Updating the flipFileName here, since the computation of FLIP may have updated the exposure parameters.
     {
@@ -177,7 +178,16 @@ static void saveErrorAndExposureMaps(const bool useHDR, commandline& commandLine
         flipFileName.setName(flipFileName.getName() + ".hdr." + parameters.tonemapper + "." + f2s(parameters.startExposure) + "_to_" + f2s(parameters.stopExposure) + "." + std::to_string(parameters.numExposures));
         exposureFileName.setName("exposure_map." + flipFileName.getName());
     }
-    flipFileName.setName("flip." + flipFileName.getName());
+
+    if (basename != "" && commandLine.getOptionValues("test").size() == 1)
+    {
+        flipFileName.setName(basename);
+        exposureFileName.setName(basename + ".exposure_map");
+    }
+    else
+    {
+        flipFileName.setName("flip." + flipFileName.getName());
+    }
 
     if (!commandLine.optionSet("no-error-map"))
     {
@@ -412,7 +422,7 @@ int main(int argc, char** argv)
         {
         { "help", "h", 0, false, "", "show this help message and exit" },
         { "reference", "r", 1, true, "REFERENCE", "Relative or absolute path (including file name and extension) for reference image" },
-        { "test", "t", -1, true, "TEST", "Relative or absolute path (including file name and extension) for test image" },
+        { "test", "t", -1, true, "TEST", "Relative or absolute path(s) (including file name and extension) for test image(s)" },
         { "pixels-per-degree", "ppd", 1, false, "PIXELS-PER-DEGREE", "Observer's number of pixels per degree of visual angle. Default corresponds to\nviewing the images at 0.7 meters from a 0.7 meter wide 4K display" },
         { "viewing-conditions", "vc", 3, false, "MONITOR-DISTANCE MONITOR-WIDTH MONITOR-WIDTH-PIXELS", "Distance to monitor (in meters), width of monitor (in meters), width of monitor (in pixels).\nDefault corresponds to viewing the monitor at 0.7 meters from a 0.7 meters wide 4K display" },
         { "tone-mapper", "tm", 1, false, "ACES | HABLE | REINHARD", "Tone mapper used for HDR-FLIP. Supported tone mappers are ACES, Hable, and Reinhard (default: ACES)" },
@@ -486,8 +496,7 @@ int main(int argc, char** argv)
         FLIP::computeFLIP(bUseHDR, parameters, referenceImage, testImage, errorMapFLIP, maxErrorExposureMap, hdrOutputFlipLDRImages, hdrOutputLDRImages);
         float time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count() / 1000000.0f;
 
-
-        saveErrorAndExposureMaps(bUseHDR, commandLine, parameters, errorMapFLIP, maxErrorExposureMap, destinationDirectory, flipFileName, exposureFileName);
+        saveErrorAndExposureMaps(bUseHDR, commandLine, parameters, basename, errorMapFLIP, maxErrorExposureMap, destinationDirectory, flipFileName, exposureFileName);
         saveHDROutputLDRImages(commandLine, parameters, basename, flipFileName, referenceFileName, testFileName, destinationDirectory, hdrOutputFlipLDRImages, hdrOutputLDRImages);
         gatherStatisticsAndSaveOutput(commandLine, errorMapFLIP, destinationDirectory, referenceFileName, testFileName, histogramFileName, FLIPString, time, ++testFileCount);
     }

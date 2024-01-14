@@ -1,6 +1,6 @@
 ![Teaser image](images/teaser.png "Teaser image")
 
-# ꟻLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.2)
+# WIP: ꟻLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.3)
 By
 [Pontus Ebelin](https://research.nvidia.com/person/pontus-ebelin),
 Jim Nilsson,
@@ -28,6 +28,8 @@ different metrics.
 
 Version 1.2. implemented separated convolutions for the C++ and CUDA versions of ꟻLIP. A note explaining those
 can be found [here](misc/separatedConvolutions.pdf).
+
+Version 1.3 (WIP) introduced a single header (`FLIP.h`) for C++ (CPU and CUDA) for easier integration into other projects.
 
 # License
 

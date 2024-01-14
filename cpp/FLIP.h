@@ -1,9 +1,10 @@
 // TODO:
 // TESTING
-// 1. Test whether the new CUDA version is the one that makes for a few pixel differences. If so, update references in tests/ and write that we use CUDA 12.5.
+// 1. Update references in tests/ for CUDA and write that we use CUDA 12.3 on the readme and explain how one may change version of CUDA in visual studio.
 // 2. Check output with test.py for cpp and cuda.
 // 3. Check performance (1 sec for CPU, 0.1 for GPU, approximately). I now include new copies of ref/test, + clamp, so might be a little slower. + timing of computeExposures.
-// 4. Explain on github that we have switched to a single header style flip with a separate tool. 
+//    Do timing with "time flip.exe ...." as well so we get all execution. + save down the numbers somewhere.
+// 4. Update flip/cpp/README.md both CUDA 12.3 + write more about single header + tell them about FLIP_ENABLE_CUDA + FLIP::computeFLIP() (variants) and where to find them.
 //
 // LOW PRIO:
 // * Add error message if LDR images are outside [0,1]. Do it at load time?
@@ -93,12 +94,12 @@
 #include <fstream>
 #include <limits>
 
-#ifdef FLIP_USE_CUDA
+#ifdef FLIP_ENABLE_CUDA
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #endif
 
-#ifdef FLIP_USE_CUDA
+#ifdef FLIP_ENABLE_CUDA
 #define HOST_DEVICE_FOR_CUDA __host__ __device__
 #else
 #define HOST_DEVICE_FOR_CUDA
@@ -142,7 +143,7 @@ namespace FLIP
         float gqf = 0.5f;
     } FLIPConstants;
 
-#ifndef FLIP_USE_CUDA
+#ifndef FLIP_ENABLE_CUDA
     static const float ToneMappingCoefficients[3][6] =
     {
         { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f },                                                 // Reinhard.
@@ -153,7 +154,7 @@ namespace FLIP
     {
         struct { int x, y, z; };
     };
-#else // FLIP_USE_CUDA
+#else // FLIP_ENABLE_CUDA
     __constant__ struct
     {
         float gqc = 0.7f;
@@ -190,7 +191,7 @@ namespace FLIP
             struct { float r, g, b; };
             struct { float x, y, z; };
             struct { float h, s, v; };
-#ifdef FLIP_USE_CUDA
+#ifdef FLIP_ENABLE_CUDA
             float3 float3;
 #endif
         };
@@ -632,7 +633,7 @@ namespace FLIP
     }
 
     // CUDA kernels.
-#ifdef FLIP_USE_CUDA
+#ifdef FLIP_ENABLE_CUDA
     __global__ static void kernelColorMap(color3* pDstImage, const float* pSrcImage, const color3* pColorMap, const int3 dim, const int mapSize)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -1023,7 +1024,7 @@ namespace FLIP
         int3 mDim;
         int mArea, mVolume;
         T* mvpHostData;
-#ifdef FLIP_USE_CUDA
+#ifdef FLIP_ENABLE_CUDA
         T* mvpDeviceData;
         CudaTensorState mState = CudaTensorState::UNINITIALIZED;
         dim3 mBlockDim, mGridDim;
@@ -1041,7 +1042,7 @@ namespace FLIP
             return true;
         }
 
-#ifdef FLIP_USE_CUDA
+#ifdef FLIP_ENABLE_CUDA
         bool allocateDevice(void)
         {
             int deviceVolume = this->mGridDim.x * this->mGridDim.y * this->mGridDim.z * this->mBlockDim.x * this->mBlockDim.y * this->mBlockDim.z;
@@ -1063,7 +1064,7 @@ namespace FLIP
             this->mArea = dim.x * dim.y;
             this->mVolume = dim.x * dim.y * dim.z;
 
-#ifdef FLIP_USE_CUDA
+#ifdef FLIP_ENABLE_CUDA
             this->mGridDim.x = (this->mDim.x + this->mBlockDim.x - 1) / this->mBlockDim.x;
             this->mGridDim.y = (this->mDim.y + this->mBlockDim.y - 1) / this->mBlockDim.y;
             this->mGridDim.z = (this->mDim.z + this->mBlockDim.z - 1) / this->mBlockDim.z;
@@ -1089,7 +1090,7 @@ namespace FLIP
 
     public:
 
-#ifndef FLIP_USE_CUDA
+#ifndef FLIP_ENABLE_CUDA
         // Constructors for the CPU side.
         tensor()
         {
@@ -1121,7 +1122,7 @@ namespace FLIP
             this->init({ size, 1, 1 });
             memcpy(this->mvpHostData, pColorMap, size * sizeof(color3));
         }
-#else   // FLIP_USE_CUDA
+#else   // FLIP_ENABLE_CUDA
         // Constructors for the CUDA side.
         tensor(const dim3 blockDim = DEFAULT_KERNEL_BLOCK_DIM)
         {
@@ -1170,12 +1171,12 @@ namespace FLIP
         ~tensor(void)
         {
             free(this->mvpHostData);
-#ifdef FLIP_USE_CUDA
+#ifdef FLIP_ENABLE_CUDA
             cudaFree(this->mvpDeviceData);
 #endif
         }
 
-#ifdef FLIP_USE_CUDA
+#ifdef FLIP_ENABLE_CUDA
         T* getDeviceData(const int z = 0)
         {
             return this->mvpDeviceData + z * this->mArea;
@@ -1202,7 +1203,7 @@ namespace FLIP
             return (z * this->mDim.y + y) * mDim.x + x;
         }
 
-#ifndef FLIP_USE_CUDA
+#ifndef FLIP_ENABLE_CUDA
         T get(int x, int y, int z) const
         {
             return this->mvpHostData[this->index(x, y, z)];
@@ -1268,7 +1269,7 @@ namespace FLIP
             return this->mDim.z;
         }
 
-#ifndef FLIP_USE_CUDA
+#ifndef FLIP_ENABLE_CUDA
         void colorMap(tensor<float>& srcImage, tensor<color3>& colorMap)
         {
             for (int z = 0; z < this->getDepth(); z++)
@@ -1407,7 +1408,7 @@ namespace FLIP
                 }
             }
         }
-#else  // FLIP_USE_CUDA
+#else  // FLIP_ENABLE_CUDA
         void synchronizeHost(void)
         {
             if (this->mState == CudaTensorState::DEVICE_ONLY)
@@ -1550,7 +1551,7 @@ namespace FLIP
     class image: public tensor<T>
     {
     public:
-#ifndef FLIP_USE_CUDA
+#ifndef FLIP_ENABLE_CUDA
         image()
         {}
 
@@ -1590,7 +1591,7 @@ namespace FLIP
             : tensor<T>(pColorMap, size)
         {
         }
-#else // FLIP_USE_CUDA
+#else // FLIP_ENABLE_CUDA
         image()
         {}
 
@@ -1650,7 +1651,7 @@ namespace FLIP
         {
         }
 
-#ifndef FLIP_USE_CUDA
+#ifndef FLIP_ENABLE_CUDA
         T get(int x, int y) const
         {
             return this->mvpHostData[this->index(x, y)];
@@ -1757,7 +1758,7 @@ namespace FLIP
             }
         }
 
-#ifndef FLIP_USE_CUDA
+#ifndef FLIP_ENABLE_CUDA
         // Performs spatial filtering (and clamps the results) on both the reference and test image at the same time (for better performance).
         // Filtering has been changed to separable filtering for better performance. For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
         // After filtering, compute color differences. referenceImage and testImage are expected to be in YCxCz space.
@@ -2006,7 +2007,7 @@ namespace FLIP
                 }
             }
         }
-#else // FLIP_USE_CUDA
+#else // FLIP_ENABLE_CUDA
         void FLIP(image<color3>& reference, image<color3>& test, float ppd);
 
         // Perform the x-component of separable spatial filtering of both the reference and the test.
@@ -2127,7 +2128,7 @@ namespace FLIP
             if (tm == "hable")
                 toneMapper = 2;
 
-#ifndef FLIP_USE_CUDA
+#ifndef FLIP_ENABLE_CUDA
             const float* tc = FLIP::ToneMappingCoefficients[toneMapper];
 #else
             const float* tc = ToneMappingCoefficients[toneMapper];
@@ -2165,7 +2166,7 @@ namespace FLIP
             stopExposure = log2(xMax / Ymedian);
         }
 
-#ifndef FLIP_USE_CUDA
+#ifndef FLIP_ENABLE_CUDA
         void FLIP(image<color3>& reference, image<color3>& test, float ppd)
         {
             int width = reference.getWidth();
@@ -2204,7 +2205,7 @@ namespace FLIP
     static FLIP::image<FLIP::color3> magmaMap = FLIP::image<FLIP::color3>(FLIP::MapMagma, 256);
     static FLIP::image<FLIP::color3> viridisMap = FLIP::image<FLIP::color3>(FLIP::MapViridis, 256);
 
-#ifdef FLIP_USE_CUDA
+#ifdef FLIP_ENABLE_CUDA
     template<typename T>
     inline void image<T>::FLIP(image<color3>& reference, image<color3>& test, float ppd)
     {
@@ -2385,7 +2386,7 @@ namespace FLIP
 
         FLIP::computeFLIP(useHDR, parameters, referenceImage, testImage, errorMapFLIPOutput);
 
-#ifdef FLIP_USE_CUDA
+#ifdef FLIP_ENABLE_CUDA
         errorMapFLIPOutput.synchronizeHost();
 #endif
         memcpy(errorMapFLIPOutputOneChannel, errorMapFLIPOutput.getHostData(), size_t(imageWidth) * imageHeight * sizeof(float));

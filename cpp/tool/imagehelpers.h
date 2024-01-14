@@ -299,7 +299,7 @@ namespace ImageHelpers
     {
         unsigned char* pixels = new unsigned char[3 * image.getWidth() * image.getHeight()];
 
-#ifdef FLIP_USE_CUDA
+#ifdef FLIP_ENABLE_CUDA
         image.synchronizeHost();
 #endif
 
@@ -325,7 +325,7 @@ namespace ImageHelpers
 
     bool exrSave(const std::string& fileName, FLIP::image<FLIP::color3>& image)
     {
-#ifdef FLIP_USE_CUDA
+#ifdef FLIP_ENABLE_CUDA
         image.synchronizeHost();
 #endif
         constexpr int channels = 3;

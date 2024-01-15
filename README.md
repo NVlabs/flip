@@ -26,7 +26,7 @@ The changes made for the different versions of ꟻLIP are summarized in the [ver
 [An image gallery](https://research.nvidia.com/node/3525) displaying a large quantity of reference/test images and corresponding error maps from
 different metrics.
 
-**Note**: in v1.3, we switched to a *single header* ([FLIP.h](https://github.com/NVlabs/flip/blob/singleheader_WIP/cpp/FLIP.h)) to C++/CUDA for easier integration.
+**Note**: in v1.3, we switched to a *single header* ([FLIP.h](https://github.com/NVlabs/flip/blob/singleheader_WIP/cpp/FLIP.h)) for C++/CUDA for easier integration.
 
 # License
 

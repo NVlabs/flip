@@ -3,6 +3,11 @@
 In addition to various minor changes, the following was
 changed for the different versions of ꟻLIP:
 
+# Version 1.3 (commit ??????)
+- Changed to CUDA 12.3.
+- Rewrote C++ code so that ꟻLIP is in a single header (both CPP/CUDA).
+- Rewrote `FLIP-tool.cpp` to use many more local functions to make the code easier to read.
+
 # Version 1.2 (commit dde1eca)
 - Changed to CUDA 11.5 (was done after v1.1, but before v1.2).
 - Adds tests for C++ and CUDA in the tests-directory.

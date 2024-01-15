@@ -1,13 +1,3 @@
-// TODO:
-// TESTING
-// 1. Explain how one may change version of CUDA in visual studio.
-// 2. Update flip/cpp/README.md both CUDA 12.3 + write more about single header + tell them about FLIP_ENABLE_CUDA + FLIP::computeFLIP() (variants) and where to find them.
-//    Write about how to use FLIP.h without the tool, i.e., you do #define FLIP_ENABLE_CUDA (if you want it) and then #include "FLIP.h" and then FLIP::computeFLIP(); etc.
-//
-// LOW PRIO:
-// * Add error message if LDR images are outside [0,1]. Do it at load time?
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 /*
  * Copyright (c) 2020-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
@@ -36,7 +26,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * SPDX-FileCopyrightText: Copyright (c) 2020-2023 NVIDIA CORPORATION & AFFILIATES
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2024 NVIDIA CORPORATION & AFFILIATES
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
@@ -57,7 +47,9 @@
  // Pointer to the paper: https://research.nvidia.com/publication/2020-07_FLIP.
 
 // Single header code by Pontus Andersson and Tomas Akenine-Moller.
-// We provide the following FLIP::computeFLIP() functions (with different in/out parameters):
+//
+// We provide the following FLIP::computeFLIP() functions with different in/out parameters (see bottom of this file for more explanations):
+// 
 // 1. computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
 //                FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap,
 //                std::vector<FLIP::image<float>*>& hdrOutputFlipLDRImages, std::vector<FLIP::image<FLIP::color3>*>& hdrOutputLDRImages);

@@ -16,7 +16,7 @@ and [HDR-ꟻLIP](https://research.nvidia.com/publication/2021-05_HDR-FLIP) image
 
 # License
 
-Copyright © 2020-2023, NVIDIA Corporation & Affiliates. All rights reserved.
+Copyright © 2020-2024, NVIDIA Corporation & Affiliates. All rights reserved.
 
 This work is made available under a [BSD 3-Clause License](../misc/LICENSE.md).
 

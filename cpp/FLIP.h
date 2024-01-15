@@ -1,14 +1,11 @@
 // TODO:
 // TESTING
-// 1. Update references in tests/ for CUDA and write that we use CUDA 12.3 on the readme and explain how one may change version of CUDA in visual studio.
-// 2. Check output with test.py for cpp and cuda.
-// 3. Check performance (1 sec for CPU, 0.1 for GPU, approximately). I now include new copies of ref/test, + clamp, so might be a little slower. + timing of computeExposures.
-//    Do timing with "time flip.exe ...." as well so we get all execution. + save down the numbers somewhere.
-// 4. Update flip/cpp/README.md both CUDA 12.3 + write more about single header + tell them about FLIP_ENABLE_CUDA + FLIP::computeFLIP() (variants) and where to find them.
+// 1. Explain how one may change version of CUDA in visual studio.
+// 2. Update flip/cpp/README.md both CUDA 12.3 + write more about single header + tell them about FLIP_ENABLE_CUDA + FLIP::computeFLIP() (variants) and where to find them.
+//    Write about how to use FLIP.h without the tool, i.e., you do #define FLIP_ENABLE_CUDA (if you want it) and then #include "FLIP.h" and then FLIP::computeFLIP(); etc.
 //
 // LOW PRIO:
 // * Add error message if LDR images are outside [0,1]. Do it at load time?
-// * Add to github page how the user can call FLIP::computeFLIP() ?! 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /*

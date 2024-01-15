@@ -18,7 +18,7 @@ It also holds code for the ꟻLIP tool, presented in [Ray Tracing Gems II](https
 Note that since v1.2, we use separated convolutions for the C++ and CUDA versions of ꟻLIP. A note explaining those
 can be found [here](misc/separatedConvolutions.pdf).
 
-With v1.3, we have switched to a single header (`FLIP.h`) for easier integration into other projects.
+With v1.3, we have switched to a single header [FLIP.h](FLIP.h) for easier integration into other projects.
 
 
 # License

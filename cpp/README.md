@@ -38,13 +38,13 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
 - If you want to use FLIP in your own project, it should suffice to use the header [FLIP.h](FLIP.h). Typical usage would be:
   ```
   #define FLIP_ENABLE_CUDA    // You need to define this if you want to run FLIP using CUDA. Otherwise, comment this out.
-  #include "FLIP.h"           // See the bottom of FLIP.h for 4 different FLIP::computeFLIP(...) functions that can be used. 
+  #include "FLIP.h"           // See the bottom of FLIP.h for 4 different FLIP::computeFLIP(...) functions that can be used.
 
   void someFunction()
   {
       FLIP::computeFLIP(...);  // See FLIP-tool.cpp for an example of how to use one of these overloaded functions.
-  }  
-  ```  
+  }
+  ```
 - The FLIP.sln solution contains one CUDA backend project and one pure C++ backend project for the FLIP tool.
 - Compiling the CUDA project requires a CUDA compatible GPU. Instruction on how to install CUDA can be found [here](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html).
 - Alternatively, a CMake build can be done by creating a build directory and invoking CMake on the source `cpp` dir:
@@ -52,13 +52,13 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
   ```
   mkdir build
   cd build
-  cmake ../cpp
+  cmake ..
   cmake --build .
   ```
 
   CUDA support is enabled via the `FLIP_ENABLE_CUDA`, which can be passed to CMake on the command line with `-DFLIP_ENABLE_CUDA=ON` or set interactively with `ccmake` or `cmake-gui`.
   `FLIP_LIBRARY` option allows to output a library rather than an executable.
-- Usage: `flip[-cuda].exe --reference reference.{exr|png} --test test.{exr|png} [options]`, where the list of options can be seen by `flip[-cuda].exe -h`.
+- Usage: `flip[-cuda]-cli.exe --reference reference.{exr|png} --test test.{exr|png} [options]`, where the list of options can be seen by `flip[-cuda]-cli.exe -h`.
 - Tested on Windows 10 version 22H2 and Windows 11 version 23H2 with CUDA 12.3. Compiled with Visual Studio 2022. If you use another version of CUDA, you will need to change the `CUDA 12.3` strings in the `CUDA.vcxproj` file accordingly.
 - `../tests/test.py` contains simple tests used to test whether code updates alter results.
 - Weighted histograms are output as Python scripts. Running the script will create a PDF version of the histogram. Note that the python script has some dependencies, so it is best to `conda activate flip` before it is executed. See [README.md](https://github.com/NVlabs/flip/blob/singleheader_WIP/python/README.md) for our Python code to set this up.
@@ -86,18 +86,18 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
   **With** `--basename <name>` **(note: not applicable if more than one test image is evaluated):**
 
   *Low dynamic range images:*<br>
-    
+
     LDR-ꟻLIP: `<name>.png`<br>
     Weighted histogram: `<name>.py`<br>
 
   *High dynamic range images:*<br>
-    
+
     HDR-ꟻLIP: `<name>.png`<br>
     Exposure map: `<name>.exposure_map.png`<br>
     Intermediate LDR-ꟻLIP maps: `<name>.<nnn>.png`<br>
     Intermediate LDR images: `<name>.reference|test.<nnn>.png`<br>
     Weighted histogram: `<name>.py`<br>
-    
+
  **Example usage:**
 After compiling the `FLIP.sln` project, navigate to the `flip[-cuda].exe` executable and try:
   ```
@@ -119,7 +119,7 @@ FLIP between reference image <reference.exr> and test image <test.exr>:
         3rd weighted quartile: 0.434673
         Min: 0.003118
         Max: 0.962022
-        Evaluation time: <t> seconds 
+        Evaluation time: <t> seconds
   ```
 where `<t>` is the time it took to evaluate HDR-ꟻLIP. In addition, you will now find the files `flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png` and `exposure_map.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png`
 in the directory containing the `flip[-cuda].exe` executable, and we urge you to inspect those, which will reveal where the errors in the test image are located.

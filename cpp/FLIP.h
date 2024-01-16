@@ -49,14 +49,14 @@
 // Single header code by Pontus Andersson and Tomas Akenine-Moller.
 //
 // We provide the following FLIP::computeFLIP() functions with different in/out parameters (see bottom of this file for more explanations):
-// 
+//
 // 1. computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
 //                FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap,
 //                std::vector<FLIP::image<float>*>& hdrOutputFlipLDRImages, std::vector<FLIP::image<FLIP::color3>*>& hdrOutputLDRImages);
 //
 //    # This is the one with most parameters and is used by FLIP-tool.cpp in main().
 //    # See the function at the bottom of this file for detailed description of the parameters.
-// 
+//
 // 2. computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
 //                FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap);
 //
@@ -75,6 +75,7 @@
 #pragma once
 #include <algorithm>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <string>
 #include <cmath>
@@ -92,7 +93,7 @@
 #define HOST_DEVICE_FOR_CUDA __host__ __device__
 #else
 #define HOST_DEVICE_FOR_CUDA
-#endif 
+#endif
 
 namespace FLIP
 {
@@ -1064,7 +1065,7 @@ namespace FLIP
             }
 
             allocateDevice();
-            this->mState = CudaTensorState::ALLOCATED; 
+            this->mState = CudaTensorState::ALLOCATED;
 #endif
             allocateHost();
 
@@ -1230,7 +1231,7 @@ namespace FLIP
             {
                 this->init({ width, height, 1});
             }
-            memcpy(this->mvpHostData, pPixels, size_t(width) * height * sizeof(T)); 
+            memcpy(this->mvpHostData, pPixels, size_t(width) * height * sizeof(T));
             this->mState = CudaTensorState::HOST_ONLY;
         }
 #endif
@@ -2234,8 +2235,8 @@ namespace FLIP
 
     /** Main function for computing (the image metric called) FLIP between a reference image and a test image.
      *  See FLIP-tool.cpp for usage of this function.
-     * 
-     * @param[in] useHDR Set to true if the input images are to be considered contain HDR content, i.e., not necessarily in [0,1]. 
+     *
+     * @param[in] useHDR Set to true if the input images are to be considered contain HDR content, i.e., not necessarily in [0,1].
      * @param[in,out] parameters Contains parameters (e.g., PPD, exposure settings,etc). If the exposures have not been set by the user, then those will be computed (and returned).
      * @param[in] referenceImageInput Reference input image. For LDR, the content should be in [0,1].
      * @param[in] testImageInput Test input image. For LDR, the content should be in [0,1].

@@ -58,7 +58,7 @@
 #define NOMINMAX
 #define FIXED_DECIMAL_DIGITS(x, d) std::fixed << std::setprecision(d) << (x)
 
-#include "../FLIP.h"
+#include "FLIP.h"
 
 #include "imagehelpers.h"
 #include "commandline.h"
@@ -206,7 +206,7 @@ static void saveErrorAndExposureMaps(const bool useHDR, commandline& commandLine
         {
             FLIP::image<FLIP::color3> pngMaxErrorExposureMap(maxErrorExposureMap.getWidth(), maxErrorExposureMap.getHeight());
             pngMaxErrorExposureMap.colorMap(maxErrorExposureMap, FLIP::viridisMap);
-            ImageHelpers::pngSave(destinationDirectory + "/" + exposureFileName.toString(), pngMaxErrorExposureMap);   
+            ImageHelpers::pngSave(destinationDirectory + "/" + exposureFileName.toString(), pngMaxErrorExposureMap);
         }
     }
 }

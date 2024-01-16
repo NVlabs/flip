@@ -493,7 +493,7 @@ int main(int argc, char** argv)
         FLIP::image<float> maxErrorExposureMap(referenceImage.getWidth(), referenceImage.getHeight());
 
         auto t0 = std::chrono::high_resolution_clock::now();
-        FLIP::computeFLIP(bUseHDR, parameters, referenceImage, testImage, errorMapFLIP, maxErrorExposureMap, hdrOutputFlipLDRImages, hdrOutputLDRImages);
+        FLIP::evaluate(bUseHDR, parameters, referenceImage, testImage, errorMapFLIP, maxErrorExposureMap, hdrOutputFlipLDRImages, hdrOutputLDRImages);
         float time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count() / 1000000.0f;
 
         saveErrorAndExposureMaps(bUseHDR, commandLine, parameters, basename, errorMapFLIP, maxErrorExposureMap, destinationDirectory, flipFileName, exposureFileName);

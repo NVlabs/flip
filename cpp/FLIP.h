@@ -48,27 +48,27 @@
 
 // Single header code by Pontus Andersson and Tomas Akenine-Moller.
 //
-// We provide the following FLIP::computeFLIP() functions with different in/out parameters (see bottom of this file for more explanations):
+// We provide the following FLIP::evaluate() functions with different in/out parameters (see bottom of this file for more explanations):
 // 
-// 1. computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
-//                FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap,
-//                std::vector<FLIP::image<float>*>& hdrOutputFlipLDRImages, std::vector<FLIP::image<FLIP::color3>*>& hdrOutputLDRImages);
+// 1. FLIP::evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+//                  FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap,
+//                  std::vector<FLIP::image<float>*>& hdrOutputFlipLDRImages, std::vector<FLIP::image<FLIP::color3>*>& hdrOutputLDRImages);
 //
 //    # This is the one with most parameters and is used by FLIP-tool.cpp in main().
 //    # See the function at the bottom of this file for detailed description of the parameters.
 // 
-// 2. computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
-//                FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap);
+// 2. FLIP::evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+//                  FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap);
 //
 //    # We do not expect that many user will want the LDR-FLIP images and the tonemappe LDR images computed during HDR-FLIP, so provide this simpler function.
 //
-// 3.computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
-//               FLIP::image<float>& errorMapFLIPOutput);
+// 3.FLIP::evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+//                 FLIP::image<float>& errorMapFLIPOutput);
 //
 //    # This one also excludes the exposure map for HDR-FLIP, in case they are not used.
 //
-// 4. computeFLIP(const bool useHDR, FLIP::Parameters& parameters, const int imageWidth, const int imageHeight,
-//                const float* referenceThreeChannelImage, const float* testThreeChannelImage, float* errorMapFLIPOutputOneChannel);
+// 4. FLIP::evaluate(const bool useHDR, FLIP::Parameters& parameters, const int imageWidth, const int imageHeight,
+//                  const float* referenceThreeChannelImage, const float* testThreeChannelImage, float* errorMapFLIPOutputOneChannel);
 //
 //    # An even simpler function that does not use any of our image classes to send in the images.
 
@@ -2148,7 +2148,7 @@ namespace FLIP
         }
 
 #ifndef FLIP_ENABLE_CUDA
-        void FLIP(image<color3>& reference, image<color3>& test, float ppd)
+        void LDR_FLIP(image<color3>& reference, image<color3>& test, float ppd)
         {
             int width = reference.getWidth();
             int height = reference.getHeight();
@@ -2181,7 +2181,7 @@ namespace FLIP
             this->computeFeatureDifferenceAndFinalError(reference, test, featureFilter);
         }
 #else
-        void image<T>::FLIP(image<color3>& reference, image<color3>& test, float ppd)
+        void image<T>::LDR_FLIP(image<color3>& reference, image<color3>& test, float ppd)
         {
             int width = reference.getWidth();
             int height = reference.getHeight();
@@ -2239,7 +2239,7 @@ namespace FLIP
      * @param[out] hdrOutputFlipLDRImages A list of temporary output LDR FLIP images from HDR-FLIP.
      * @param[out] hdrOutputLDRImages A list of temporary tonemapped output LDR images from HDR-FLIP. Images in this order: Ref0, Test0, Ref1, Test1,...
      */
-    static void computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+    static void evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
         FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMapOutput,
         std::vector<FLIP::image<float>*>& hdrOutputFlipLDRImages, std::vector<FLIP::image<FLIP::color3>*>& hdrOutputLDRImages)
     {
@@ -2301,7 +2301,7 @@ namespace FLIP
                     hdrOutputLDRImages.push_back(new FLIP::image<FLIP::color3>(rImage));
                     hdrOutputLDRImages.push_back(new FLIP::image<FLIP::color3>(tImage));
                 }
-                tmpErrorMap.FLIP(rImage, tImage, parameters.PPD);
+                tmpErrorMap.LDR_FLIP(rImage, tImage, parameters.PPD);
                 if (parameters.returnLDRFLIPImages)
                 {
                     hdrOutputFlipLDRImages.push_back(new FLIP::image<float>(tmpErrorMap));
@@ -2313,27 +2313,27 @@ namespace FLIP
         {
             referenceImage.clamp();     // The input images should always be in [0,1], but we clamp them here to avoid any problems.
             testImage.clamp();
-            errorMapFLIPOutput.FLIP(referenceImage, testImage, parameters.PPD);
+            errorMapFLIPOutput.LDR_FLIP(referenceImage, testImage, parameters.PPD);
         }
     }
 
     // This variant does not return any LDR images computing for HDR-FLIP and thus avoids two parameters (since using those is a rare use case).
-    static void computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+    static void evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
          FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMapOutput)
     {
         parameters.returnLDRFLIPImages = false;
         parameters.returnLDRImages = false;
         std::vector<FLIP::image<float>*> hdrOutputFlipLDRImages;
         std::vector<FLIP::image<FLIP::color3>*> hdrOutputLDRImages;
-        FLIP::computeFLIP(useHDR, parameters, referenceImageInput, testImageInput, errorMapFLIPOutput, maxErrorExposureMapOutput, hdrOutputFlipLDRImages, hdrOutputLDRImages);
+        FLIP::evaluate(useHDR, parameters, referenceImageInput, testImageInput, errorMapFLIPOutput, maxErrorExposureMapOutput, hdrOutputFlipLDRImages, hdrOutputLDRImages);
     }
 
     // This variant does not return the exposure map, which may also be used quite seldom.
-    static void computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+    static void evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
          FLIP::image<float>& errorMapFLIPOutput)
     {
         FLIP::image<float> maxErrorExposureMapOutput(referenceImageInput.getWidth(), referenceImageInput.getHeight());
-        FLIP::computeFLIP(useHDR, parameters, referenceImageInput, testImageInput, errorMapFLIPOutput, maxErrorExposureMapOutput);
+        FLIP::evaluate(useHDR, parameters, referenceImageInput, testImageInput, errorMapFLIPOutput, maxErrorExposureMapOutput);
     }
 
     /** A simplified function for computing (the image metric called) FLIP between a reference image and a test image, without using FLIP::image etc.
@@ -2342,14 +2342,16 @@ namespace FLIP
      * @param[in,out] parameters Contains parameters (e.g., PPD, exposure settings,etc). If the exposures have not been set by the user, then those will be computed (and returned).
      * @param[in] imageWidth Width of the reference and test images.
      * @param[in] imageHeight Height of the reference and test images.
-     * @param[in] referenceThreeChannelImage Reference input image. For LDR, the content should be in [0,1]. The image is expected to have 3 floats per pixel.
-     * @param[in] testThreeChannelImage Test input image. For LDR, the content should be in [0,1]. The image is expected to have 3 floats per pixel.
-     * @param[out] errorMapFLIPOutputOneChannel The FLIP error image in [0,1], a single channel (grayscale). The user should map it using MapMagma if that is desired
-                   (see image::colorMap(errorMapFLIP, FLIP::magmaMap);)
-     *             Note that the user has to allocate flipOneChannelErrorImage of size imageWidth * imageHeight * sizeof(float).
+     * @param[in] referenceThreeChannelImage Reference input image. For LDR, the content should be in [0,1]. The image is expected to have 3 floats per pixel and they
+     *            are interleaved, i.e., they come in the order: R0G0B0, R1G1B1, etc.
+     * @param[in] testThreeChannelImage Test input image. For LDR, the content should be in [0,1]. The image is expected to have 3 floats per pixel and they are interleaved.
+     * @param[in] applyMagmaMapToOutput A boolean indicating whether the output should have the MagmaMap applied to it before the image is returned.
+     * @param[out] errorMapFLIPOutput The computed FLIP error image is return in this variable. If applyMagmaMapToOutput is true, the function will allocate
+     *             three channels, and if it is false, only one channel will be allocated (and the FLIP error is returned in that gray scale image).
+     *             Note that the user is responsible for deallocating the errorMapFLIPOutput image.
      */
-    static void computeFLIP(const bool useHDR, FLIP::Parameters& parameters, const int imageWidth, const int imageHeight,
-        const float* referenceThreeChannelImage, const float* testThreeChannelImage, float* errorMapFLIPOutputOneChannel)
+    static void evaluate(const bool useHDR, FLIP::Parameters& parameters, const int imageWidth, const int imageHeight,
+        const float* referenceThreeChannelImage, const float* testThreeChannelImage, const bool applyMagmaMapToOutput, float** errorMapFLIPOutput)
     {
         FLIP::image<FLIP::color3> referenceImage;
         FLIP::image<FLIP::color3> testImage;
@@ -2360,13 +2362,28 @@ namespace FLIP
         parameters.returnLDRImages = false;
         std::vector<FLIP::image<float>*> hdrOutputFlipLDRImages;
         std::vector<FLIP::image<FLIP::color3>*> hdrOutputLDRImages;
-        FLIP::image<float> errorMapFLIPOutput(imageWidth, imageHeight);
+        FLIP::image<float> errorMapFLIPOutputImage(imageWidth, imageHeight);
 
-        FLIP::computeFLIP(useHDR, parameters, referenceImage, testImage, errorMapFLIPOutput);
+        FLIP::evaluate(useHDR, parameters, referenceImage, testImage, errorMapFLIPOutputImage);
 
 #ifdef FLIP_ENABLE_CUDA
-        errorMapFLIPOutput.synchronizeHost();
+        errorMapFLIPOutputImage.synchronizeHost();
 #endif
-        memcpy(errorMapFLIPOutputOneChannel, errorMapFLIPOutput.getHostData(), size_t(imageWidth) * imageHeight * sizeof(float));
+        if (applyMagmaMapToOutput)
+        {
+            *errorMapFLIPOutput = new float[imageWidth * imageWidth * 3];
+            FLIP::image<FLIP::color3> magmaMappedFLIPImage(imageWidth, imageHeight);
+            magmaMappedFLIPImage.colorMap(errorMapFLIPOutputImage, FLIP::magmaMap);
+#ifdef FLIP_ENABLE_CUDA
+            magmaMappedFLIPImage.synchronizeHost();
+#endif
+            memcpy(*errorMapFLIPOutput, magmaMappedFLIPImage.getHostData(), size_t(imageWidth) * imageHeight * sizeof(float) * 3);
+
+        }
+        else    // No MagmaMap applied, which means that we will return the gray scale image.
+        {
+            *errorMapFLIPOutput = new float[imageWidth * imageWidth];
+            memcpy(*errorMapFLIPOutput, errorMapFLIPOutputImage.getHostData(), size_t(imageWidth) * imageHeight * sizeof(float));
+        }
     }
 }

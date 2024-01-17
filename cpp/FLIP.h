@@ -48,27 +48,27 @@
 
 // Single header code by Pontus Andersson and Tomas Akenine-Moller.
 //
-// We provide the following FLIP::computeFLIP() functions with different in/out parameters (see bottom of this file for more explanations):
-//
-// 1. computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
-//                FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap,
-//                std::vector<FLIP::image<float>*>& hdrOutputFlipLDRImages, std::vector<FLIP::image<FLIP::color3>*>& hdrOutputLDRImages);
+// We provide the following FLIP::evaluate() functions with different in/out parameters (see bottom of this file for more explanations):
+// 
+// 1. FLIP::evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+//                  FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap,
+//                  std::vector<FLIP::image<float>*>& hdrOutputFlipLDRImages, std::vector<FLIP::image<FLIP::color3>*>& hdrOutputLDRImages);
 //
 //    # This is the one with most parameters and is used by FLIP-tool.cpp in main().
 //    # See the function at the bottom of this file for detailed description of the parameters.
-//
-// 2. computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
-//                FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap);
+// 
+// 2. FLIP::evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+//                  FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap);
 //
 //    # We do not expect that many user will want the LDR-FLIP images and the tonemappe LDR images computed during HDR-FLIP, so provide this simpler function.
 //
-// 3.computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
-//               FLIP::image<float>& errorMapFLIPOutput);
+// 3.FLIP::evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+//                 FLIP::image<float>& errorMapFLIPOutput);
 //
 //    # This one also excludes the exposure map for HDR-FLIP, in case they are not used.
 //
-// 4. computeFLIP(const bool useHDR, FLIP::Parameters& parameters, const int imageWidth, const int imageHeight,
-//                const float* referenceThreeChannelImage, const float* testThreeChannelImage, float* errorMapFLIPOutputOneChannel);
+// 4. FLIP::evaluate(const bool useHDR, FLIP::Parameters& parameters, const int imageWidth, const int imageHeight,
+//                  const float* referenceThreeChannelImage, const float* testThreeChannelImage, float* errorMapFLIPOutputOneChannel);
 //
 //    # An even simpler function that does not use any of our image classes to send in the images.
 
@@ -119,8 +119,6 @@ namespace FLIP
         float stopExposure = std::numeric_limits<float>::infinity();    // Used when the input is HDR.
         int numExposures = -1;                                          // Used when the input is HDR.
         std::string tonemapper = "aces";                                // Default tonemapper (used for HDR).
-        bool returnLDRImages = false;                                   // Can only happen for HDR. Probably only of use for FLIP-tool.cpp.
-        bool returnLDRFLIPImages = false;                               // Can only happen for HDR. Probably only of use for FLIP-tool.cpp.
     };
 
     static const struct xFLIPConstants
@@ -685,6 +683,29 @@ namespace FLIP
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
         pImage[i] = color3::XYZ2YCxCz(color3::LinearRGB2XYZ(color3::sRGB2LinearRGB(pImage[i])));
+    }
+
+    __global__ static void kernelsRGB2LinearRGB(color3* pImage, const int3 dim)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int i = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+        pImage[i] = color3::sRGB2LinearRGB(pImage[i]);
+    }
+
+
+    __global__ static void kernelLinearRGB2YCxCz(color3* pImage, const int3 dim)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int i = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+        pImage[i] = color3::XYZ2YCxCz(color3::LinearRGB2XYZ(pImage[i]));
     }
 
     __global__ static void kernelLinearRGB2sRGB(color3* pImage, const int3 dim)
@@ -1287,6 +1308,36 @@ namespace FLIP
             }
         }
 
+        void sRGB2LinearRGB(void)
+        {
+            for (int z = 0; z < this->getDepth(); z++)
+            {
+#pragma omp parallel for
+                for (int y = 0; y < this->getHeight(); y++)
+                {
+                    for (int x = 0; x < this->getWidth(); x++)
+                    {
+                        this->set(x, y, z, color3::sRGB2LinearRGB(this->get(x, y, z)));
+                    }
+                }
+            }
+        }
+
+        void LinearRGB2YCxCz(void)
+        {
+            for (int z = 0; z < this->getDepth(); z++)
+            {
+#pragma omp parallel for
+                for (int y = 0; y < this->getHeight(); y++)
+                {
+                    for (int x = 0; x < this->getWidth(); x++)
+                    {
+                        this->set(x, y, z, color3::XYZ2YCxCz(color3::LinearRGB2XYZ(this->get(x, y, z))));
+                    }
+                }
+            }
+        }
+
         void LinearRGB2sRGB(void)
         {
             for (int z = 0; z < this->getDepth(); z++)
@@ -1438,6 +1489,22 @@ namespace FLIP
             this->synchronizeDevice();
             kernelsRGB2YCxCz << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
             checkStatus("kernelsRGB2YCxCz");
+            this->mState = CudaTensorState::DEVICE_ONLY;
+        }
+
+        void sRGB2LinearRGB(void)
+        {
+            this->synchronizeDevice();
+            kernelsRGB2LinearRGB << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
+            checkStatus("kernelsRGB2LinearRGB");
+            this->mState = CudaTensorState::DEVICE_ONLY;
+        }
+
+        void LinearRGB2YCxCz(void)
+        {
+            this->synchronizeDevice();
+            kernelLinearRGB2YCxCz << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
+            checkStatus("kernelLinearRGB2YCxCz");
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 
@@ -1992,8 +2059,6 @@ namespace FLIP
             }
         }
 #else // FLIP_ENABLE_CUDA
-        void FLIP(image<color3>& reference, image<color3>& test, float ppd);
-
         // Perform the x-component of separable spatial filtering of both the reference and the test.
         // referenceImage and testImage are expected to be in YCxCz space.
         static void spatialFilterFirstDir(image& referenceImage, image& intermediateYCxImageReference, image& intermediateCzImageReference, image& testImage, image& intermediateYCxImageTest, image& intermediateCzImageTest, image& filterYCx, image& filterCz)
@@ -2151,14 +2216,14 @@ namespace FLIP
         }
 
 #ifndef FLIP_ENABLE_CUDA
-        void FLIP(image<color3>& reference, image<color3>& test, float ppd)
+        void LDR_FLIP(image<color3>& reference, image<color3>& test, float ppd)     // Both reference and test are assumed to be in linear RGB.
         {
             int width = reference.getWidth();
             int height = reference.getHeight();
 
-            // Transform from sRGB to YCxCz.
-            reference.sRGB2YCxCz();
-            test.sRGB2YCxCz();
+            // Transform from linear RGB to YCxCz.
+            reference.LinearRGB2YCxCz();
+            test.LinearRGB2YCxCz();
 
             // Prepare separated spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
             // (YCx for the Achromatic and Red-Green channels and Cz for the Blue-Yellow channel).
@@ -2183,71 +2248,72 @@ namespace FLIP
             // computations for the final feature differences, and then computes the final FLIP error and stores in "this".
             this->computeFeatureDifferenceAndFinalError(reference, test, featureFilter);
         }
+#else
+        void image<T>::LDR_FLIP(image<color3>& reference, image<color3>& test, float ppd)     // Both reference and test are assumed to be in linear RGB.
+        {
+            int width = reference.getWidth();
+            int height = reference.getHeight();
+
+            // Temporary images (on device).
+            image<color3> intermediateReferenceYCx(width, height), intermediateReferenceCz(width, height), intermediateTestYCx(width, height), intermediateTestCz(width, height);
+            image<color3> intermediateFeaturesReference(width, height), intermediateFeaturesTest(width, height);
+            image<color3> colorFeatureDifference(width, height);
+
+            // Transform from linear RGB to YCxCz.
+            reference.LinearRGB2YCxCz();
+            test.LinearRGB2YCxCz();
+
+            // Prepare separated spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
+            // (YCx for the Achromatic and Red-Green channels and Cz for the Blue-Yellow channel). For details, see separatedConvolutions.pdf in the FLIP repository.
+            int spatialFilterRadius = calculateSpatialFilterRadius(ppd);
+            int spatialFilterWidth = 2 * spatialFilterRadius + 1;
+            image<color3> spatialFilterYCx(spatialFilterWidth, 1);
+            image<color3> spatialFilterCz(spatialFilterWidth, 1);
+            setSpatialFilters(spatialFilterYCx, spatialFilterCz, ppd, spatialFilterRadius);
+
+            // The next two calls perform separable spatial filtering on both the reference and test image at the same time (for better performance).
+            // The second call also computes the color difference between the images.
+            FLIP::image<color3>::spatialFilterFirstDir(reference, intermediateReferenceYCx, intermediateReferenceCz, test, intermediateTestYCx, intermediateTestCz, spatialFilterYCx, spatialFilterCz);
+            FLIP::image<color3>::spatialFilterSecondDirAndColorDifference(intermediateReferenceYCx, intermediateReferenceCz, intermediateTestYCx, intermediateTestCz, colorFeatureDifference, spatialFilterYCx, spatialFilterCz);
+
+            // Prepare separated feature (edge/point) detection filters.
+            const float stdDev = 0.5f * FLIPConstants.gw * ppd;
+            const int featureFilterRadius = int(std::ceil(3.0f * stdDev));
+            int featureFilterWidth = 2 * featureFilterRadius + 1;
+            image<color3> featureFilter(featureFilterWidth, 1);
+            setFeatureFilter(featureFilter, ppd);
+
+            // The following two calls convolve (separably) referenceImage and testImage with the edge and point detection filters and performs additional computations for the feature differences.
+            FLIP::image<color3>::featureFilterFirstDir(reference, intermediateFeaturesReference, test, intermediateFeaturesTest, featureFilter);
+            FLIP::image<color3>::featureFilterSecondDirAndFeatureDifference(intermediateFeaturesReference, intermediateFeaturesTest, colorFeatureDifference, featureFilter);
+
+            this->finalError(colorFeatureDifference);
+        }
 #endif
     };
 
     static FLIP::image<FLIP::color3> magmaMap = FLIP::image<FLIP::color3>(FLIP::MapMagma, 256);
     static FLIP::image<FLIP::color3> viridisMap = FLIP::image<FLIP::color3>(FLIP::MapViridis, 256);
 
-#ifdef FLIP_ENABLE_CUDA
-    template<typename T>
-    inline void image<T>::FLIP(image<color3>& reference, image<color3>& test, float ppd)
-    {
-        int width = reference.getWidth();
-        int height = reference.getHeight();
-
-        // Temporary images (on device).
-        image<color3> intermediateReferenceYCx(width, height), intermediateReferenceCz(width, height), intermediateTestYCx(width, height), intermediateTestCz(width, height);
-        image<color3> intermediateFeaturesReference(width, height), intermediateFeaturesTest(width, height);
-        image<color3> colorFeatureDifference(width, height);
-
-        // Transform from sRGB to YCxCz.
-        reference.sRGB2YCxCz();
-        test.sRGB2YCxCz();
-
-        // Prepare separated spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
-        // (YCx for the Achromatic and Red-Green channels and Cz for the Blue-Yellow channel). For details, see separatedConvolutions.pdf in the FLIP repository.
-        int spatialFilterRadius = calculateSpatialFilterRadius(ppd);
-        int spatialFilterWidth = 2 * spatialFilterRadius + 1;
-        image<color3> spatialFilterYCx(spatialFilterWidth, 1);
-        image<color3> spatialFilterCz(spatialFilterWidth, 1);
-        setSpatialFilters(spatialFilterYCx, spatialFilterCz, ppd, spatialFilterRadius);
-
-        // The next two calls perform separable spatial filtering on both the reference and test image at the same time (for better performance).
-        // The second call also computes the color difference between the images.
-        FLIP::image<color3>::spatialFilterFirstDir(reference, intermediateReferenceYCx, intermediateReferenceCz, test, intermediateTestYCx, intermediateTestCz, spatialFilterYCx, spatialFilterCz);
-        FLIP::image<color3>::spatialFilterSecondDirAndColorDifference(intermediateReferenceYCx, intermediateReferenceCz, intermediateTestYCx, intermediateTestCz, colorFeatureDifference, spatialFilterYCx, spatialFilterCz);
-
-        // Prepare separated feature (edge/point) detection filters.
-        const float stdDev = 0.5f * FLIPConstants.gw * ppd;
-        const int featureFilterRadius = int(std::ceil(3.0f * stdDev));
-        int featureFilterWidth = 2 * featureFilterRadius + 1;
-        image<color3> featureFilter(featureFilterWidth, 1);
-        setFeatureFilter(featureFilter, ppd);
-
-        // The following two calls convolve (separably) referenceImage and testImage with the edge and point detection filters and performs additional computations for the feature differences.
-        FLIP::image<color3>::featureFilterFirstDir(reference, intermediateFeaturesReference, test, intermediateFeaturesTest, featureFilter);
-        FLIP::image<color3>::featureFilterSecondDirAndFeatureDifference(intermediateFeaturesReference, intermediateFeaturesTest, colorFeatureDifference, featureFilter);
-
-        this->finalError(colorFeatureDifference);
-    }
-#endif
-
     /** Main function for computing (the image metric called) FLIP between a reference image and a test image.
      *  See FLIP-tool.cpp for usage of this function.
      *
      * @param[in] useHDR Set to true if the input images are to be considered contain HDR content, i.e., not necessarily in [0,1].
      * @param[in,out] parameters Contains parameters (e.g., PPD, exposure settings,etc). If the exposures have not been set by the user, then those will be computed (and returned).
-     * @param[in] referenceImageInput Reference input image. For LDR, the content should be in [0,1].
-     * @param[in] testImageInput Test input image. For LDR, the content should be in [0,1].
-     * @param[out] errorMapFLIPOutput The FLIP error image in [0,1], a single channel (grayscale). The user should map it using MapMagma if that is desired (with: imageWithMagma.colorMap(errorMapFLIP, FLIP::magmaMap);)
+     * @param[in] referenceImageInput Reference input image. For LDR, the content should be in [0,1]. Input is expected in linear RGB.
+     * @param[in] testImageInput Test input image. For LDR, the content should be in [0,1]. Input is expected in linear RGB.
+     * @param[out] errorMapFLIPOutput The FLIP error image in [0,1], a single channel (grayscale).
+                   The user should map it using MapMagma if that is desired (with: imageWithMagma.colorMap(errorMapFLIP, FLIP::magmaMap);)
      * @param[out] maxErrorExposureMapOutput Exposure map output (only for HDR content).
-     * @param[out] hdrOutputFlipLDRImages A list of temporary output LDR FLIP images from HDR-FLIP.
-     * @param[out] hdrOutputLDRImages A list of temporary tonemapped output LDR images from HDR-FLIP. Images in this order: Ref0, Test0, Ref1, Test1,...
+     * @param[in] returnLDRFLIPImages True if the next argument should be filled in by FLIP::evaluate().
+     * @param[out] hdrOutputFlipLDRImages A list of temporary output LDR FLIP images (in linear RGB) from HDR-FLIP.
+     * @param[in] returnLDRImages True if the next argument should be filled in by FLIP::evaluate().
+     * @param[out] hdrOutputLDRImages A list of temporary tonemapped output LDR images (in linear RGB) from HDR-FLIP. Images in this order: Ref0, Test0, Ref1, Test1,...
      */
-    static void computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+    static void evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
         FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMapOutput,
-        std::vector<FLIP::image<float>*>& hdrOutputFlipLDRImages, std::vector<FLIP::image<FLIP::color3>*>& hdrOutputLDRImages)
+        const bool returnLDRFLIPImages, std::vector<FLIP::image<float>*>& hdrOutputFlipLDRImages, 
+        const bool returnLDRImages, std::vector<FLIP::image<FLIP::color3>*>& hdrOutputLDRImages)
     {
         FLIP::image<FLIP::color3> referenceImage(referenceImageInput.getWidth(), referenceImageInput.getHeight());
         FLIP::image<FLIP::color3> testImage(referenceImageInput.getWidth(), referenceImageInput.getHeight());
@@ -2300,15 +2366,13 @@ namespace FLIP
                 tImage.toneMap(parameters.tonemapper);
                 rImage.clamp();
                 tImage.clamp();
-                rImage.LinearRGB2sRGB();
-                tImage.LinearRGB2sRGB();
-                if (parameters.returnLDRImages)
+                if (returnLDRImages)
                 {
                     hdrOutputLDRImages.push_back(new FLIP::image<FLIP::color3>(rImage));
                     hdrOutputLDRImages.push_back(new FLIP::image<FLIP::color3>(tImage));
                 }
-                tmpErrorMap.FLIP(rImage, tImage, parameters.PPD);
-                if (parameters.returnLDRFLIPImages)
+                tmpErrorMap.LDR_FLIP(rImage, tImage, parameters.PPD);
+                if (returnLDRFLIPImages)
                 {
                     hdrOutputFlipLDRImages.push_back(new FLIP::image<float>(tmpErrorMap));
                 }
@@ -2319,27 +2383,25 @@ namespace FLIP
         {
             referenceImage.clamp();     // The input images should always be in [0,1], but we clamp them here to avoid any problems.
             testImage.clamp();
-            errorMapFLIPOutput.FLIP(referenceImage, testImage, parameters.PPD);
+            errorMapFLIPOutput.LDR_FLIP(referenceImage, testImage, parameters.PPD);
         }
     }
 
     // This variant does not return any LDR images computing for HDR-FLIP and thus avoids two parameters (since using those is a rare use case).
-    static void computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+    static void evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
          FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMapOutput)
     {
-        parameters.returnLDRFLIPImages = false;
-        parameters.returnLDRImages = false;
         std::vector<FLIP::image<float>*> hdrOutputFlipLDRImages;
         std::vector<FLIP::image<FLIP::color3>*> hdrOutputLDRImages;
-        FLIP::computeFLIP(useHDR, parameters, referenceImageInput, testImageInput, errorMapFLIPOutput, maxErrorExposureMapOutput, hdrOutputFlipLDRImages, hdrOutputLDRImages);
+        FLIP::evaluate(useHDR, parameters, referenceImageInput, testImageInput, errorMapFLIPOutput, maxErrorExposureMapOutput, false, hdrOutputFlipLDRImages, false, hdrOutputLDRImages);
     }
 
     // This variant does not return the exposure map, which may also be used quite seldom.
-    static void computeFLIP(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+    static void evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
          FLIP::image<float>& errorMapFLIPOutput)
     {
         FLIP::image<float> maxErrorExposureMapOutput(referenceImageInput.getWidth(), referenceImageInput.getHeight());
-        FLIP::computeFLIP(useHDR, parameters, referenceImageInput, testImageInput, errorMapFLIPOutput, maxErrorExposureMapOutput);
+        FLIP::evaluate(useHDR, parameters, referenceImageInput, testImageInput, errorMapFLIPOutput, maxErrorExposureMapOutput);
     }
 
     /** A simplified function for computing (the image metric called) FLIP between a reference image and a test image, without using FLIP::image etc.
@@ -2348,31 +2410,45 @@ namespace FLIP
      * @param[in,out] parameters Contains parameters (e.g., PPD, exposure settings,etc). If the exposures have not been set by the user, then those will be computed (and returned).
      * @param[in] imageWidth Width of the reference and test images.
      * @param[in] imageHeight Height of the reference and test images.
-     * @param[in] referenceThreeChannelImage Reference input image. For LDR, the content should be in [0,1]. The image is expected to have 3 floats per pixel.
-     * @param[in] testThreeChannelImage Test input image. For LDR, the content should be in [0,1]. The image is expected to have 3 floats per pixel.
-     * @param[out] errorMapFLIPOutputOneChannel The FLIP error image in [0,1], a single channel (grayscale). The user should map it using MapMagma if that is desired
-                   (see image::colorMap(errorMapFLIP, FLIP::magmaMap);)
-     *             Note that the user has to allocate flipOneChannelErrorImage of size imageWidth * imageHeight * sizeof(float).
+     * @param[in] referenceThreeChannelImage Reference input image. For LDR, the content should be in [0,1]. The image is expected to have 3 floats per pixel and they
+     *            are interleaved, i.e., they come in the order: R0G0B0, R1G1B1, etc. Input is expected in linear RGB.
+     * @param[in] testThreeChannelImage Test input image. For LDR, the content should be in [0,1]. The image is expected to have 3 floats per pixel and they are interleaved.
+                  Input is expected in linear RGB
+     * @param[in] applyMagmaMapToOutput A boolean indicating whether the output should have the MagmaMap applied to it before the image is returned.
+     * @param[out] errorMapFLIPOutput The computed FLIP error image is returned in this variable. If applyMagmaMapToOutput is true, the function will allocate
+     *             three channels (and store the magma mapped FLIP images in sRGB), and 
+                   if it is false, only one channel will be allocated (and the FLIP error is returned in that gray scale image).
+     *             Note that the user is responsible for deallocating the errorMapFLIPOutput image.
      */
-    static void computeFLIP(const bool useHDR, FLIP::Parameters& parameters, const int imageWidth, const int imageHeight,
-        const float* referenceThreeChannelImage, const float* testThreeChannelImage, float* errorMapFLIPOutputOneChannel)
+    static void evaluate(const bool useHDR, FLIP::Parameters& parameters, const int imageWidth, const int imageHeight,
+        const float* referenceThreeChannelImage, const float* testThreeChannelImage, const bool applyMagmaMapToOutput, float** errorMapFLIPOutput)
     {
         FLIP::image<FLIP::color3> referenceImage;
         FLIP::image<FLIP::color3> testImage;
+        FLIP::image<float> errorMapFLIPOutputImage(imageWidth, imageHeight);
         referenceImage.setPixels(referenceThreeChannelImage, imageWidth, imageHeight);
         testImage.setPixels(testThreeChannelImage, imageWidth, imageHeight);
 
-        parameters.returnLDRFLIPImages = false;
-        parameters.returnLDRImages = false;
-        std::vector<FLIP::image<float>*> hdrOutputFlipLDRImages;
-        std::vector<FLIP::image<FLIP::color3>*> hdrOutputLDRImages;
-        FLIP::image<float> errorMapFLIPOutput(imageWidth, imageHeight);
-
-        FLIP::computeFLIP(useHDR, parameters, referenceImage, testImage, errorMapFLIPOutput);
+        FLIP::evaluate(useHDR, parameters, referenceImage, testImage, errorMapFLIPOutputImage);
 
 #ifdef FLIP_ENABLE_CUDA
-        errorMapFLIPOutput.synchronizeHost();
+        errorMapFLIPOutputImage.synchronizeHost();
 #endif
-        memcpy(errorMapFLIPOutputOneChannel, errorMapFLIPOutput.getHostData(), size_t(imageWidth) * imageHeight * sizeof(float));
+        if (applyMagmaMapToOutput)
+        {
+            *errorMapFLIPOutput = new float[imageWidth * imageWidth * 3];
+            FLIP::image<FLIP::color3> magmaMappedFLIPImage(imageWidth, imageHeight);
+            magmaMappedFLIPImage.colorMap(errorMapFLIPOutputImage, FLIP::magmaMap);
+#ifdef FLIP_ENABLE_CUDA
+            magmaMappedFLIPImage.synchronizeHost();
+#endif
+            memcpy(*errorMapFLIPOutput, magmaMappedFLIPImage.getHostData(), size_t(imageWidth) * imageHeight * sizeof(float) * 3);
+
+        }
+        else    // No MagmaMap applied, which means that we will return the gray scale image.
+        {
+            *errorMapFLIPOutput = new float[imageWidth * imageWidth];
+            memcpy(*errorMapFLIPOutput, errorMapFLIPOutputImage.getHostData(), size_t(imageWidth) * imageHeight * sizeof(float));
+        }
     }
 }

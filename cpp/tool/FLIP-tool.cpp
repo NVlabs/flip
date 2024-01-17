@@ -109,7 +109,7 @@ static void setupPixelsPerDegree(const commandline& commandLine, FLIP::Parameter
     }
 }
 
-static void getExposureParameters(const bool useHDR, const commandline& commandLine, FLIP::Parameters& parameters)
+static void getExposureParameters(const bool useHDR, const commandline& commandLine, FLIP::Parameters& parameters, bool& returnLDRFLIPImages, bool& returnLDRImages)
 {
     if (useHDR)
     {
@@ -136,17 +136,16 @@ static void getExposureParameters(const bool useHDR, const commandline& commandL
         {
             parameters.numExposures = atoi(commandLine.getOptionValue("num-exposures").c_str());
         }
-        parameters.returnLDRFLIPImages = commandLine.optionSet("save-ldrflip");
-        parameters.returnLDRImages = commandLine.optionSet("save-ldr-images");
+        returnLDRFLIPImages = commandLine.optionSet("save-ldrflip");
+        returnLDRImages = commandLine.optionSet("save-ldr-images");
     }
 }
 
-static void setFileNames(const bool useHDR, commandline& commandLine, const FLIP::Parameters& parameters, const std::string& basename,
-    const FLIP::filename& referenceFileName, FLIP::filename& testFileName, const std::string& testFileNameString, FLIP::filename& flipFileName,
-    FLIP::filename& histogramFileName, FLIP::filename& exposureFileName)
+static void saveErrorAndExposureMaps(const bool useHDR, commandline& commandLine, const FLIP::Parameters& parameters, const std::string basename,
+    FLIP::image<float>& errorMapFLIP, FLIP::image<float>& maxErrorExposureMap, const std::string& destinationDirectory,
+    FLIP::filename& referenceFileName, FLIP::filename& testFileName, FLIP::filename& histogramFileName,
+    FLIP::filename& flipFileName, FLIP::filename& exposureFileName)
 {
-    testFileName = testFileNameString;
-
     if (basename != "" && commandLine.getOptionValues("test").size() == 1)
     {
         flipFileName.setName(basename);
@@ -162,12 +161,8 @@ static void setFileNames(const bool useHDR, commandline& commandLine, const FLIP
         }
         histogramFileName.setName("weighted_histogram." + flipFileName.getName());
     }
-}
 
-static void saveErrorAndExposureMaps(const bool useHDR, commandline& commandLine, const FLIP::Parameters& parameters, const std::string basename,
-    FLIP::image<float>& errorMapFLIP, FLIP::image<float>& maxErrorExposureMap, const std::string& destinationDirectory,
-    FLIP::filename& flipFileName, FLIP::filename& exposureFileName)
-{
+
     if(useHDR) // Updating the flipFileName here, since the computation of FLIP may have updated the exposure parameters.
     {
         std::cout << "     Assumed tone mapper: " << ((parameters.tonemapper == "aces") ? "ACES" : (parameters.tonemapper == "hable" ? "Hable" : "Reinhard")) << "\n";
@@ -192,10 +187,13 @@ static void saveErrorAndExposureMaps(const bool useHDR, commandline& commandLine
     if (!commandLine.optionSet("no-error-map"))
     {
         FLIP::image<FLIP::color3> pngResult(errorMapFLIP.getWidth(), errorMapFLIP.getHeight());
-        pngResult.copyFloat2Color3(errorMapFLIP);
         if (!commandLine.optionSet("no-magma"))
         {
             pngResult.colorMap(errorMapFLIP, FLIP::magmaMap);
+        }
+        else
+        {
+            pngResult.copyFloat2Color3(errorMapFLIP);
         }
         ImageHelpers::pngSave(destinationDirectory + "/" + flipFileName.toString(), pngResult);
     }
@@ -255,6 +253,8 @@ static void saveHDROutputLDRImages(const commandline& commandLine, const FLIP::P
             FLIP::image<FLIP::color3>* tImage = hdrOutputLDRImages[1];
             hdrOutputLDRImages.erase(hdrOutputLDRImages.begin());
             hdrOutputLDRImages.erase(hdrOutputLDRImages.begin());
+            rImage->LinearRGB2sRGB();
+            tImage->LinearRGB2sRGB();
             ImageHelpers::pngSave(destinationDirectory + "/" + rFileName.toString(), *rImage);
             ImageHelpers::pngSave(destinationDirectory + "/" + tFileName.toString(), *tImage);
             delete rImage;
@@ -467,16 +467,22 @@ int main(int argc, char** argv)
     FLIP::filename histogramFileName("tmp.py");
     FLIP::filename exposureFileName("tmp.png");
     FLIP::filename testFileName;
+    bool returnLDRImages = false;                                   // Can only happen for HDR.
+    bool returnLDRFLIPImages = false;                               // Can only happen for HDR.
 
     setupDestinationDirectory(bUseHDR, commandLine, destinationDirectory);
     setupPixelsPerDegree(commandLine, parameters);
-    getExposureParameters(bUseHDR, commandLine, parameters);
+    getExposureParameters(bUseHDR, commandLine, parameters, returnLDRFLIPImages, returnLDRImages);
 
     std::cout << "Invoking " << (bUseHDR ? "HDR" : "LDR") << "-FLIP\n";
     std::cout << "     Pixels per degree: " << int(std::round(parameters.PPD)) << "\n" << (!bUseHDR ? "\n" : "");
 
     FLIP::image<FLIP::color3> referenceImage;
     ImageHelpers::load(referenceImage, referenceFileName.toString());   // Load reference image.
+    if (!bUseHDR)
+    {
+        referenceImage.sRGB2LinearRGB();
+    }
 
     uint32_t testFileCount = 0;
     // Loop over the test images files to be FLIP:ed against the reference image.
@@ -484,19 +490,23 @@ int main(int argc, char** argv)
     {
         std::vector<FLIP::image<float>*> hdrOutputFlipLDRImages;
         std::vector<FLIP::image<FLIP::color3>*> hdrOutputLDRImages;
-        setFileNames(bUseHDR, commandLine, parameters, basename, referenceFileName, testFileName, testFileNameString, flipFileName, histogramFileName, exposureFileName);
+        testFileName = testFileNameString;
 
         FLIP::image<FLIP::color3> testImage;
         ImageHelpers::load(testImage, testFileName.toString());     // Load test image.
+        if (!bUseHDR)
+        {
+            testImage.sRGB2LinearRGB();
+        }
 
         FLIP::image<float> errorMapFLIP(referenceImage.getWidth(), referenceImage.getHeight(), 0.0f);
         FLIP::image<float> maxErrorExposureMap(referenceImage.getWidth(), referenceImage.getHeight());
 
         auto t0 = std::chrono::high_resolution_clock::now();
-        FLIP::computeFLIP(bUseHDR, parameters, referenceImage, testImage, errorMapFLIP, maxErrorExposureMap, hdrOutputFlipLDRImages, hdrOutputLDRImages);
+        FLIP::evaluate(bUseHDR, parameters, referenceImage, testImage, errorMapFLIP, maxErrorExposureMap, returnLDRFLIPImages, hdrOutputFlipLDRImages, returnLDRImages, hdrOutputLDRImages);
         float time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count() / 1000000.0f;
 
-        saveErrorAndExposureMaps(bUseHDR, commandLine, parameters, basename, errorMapFLIP, maxErrorExposureMap, destinationDirectory, flipFileName, exposureFileName);
+        saveErrorAndExposureMaps(bUseHDR, commandLine, parameters, basename, errorMapFLIP, maxErrorExposureMap, destinationDirectory, referenceFileName, testFileName, histogramFileName, flipFileName, exposureFileName);
         saveHDROutputLDRImages(commandLine, parameters, basename, flipFileName, referenceFileName, testFileName, destinationDirectory, hdrOutputFlipLDRImages, hdrOutputLDRImages);
         gatherStatisticsAndSaveOutput(commandLine, errorMapFLIP, destinationDirectory, referenceFileName, testFileName, histogramFileName, FLIPString, time, ++testFileCount);
     }

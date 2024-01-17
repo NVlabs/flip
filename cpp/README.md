@@ -38,13 +38,13 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
 - If you want to use FLIP in your own project, it should suffice to use the header [FLIP.h](FLIP.h). Typical usage would be:
   ```
   #define FLIP_ENABLE_CUDA    // You need to define this if you want to run FLIP using CUDA. Otherwise, comment this out.
-  #include "FLIP.h"           // See the bottom of FLIP.h for 4 different FLIP::computeFLIP(...) functions that can be used.
+  #include "FLIP.h"           // See the bottom of FLIP.h for 4 different FLIP::evaluate(...) functions that can be used. 
 
   void someFunction()
   {
-      FLIP::computeFLIP(...);  // See FLIP-tool.cpp for an example of how to use one of these overloaded functions.
-  }
-  ```
+      FLIP::evaluate(...);  // See FLIP-tool.cpp for an example of how to use one of these overloaded functions.
+  }  
+  ```  
 - The FLIP.sln solution contains one CUDA backend project and one pure C++ backend project for the FLIP tool.
 - Compiling the CUDA project requires a CUDA compatible GPU. Instruction on how to install CUDA can be found [here](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html).
 - Alternatively, a CMake build can be done by creating a build directory and invoking CMake on the source `cpp` dir:

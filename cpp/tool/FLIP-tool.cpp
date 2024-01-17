@@ -204,7 +204,7 @@ static void saveErrorAndExposureMaps(const bool useHDR, commandline& commandLine
         {
             FLIP::image<FLIP::color3> pngMaxErrorExposureMap(maxErrorExposureMap.getWidth(), maxErrorExposureMap.getHeight());
             pngMaxErrorExposureMap.colorMap(maxErrorExposureMap, FLIP::viridisMap);
-            ImageHelpers::pngSave(destinationDirectory + "/" + exposureFileName.toString(), pngMaxErrorExposureMap);   
+            ImageHelpers::pngSave(destinationDirectory + "/" + exposureFileName.toString(), pngMaxErrorExposureMap);
         }
     }
 }

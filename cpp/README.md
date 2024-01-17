@@ -58,7 +58,7 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
 
   CUDA support is enabled via the `FLIP_ENABLE_CUDA`, which can be passed to CMake on the command line with `-DFLIP_ENABLE_CUDA=ON` or set interactively with `ccmake` or `cmake-gui`.
   `FLIP_LIBRARY` option allows to output a library rather than an executable.
-- Usage: `flip[-cuda]-cli.exe --reference reference.{exr|png} --test test.{exr|png} [options]`, where the list of options can be seen by `flip[-cuda]-cli.exe -h`.
+- Usage: `flip[-cuda].exe --reference reference.{exr|png} --test test.{exr|png} [options]`, where the list of options can be seen by `flip[-cuda].exe -h`.
 - Tested on Windows 10 version 22H2 and Windows 11 version 23H2 with CUDA 12.3. Compiled with Visual Studio 2022. If you use another version of CUDA, you will need to change the `CUDA 12.3` strings in the `CUDA.vcxproj` file accordingly.
 - `../tests/test.py` contains simple tests used to test whether code updates alter results.
 - Weighted histograms are output as Python scripts. Running the script will create a PDF version of the histogram. Note that the python script has some dependencies, so it is best to `conda activate flip` before it is executed. See [README.md](https://github.com/NVlabs/flip/blob/singleheader_WIP/python/README.md) for our Python code to set this up.

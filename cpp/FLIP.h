@@ -51,8 +51,9 @@
 // We provide the following FLIP::evaluate() functions with different in/out parameters (see bottom of this file for more explanations):
 // 
 // 1. FLIP::evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
-//                  FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap,
-//                  std::vector<FLIP::image<float>*>& hdrOutputFlipLDRImages, std::vector<FLIP::image<FLIP::color3>*>& hdrOutputLDRImages);
+//                  FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMapOutput,
+//                  const bool returnLDRFLIPImages, std::vector<FLIP::image<float>*>& hdrOutputFlipLDRImages,
+//                  const bool returnLDRImages, std::vector<FLIP::image<FLIP::color3>*>& hdrOutputLDRImages)
 //
 //    # This is the one with most parameters and is used by FLIP-tool.cpp in main().
 //    # See the function at the bottom of this file for detailed description of the parameters.
@@ -68,7 +69,7 @@
 //    # This one also excludes the exposure map for HDR-FLIP, in case they are not used.
 //
 // 4. FLIP::evaluate(const bool useHDR, FLIP::Parameters& parameters, const int imageWidth, const int imageHeight,
-//                  const float* referenceThreeChannelImage, const float* testThreeChannelImage, float* errorMapFLIPOutputOneChannel);
+//                  const float* referenceThreeChannelImage, const float* testThreeChannelImage, const bool applyMagmaMapToOutput, float** errorMapFLIPOutput)
 //
 //    # An even simpler function that does not use any of our image classes to send in the images.
 

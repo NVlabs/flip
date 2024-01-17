@@ -7,6 +7,7 @@ changed for the different versions of ꟻLIP:
 - Changed to CUDA 12.3.
 - Rewrote C++ code so that ꟻLIP is in a single header (both CPP/CUDA).
 - Rewrote `FLIP-tool.cpp` to use many more local functions to make the code easier to read.
+- Some of the `tests/correct_*.png` images have been update due to minor changes in output that occured as part of switching to CUDA 12.3 and changing the order of some transforms.
 
 # Version 1.2 (commit dde1eca)
 - Changed to CUDA 11.5 (was done after v1.1, but before v1.2).

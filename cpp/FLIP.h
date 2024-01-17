@@ -75,6 +75,7 @@
 #pragma once
 #include <algorithm>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <string>
 #include <cmath>
@@ -92,7 +93,7 @@
 #define HOST_DEVICE_FOR_CUDA __host__ __device__
 #else
 #define HOST_DEVICE_FOR_CUDA
-#endif 
+#endif
 
 namespace FLIP
 {
@@ -1085,7 +1086,7 @@ namespace FLIP
             }
 
             allocateDevice();
-            this->mState = CudaTensorState::ALLOCATED; 
+            this->mState = CudaTensorState::ALLOCATED;
 #endif
             allocateHost();
 
@@ -1251,7 +1252,7 @@ namespace FLIP
             {
                 this->init({ width, height, 1});
             }
-            memcpy(this->mvpHostData, pPixels, size_t(width) * height * sizeof(T)); 
+            memcpy(this->mvpHostData, pPixels, size_t(width) * height * sizeof(T));
             this->mState = CudaTensorState::HOST_ONLY;
         }
 #endif
@@ -2296,8 +2297,8 @@ namespace FLIP
 
     /** Main function for computing (the image metric called) FLIP between a reference image and a test image.
      *  See FLIP-tool.cpp for usage of this function.
-     * 
-     * @param[in] useHDR Set to true if the input images are to be considered contain HDR content, i.e., not necessarily in [0,1]. 
+     *
+     * @param[in] useHDR Set to true if the input images are to be considered contain HDR content, i.e., not necessarily in [0,1].
      * @param[in,out] parameters Contains parameters (e.g., PPD, exposure settings,etc). If the exposures have not been set by the user, then those will be computed (and returned).
      * @param[in] referenceImageInput Reference input image. For LDR, the content should be in [0,1]. Input is expected in linear RGB.
      * @param[in] testImageInput Test input image. For LDR, the content should be in [0,1]. Input is expected in linear RGB.

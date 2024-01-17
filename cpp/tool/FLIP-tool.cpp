@@ -58,7 +58,7 @@
 #define NOMINMAX
 #define FIXED_DECIMAL_DIGITS(x, d) std::fixed << std::setprecision(d) << (x)
 
-#include "../FLIP.h"
+#include "FLIP.h"
 
 #include "imagehelpers.h"
 #include "commandline.h"

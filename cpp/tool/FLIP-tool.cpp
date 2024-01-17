@@ -253,6 +253,8 @@ static void saveHDROutputLDRImages(const commandline& commandLine, const FLIP::P
             FLIP::image<FLIP::color3>* tImage = hdrOutputLDRImages[1];
             hdrOutputLDRImages.erase(hdrOutputLDRImages.begin());
             hdrOutputLDRImages.erase(hdrOutputLDRImages.begin());
+            rImage->LinearRGB2sRGB();
+            tImage->LinearRGB2sRGB();
             ImageHelpers::pngSave(destinationDirectory + "/" + rFileName.toString(), *rImage);
             ImageHelpers::pngSave(destinationDirectory + "/" + tFileName.toString(), *tImage);
             delete rImage;

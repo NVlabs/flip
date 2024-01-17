@@ -2300,13 +2300,14 @@ namespace FLIP
      * @param[in] useHDR Set to true if the input images are to be considered contain HDR content, i.e., not necessarily in [0,1]. 
      * @param[in,out] parameters Contains parameters (e.g., PPD, exposure settings,etc). If the exposures have not been set by the user, then those will be computed (and returned).
      * @param[in] referenceImageInput Reference input image. For LDR, the content should be in [0,1]. Input is expected in linear RGB.
-     * @param[in] testImageInput Test input image. For LDR, the content should be in [0,1]. Input is expected in linear RGB
-     * @param[out] errorMapFLIPOutput The FLIP error image in [0,1], a single channel (grayscale). The user should map it using MapMagma if that is desired (with: imageWithMagma.colorMap(errorMapFLIP, FLIP::magmaMap);)
+     * @param[in] testImageInput Test input image. For LDR, the content should be in [0,1]. Input is expected in linear RGB.
+     * @param[out] errorMapFLIPOutput The FLIP error image in [0,1], a single channel (grayscale).
+                   The user should map it using MapMagma if that is desired (with: imageWithMagma.colorMap(errorMapFLIP, FLIP::magmaMap);)
      * @param[out] maxErrorExposureMapOutput Exposure map output (only for HDR content).
      * @param[in] returnLDRFLIPImages True if the next argument should be filled in by FLIP::evaluate().
-     * @param[out] hdrOutputFlipLDRImages A list of temporary output LDR FLIP images from HDR-FLIP.
+     * @param[out] hdrOutputFlipLDRImages A list of temporary output LDR FLIP images (in linear RGB) from HDR-FLIP.
      * @param[in] returnLDRImages True if the next argument should be filled in by FLIP::evaluate().
-     * @param[out] hdrOutputLDRImages A list of temporary tonemapped output LDR images from HDR-FLIP. Images in this order: Ref0, Test0, Ref1, Test1,...
+     * @param[out] hdrOutputLDRImages A list of temporary tonemapped output LDR images (in linear RGB) from HDR-FLIP. Images in this order: Ref0, Test0, Ref1, Test1,...
      */
     static void evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
         FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMapOutput,
@@ -2366,12 +2367,8 @@ namespace FLIP
                 tImage.clamp();
                 if (returnLDRImages)
                 {
-                    FLIP::image<FLIP::color3>* rImg = new FLIP::image<FLIP::color3>(rImage);
-                    FLIP::image<FLIP::color3>* tImg = new FLIP::image<FLIP::color3>(tImage);
-                    rImg->LinearRGB2sRGB();
-                    tImg->LinearRGB2sRGB();
-                    hdrOutputLDRImages.push_back(rImg);
-                    hdrOutputLDRImages.push_back(tImg);
+                    hdrOutputLDRImages.push_back(new FLIP::image<FLIP::color3>(rImage));
+                    hdrOutputLDRImages.push_back(new FLIP::image<FLIP::color3>(tImage));
                 }
                 tmpErrorMap.LDR_FLIP(rImage, tImage, parameters.PPD);
                 if (returnLDRFLIPImages)
@@ -2418,7 +2415,8 @@ namespace FLIP
                   Input is expected in linear RGB
      * @param[in] applyMagmaMapToOutput A boolean indicating whether the output should have the MagmaMap applied to it before the image is returned.
      * @param[out] errorMapFLIPOutput The computed FLIP error image is returned in this variable. If applyMagmaMapToOutput is true, the function will allocate
-     *             three channels, and if it is false, only one channel will be allocated (and the FLIP error is returned in that gray scale image).
+     *             three channels (and store the magma mapped FLIP images in sRGB), and 
+                   if it is false, only one channel will be allocated (and the FLIP error is returned in that gray scale image).
      *             Note that the user is responsible for deallocating the errorMapFLIPOutput image.
      */
     static void evaluate(const bool useHDR, FLIP::Parameters& parameters, const int imageWidth, const int imageHeight,

@@ -477,6 +477,10 @@ int main(int argc, char** argv)
 
     FLIP::image<FLIP::color3> referenceImage;
     ImageHelpers::load(referenceImage, referenceFileName.toString());   // Load reference image.
+    if (!bUseHDR)
+    {
+        referenceImage.sRGB2LinearRGB();
+    }
 
     uint32_t testFileCount = 0;
     // Loop over the test images files to be FLIP:ed against the reference image.
@@ -488,6 +492,10 @@ int main(int argc, char** argv)
 
         FLIP::image<FLIP::color3> testImage;
         ImageHelpers::load(testImage, testFileName.toString());     // Load test image.
+        if (!bUseHDR)
+        {
+            testImage.sRGB2LinearRGB();
+        }
 
         FLIP::image<float> errorMapFLIP(referenceImage.getWidth(), referenceImage.getHeight(), 0.0f);
         FLIP::image<float> maxErrorExposureMap(referenceImage.getWidth(), referenceImage.getHeight());

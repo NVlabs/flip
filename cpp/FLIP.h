@@ -684,6 +684,29 @@ namespace FLIP
         pImage[i] = color3::XYZ2YCxCz(color3::LinearRGB2XYZ(color3::sRGB2LinearRGB(pImage[i])));
     }
 
+    __global__ static void kernelsRGB2LinearRGB(color3* pImage, const int3 dim)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int i = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+        pImage[i] = color3::sRGB2LinearRGB(pImage[i]);
+    }
+
+
+    __global__ static void kernelLinearRGB2YCxCz(color3* pImage, const int3 dim)
+    {
+        int x = blockIdx.x * blockDim.x + threadIdx.x;
+        int y = blockIdx.y * blockDim.y + threadIdx.y;
+        int z = blockIdx.z * blockDim.z + threadIdx.z;
+        int i = (z * dim.y + y) * dim.x + x;
+
+        if (x >= dim.x || y >= dim.y || z >= dim.z) return;
+        pImage[i] = color3::XYZ2YCxCz(color3::LinearRGB2XYZ(pImage[i]));
+    }
+
     __global__ static void kernelLinearRGB2sRGB(color3* pImage, const int3 dim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -1284,6 +1307,36 @@ namespace FLIP
             }
         }
 
+        void sRGB2LinearRGB(void)
+        {
+            for (int z = 0; z < this->getDepth(); z++)
+            {
+#pragma omp parallel for
+                for (int y = 0; y < this->getHeight(); y++)
+                {
+                    for (int x = 0; x < this->getWidth(); x++)
+                    {
+                        this->set(x, y, z, color3::sRGB2LinearRGB(this->get(x, y, z)));
+                    }
+                }
+            }
+        }
+
+        void LinearRGB2YCxCz(void)
+        {
+            for (int z = 0; z < this->getDepth(); z++)
+            {
+#pragma omp parallel for
+                for (int y = 0; y < this->getHeight(); y++)
+                {
+                    for (int x = 0; x < this->getWidth(); x++)
+                    {
+                        this->set(x, y, z, color3::XYZ2YCxCz(color3::LinearRGB2XYZ(this->get(x, y, z))));
+                    }
+                }
+            }
+        }
+
         void LinearRGB2sRGB(void)
         {
             for (int z = 0; z < this->getDepth(); z++)
@@ -1435,6 +1488,22 @@ namespace FLIP
             this->synchronizeDevice();
             kernelsRGB2YCxCz << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
             checkStatus("kernelsRGB2YCxCz");
+            this->mState = CudaTensorState::DEVICE_ONLY;
+        }
+
+        void sRGB2LinearRGB(void)
+        {
+            this->synchronizeDevice();
+            kernelsRGB2LinearRGB << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
+            checkStatus("kernelsRGB2LinearRGB");
+            this->mState = CudaTensorState::DEVICE_ONLY;
+        }
+
+        void LinearRGB2YCxCz(void)
+        {
+            this->synchronizeDevice();
+            kernelLinearRGB2YCxCz << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
+            checkStatus("kernelLinearRGB2YCxCz");
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 
@@ -2146,14 +2215,14 @@ namespace FLIP
         }
 
 #ifndef FLIP_ENABLE_CUDA
-        void LDR_FLIP(image<color3>& reference, image<color3>& test, float ppd)
+        void LDR_FLIP(image<color3>& reference, image<color3>& test, float ppd)     // Both reference and test are assumed to be in linear RGB.
         {
             int width = reference.getWidth();
             int height = reference.getHeight();
 
-            // Transform from sRGB to YCxCz.
-            reference.sRGB2YCxCz();
-            test.sRGB2YCxCz();
+            // Transform from linear RGB to YCxCz.
+            reference.LinearRGB2YCxCz();
+            test.LinearRGB2YCxCz();
 
             // Prepare separated spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
             // (YCx for the Achromatic and Red-Green channels and Cz for the Blue-Yellow channel).
@@ -2179,7 +2248,7 @@ namespace FLIP
             this->computeFeatureDifferenceAndFinalError(reference, test, featureFilter);
         }
 #else
-        void image<T>::LDR_FLIP(image<color3>& reference, image<color3>& test, float ppd)
+        void image<T>::LDR_FLIP(image<color3>& reference, image<color3>& test, float ppd)     // Both reference and test are assumed to be in linear RGB.
         {
             int width = reference.getWidth();
             int height = reference.getHeight();
@@ -2189,9 +2258,9 @@ namespace FLIP
             image<color3> intermediateFeaturesReference(width, height), intermediateFeaturesTest(width, height);
             image<color3> colorFeatureDifference(width, height);
 
-            // Transform from sRGB to YCxCz.
-            reference.sRGB2YCxCz();
-            test.sRGB2YCxCz();
+            // Transform from linear RGB to YCxCz.
+            reference.LinearRGB2YCxCz();
+            test.LinearRGB2YCxCz();
 
             // Prepare separated spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
             // (YCx for the Achromatic and Red-Green channels and Cz for the Blue-Yellow channel). For details, see separatedConvolutions.pdf in the FLIP repository.
@@ -2230,8 +2299,8 @@ namespace FLIP
      * 
      * @param[in] useHDR Set to true if the input images are to be considered contain HDR content, i.e., not necessarily in [0,1]. 
      * @param[in,out] parameters Contains parameters (e.g., PPD, exposure settings,etc). If the exposures have not been set by the user, then those will be computed (and returned).
-     * @param[in] referenceImageInput Reference input image. For LDR, the content should be in [0,1].
-     * @param[in] testImageInput Test input image. For LDR, the content should be in [0,1].
+     * @param[in] referenceImageInput Reference input image. For LDR, the content should be in [0,1]. Input is expected in linear RGB.
+     * @param[in] testImageInput Test input image. For LDR, the content should be in [0,1]. Input is expected in linear RGB
      * @param[out] errorMapFLIPOutput The FLIP error image in [0,1], a single channel (grayscale). The user should map it using MapMagma if that is desired (with: imageWithMagma.colorMap(errorMapFLIP, FLIP::magmaMap);)
      * @param[out] maxErrorExposureMapOutput Exposure map output (only for HDR content).
      * @param[in] returnLDRFLIPImages True if the next argument should be filled in by FLIP::evaluate().
@@ -2295,12 +2364,14 @@ namespace FLIP
                 tImage.toneMap(parameters.tonemapper);
                 rImage.clamp();
                 tImage.clamp();
-                rImage.LinearRGB2sRGB();
-                tImage.LinearRGB2sRGB();
                 if (returnLDRImages)
                 {
-                    hdrOutputLDRImages.push_back(new FLIP::image<FLIP::color3>(rImage));
-                    hdrOutputLDRImages.push_back(new FLIP::image<FLIP::color3>(tImage));
+                    FLIP::image<FLIP::color3>* rImg = new FLIP::image<FLIP::color3>(rImage);
+                    FLIP::image<FLIP::color3>* tImg = new FLIP::image<FLIP::color3>(tImage);
+                    rImg->LinearRGB2sRGB();
+                    tImg->LinearRGB2sRGB();
+                    hdrOutputLDRImages.push_back(rImg);
+                    hdrOutputLDRImages.push_back(tImg);
                 }
                 tmpErrorMap.LDR_FLIP(rImage, tImage, parameters.PPD);
                 if (returnLDRFLIPImages)
@@ -2342,10 +2413,11 @@ namespace FLIP
      * @param[in] imageWidth Width of the reference and test images.
      * @param[in] imageHeight Height of the reference and test images.
      * @param[in] referenceThreeChannelImage Reference input image. For LDR, the content should be in [0,1]. The image is expected to have 3 floats per pixel and they
-     *            are interleaved, i.e., they come in the order: R0G0B0, R1G1B1, etc.
+     *            are interleaved, i.e., they come in the order: R0G0B0, R1G1B1, etc. Input is expected in linear RGB.
      * @param[in] testThreeChannelImage Test input image. For LDR, the content should be in [0,1]. The image is expected to have 3 floats per pixel and they are interleaved.
+                  Input is expected in linear RGB
      * @param[in] applyMagmaMapToOutput A boolean indicating whether the output should have the MagmaMap applied to it before the image is returned.
-     * @param[out] errorMapFLIPOutput The computed FLIP error image is return in this variable. If applyMagmaMapToOutput is true, the function will allocate
+     * @param[out] errorMapFLIPOutput The computed FLIP error image is returned in this variable. If applyMagmaMapToOutput is true, the function will allocate
      *             three channels, and if it is false, only one channel will be allocated (and the FLIP error is returned in that gray scale image).
      *             Note that the user is responsible for deallocating the errorMapFLIPOutput image.
      */

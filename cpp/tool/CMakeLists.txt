@@ -1,5 +1,5 @@
 #################################################################################
-# Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2020-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -30,19 +30,22 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #################################################################################
 
-project(flip-cuda LANGUAGES CXX CUDA)
+set(FLIP_DIR ${CMAKE_CURRENT_LIST_DIR}/../../cmake)
+find_package(FLIP REQUIRED CONFIG) # Exercise CMake config in cmake/ directory
 
-if (FLIP_LIBRARY)
-  add_library(${PROJECT_NAME} ../common/FLIP.cpp)
-else()
-  add_executable(${PROJECT_NAME} ../common/FLIP.cpp)
-endif()
+## CPU version ##
 
-target_include_directories(${PROJECT_NAME}
-PRIVATE
-  ${CMAKE_CURRENT_LIST_DIR}
-  ${CMAKE_CURRENT_LIST_DIR}/../common
-)
-set_source_files_properties(../common/FLIP.cpp PROPERTIES LANGUAGE CUDA)
-set_property(TARGET ${PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES OFF)
+project(flip-cli LANGUAGES CXX)
+add_executable(${PROJECT_NAME} FLIP-tool.cpp)
+target_link_libraries(${PROJECT_NAME} FLIP::flip)
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+## CUDA version ##
+
+if (FLIP_ENABLE_CUDA)
+  project(flip-cuda-cli LANGUAGES CUDA)
+  add_executable(${PROJECT_NAME} FLIP-tool.cu)
+  target_link_libraries(${PROJECT_NAME} FLIP::flip)
+  set_property(TARGET ${PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES OFF)
+  install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()

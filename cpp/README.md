@@ -38,7 +38,7 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
 - If you want to use FLIP in your own project, it should suffice to use the header [FLIP.h](FLIP.h). Typical usage would be:
   ```
   #define FLIP_ENABLE_CUDA    // You need to define this if you want to run FLIP using CUDA. Otherwise, comment this out.
-  #include "FLIP.h"           // See the bottom of FLIP.h for 4 different FLIP::evaluate(...) functions that can be used. 
+  #include "FLIP.h"           // See the bottom of FLIP.h for four different FLIP::evaluate(...) functions that can be used. 
 
   void someFunction()
   {
@@ -61,7 +61,7 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
 - Usage: `flip[-cuda].exe --reference reference.{exr|png} --test test.{exr|png} [options]`, where the list of options can be seen by `flip[-cuda].exe -h`.
 - Tested on Windows 10 version 22H2 and Windows 11 version 23H2 with CUDA 12.3. Compiled with Visual Studio 2022. If you use another version of CUDA, you will need to change the `CUDA 12.3` strings in the `CUDA.vcxproj` file accordingly.
 - `../tests/test.py` contains simple tests used to test whether code updates alter results.
-- Weighted histograms are output as Python scripts. Running the script will create a PDF version of the histogram. Note that the python script has some dependencies, so it is best to `conda activate flip` before it is executed. See [README.md](https://github.com/NVlabs/flip/blob/singleheader_WIP/python/README.md) for our Python code to set this up.
+- Weighted histograms are output as Python scripts. Running the script will create a PDF version of the histogram. Note that the python script has some dependencies, so it is best to `conda activate flip` before it is executed. See [README.md](https://github.com/NVlabs/flip/blob/main/python/README.md) for our Python code to set this up.
 - The naming convention used for the ꟻLIP tool's output is as follows (where `ppd` is the assumed number of pixels per degree,
   `tm` is the tone mapper assumed by HDR-ꟻLIP, `cstart` and `cstop` are the shortest and longest exposures, respectively, assumed by HDR-ꟻLIP,
   with `p` indicating a positive value and `m` indicating a negative value,

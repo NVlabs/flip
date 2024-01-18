@@ -1,7 +1,7 @@
-# ꟻLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.2)
+# ꟻLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.3)
 By
 [Pontus Andersson](https://research.nvidia.com/person/pontus-andersson),
-[Jim Nilsson](https://research.nvidia.com/person/jim-nilsson),
+Jim Nilsson,
 and
 [Tomas Akenine-Möller](https://research.nvidia.com/person/tomas-akenine-m%C3%B6ller),
 with
@@ -15,9 +15,15 @@ This [repository](https://github.com/NVlabs/flip) holds implementations of the [
 and [HDR-ꟻLIP](https://research.nvidia.com/publication/2021-05_HDR-FLIP) image error metrics in C++ and CUDA.
 It also holds code for the ꟻLIP tool, presented in [Ray Tracing Gems II](https://www.realtimerendering.com/raytracinggems/rtg2/index.html).
 
+Note that since v1.2, we use separated convolutions for the C++ and CUDA versions of ꟻLIP. A note explaining those
+can be found [here](misc/separatedConvolutions.pdf).
+
+With v1.3, we have switched to a single header [FLIP.h](FLIP.h) for easier integration into other projects.
+
+
 # License
 
-Copyright © 2020-2023, NVIDIA Corporation & Affiliates. All rights reserved.
+Copyright © 2020-2024, NVIDIA Corporation & Affiliates. All rights reserved.
 
 This work is made available under a [BSD 3-Clause License](../misc/LICENSE.md).
 
@@ -29,23 +35,33 @@ For individual contributions to the project, please confer the [Individual Contr
 For business inquiries, please visit our website and submit the form: [NVIDIA Research Licensing](https://www.nvidia.com/en-us/research/inquiries/).
 
 # C++ and CUDA (API and Tool)
-- The FLIP.sln solution contains one CUDA backend project and one pure C++ backend project.
+- If you want to use FLIP in your own project, it should suffice to use the header [FLIP.h](FLIP.h). Typical usage would be:
+  ```
+  #define FLIP_ENABLE_CUDA    // You need to define this if you want to run FLIP using CUDA. Otherwise, comment this out.
+  #include "FLIP.h"           // See the bottom of FLIP.h for four different FLIP::evaluate(...) functions that can be used. 
+
+  void someFunction()
+  {
+      FLIP::evaluate(...);  // See FLIP-tool.cpp for an example of how to use one of these overloaded functions.
+  }  
+  ```  
+- The FLIP.sln solution contains one CUDA backend project and one pure C++ backend project for the FLIP tool.
 - Compiling the CUDA project requires a CUDA compatible GPU. Instruction on how to install CUDA can be found [here](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html).
 - Alternatively, a CMake build can be done by creating a build directory and invoking CMake on the source `cpp` dir:
 
   ```
   mkdir build
   cd build
-  cmake ../cpp
+  cmake ..
   cmake --build .
   ```
 
   CUDA support is enabled via the `FLIP_ENABLE_CUDA`, which can be passed to CMake on the command line with `-DFLIP_ENABLE_CUDA=ON` or set interactively with `ccmake` or `cmake-gui`.
   `FLIP_LIBRARY` option allows to output a library rather than an executable.
 - Usage: `flip[-cuda].exe --reference reference.{exr|png} --test test.{exr|png} [options]`, where the list of options can be seen by `flip[-cuda].exe -h`.
-- Tested on Windows 10 version 20H2 with CUDA 11.5. Compiled with Visual Studio 2019. If you use another version of CUDA, you will need to change the `CUDA 11.5` strings in the `CUDA.vcxproj` file accordingly.
+- Tested on Windows 10 version 22H2 and Windows 11 version 23H2 with CUDA 12.3. Compiled with Visual Studio 2022. If you use another version of CUDA, you will need to change the `CUDA 12.3` strings in the `CUDA.vcxproj` file accordingly.
 - `../tests/test.py` contains simple tests used to test whether code updates alter results.
-- Weighted histograms are output as Python scripts. Running the script will create a PDF version of the histogram.
+- Weighted histograms are output as Python scripts. Running the script will create a PDF version of the histogram. Note that the python script has some dependencies, so it is best to `conda activate flip` before it is executed. See [README.md](https://github.com/NVlabs/flip/blob/main/python/README.md) for our Python code to set this up.
 - The naming convention used for the ꟻLIP tool's output is as follows (where `ppd` is the assumed number of pixels per degree,
   `tm` is the tone mapper assumed by HDR-ꟻLIP, `cstart` and `cstop` are the shortest and longest exposures, respectively, assumed by HDR-ꟻLIP,
   with `p` indicating a positive value and `m` indicating a negative value,
@@ -70,18 +86,18 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
   **With** `--basename <name>` **(note: not applicable if more than one test image is evaluated):**
 
   *Low dynamic range images:*<br>
-    
+
     LDR-ꟻLIP: `<name>.png`<br>
     Weighted histogram: `<name>.py`<br>
 
   *High dynamic range images:*<br>
-    
+
     HDR-ꟻLIP: `<name>.png`<br>
     Exposure map: `<name>.exposure_map.png`<br>
     Intermediate LDR-ꟻLIP maps: `<name>.<nnn>.png`<br>
     Intermediate LDR images: `<name>.reference|test.<nnn>.png`<br>
     Weighted histogram: `<name>.py`<br>
-    
+
  **Example usage:**
 After compiling the `FLIP.sln` project, navigate to the `flip[-cuda].exe` executable and try:
   ```
@@ -103,7 +119,7 @@ FLIP between reference image <reference.exr> and test image <test.exr>:
         3rd weighted quartile: 0.434673
         Min: 0.003118
         Max: 0.962022
-        Evaluation time: <t> seconds 
+        Evaluation time: <t> seconds
   ```
 where `<t>` is the time it took to evaluate HDR-ꟻLIP. In addition, you will now find the files `flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png` and `exposure_map.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png`
 in the directory containing the `flip[-cuda].exe` executable, and we urge you to inspect those, which will reveal where the errors in the test image are located.

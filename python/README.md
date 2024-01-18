@@ -1,7 +1,7 @@
-# ꟻLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.2)
+# ꟻLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.3)
 By
 [Pontus Andersson](https://research.nvidia.com/person/pontus-andersson),
-[Jim Nilsson](https://research.nvidia.com/person/jim-nilsson),
+Jim Nilsson,
 and
 [Tomas Akenine-Möller](https://research.nvidia.com/person/tomas-akenine-m%C3%B6ller),
 with
@@ -17,7 +17,7 @@ It also holds code for the ꟻLIP tool, presented in [Ray Tracing Gems II](https
 
 # License
 
-Copyright © 2020-2023, NVIDIA Corporation & Affiliates. All rights reserved.
+Copyright © 2020-2024, NVIDIA Corporation & Affiliates. All rights reserved.
 
 This work is made available under a [BSD 3-Clause License](../misc/LICENSE.md).
 

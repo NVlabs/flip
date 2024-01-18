@@ -46,7 +46,7 @@
  // Magnus Oskarsson, Kalle Astrom, and Mark D. Fairchild.
  // Pointer to the paper: https://research.nvidia.com/publication/2020-07_FLIP.
 
-// Single header code by Pontus Andersson and Tomas Akenine-Moller.
+// Single header code by Pontus Ebelin (formerly Andersson) and Tomas Akenine-Moller.
 //
 // We provide the following FLIP::evaluate() functions with different in/out parameters (see bottom of this file for more explanations):
 // 
@@ -66,12 +66,12 @@
 // 3.FLIP::evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
 //                 FLIP::image<float>& errorMapFLIPOutput);
 //
-//    # This one also excludes the exposure map for HDR-FLIP, in case they are not used.
+//    # This one also excludes the exposure map for HDR-FLIP, in case it is not used.
 //
 // 4. FLIP::evaluate(const bool useHDR, FLIP::Parameters& parameters, const int imageWidth, const int imageHeight,
 //                  const float* referenceThreeChannelImage, const float* testThreeChannelImage, const bool applyMagmaMapToOutput, float** errorMapFLIPOutput)
 //
-//    # An even simpler function that does not use any of our image classes to send in the images.
+//    # An even simpler function that does not use any of our image classes to input the images.
 
 #pragma once
 #include <algorithm>
@@ -585,7 +585,9 @@ namespace FLIP
         return a * std::sqrt(pi / b) * std::exp(-pi_sq * x2 / b);
     }
 
-    static inline float GaussianSqrt(const float x2, const float a, const float b) // Needed to separate sum of Gaussians filters (see separatedConvolutions.pdf in the FLIP repository).
+    // This function is needed to separate sum of Gaussians filters See separatedConvolutions.pdf in the FLIP repository:
+    // https://github.com/NVlabs/flip/blob/main/misc/separatedConvolutions.pdf
+    static inline float GaussianSqrt(const float x2, const float a, const float b)
     {
         const float pi = float(PI);
         const float pi_sq = float(PI * PI);
@@ -811,7 +813,8 @@ namespace FLIP
     }
 
     // Convolve in x direction (1st and 2nd derivative for filter in x direction, Gaussian in y direction).
-    // For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
+    // For details on the convolution, see separatedConvolutions.pdf in the FLIP repository:
+    // https://github.com/NVlabs/flip/blob/main/misc/separatedConvolutions.pdf.
     // We filter both reference and test image simultaneously (for better performance).
     // referenceImage and testImage are expected to be in YCxCz space.
     __global__ static void kernelFeatureFilterFirstDir(color3* intermediateFeaturesImageReference, color3* referenceImage, color3* intermediateFeaturesImageTest, color3* testImage, color3* pFilter, const int3 dim, const int3 filterDim)
@@ -859,7 +862,8 @@ namespace FLIP
     }
 
     // Convolve in y direction (1st and 2nd derivative for filter in y direction, Gaussian in x direction), then compute difference.
-    // For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
+    // For details on the convolution, see separatedConvolutions.pdf in the FLIP repository:
+    // https://github.com/NVlabs/flip/blob/main/misc/separatedConvolutions.pdf.
     // We filter both reference and test image simultaneously (for better performance).
     __global__ static void kernelFeatureFilterSecondDirAndFeatureDifference(color3* featureDifferenceImage, color3* intermediateFeaturesImageReference, color3* intermediateFeaturesImageTest, color3* pFilter, const int3 dim, const int3 filterDim)
     {
@@ -911,7 +915,8 @@ namespace FLIP
 
     // Performs spatial filtering in the x direction on both the reference and test image at the same time (for better performance).
     // Filtering has been changed to using separable filtering for better performance.
-    // For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
+    // For details on the convolution, see separatedConvolutions.pdf in the FLIP repository:
+    // https://github.com/NVlabs/flip/blob/main/misc/separatedConvolutions.pdf.
     // referenceImage and testImage are expected to be in YCxCz space.
     __global__ static void kernelSpatialFilterFirstDir(color3* intermediateYCxImageReference, color3* intermediateCzImageReference, color3* referenceImage, color3* intermediateYCxImageTest, color3* intermediateCzImageTest, color3* testImage, color3* pFilterYCx, color3* pFilterCz, const int3 dim, const int3 filterDim)
     {
@@ -954,7 +959,8 @@ namespace FLIP
     }
 
     // Performs spatial filtering in the y direction (and clamps the results) on both the reference and test image at the same time (for better performance).
-    // Filtering has been changed to using separable filtering for better performance. For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
+    // Filtering has been changed to using separable filtering for better performance. For details on the convolution, see separatedConvolutions.pdf in the FLIP repository:
+    // https://github.com/NVlabs/flip/blob/main/misc/separatedConvolutions.pdf.
     // After filtering, compute color differences.
     __global__ static void kernelSpatialFilterSecondDirAndColorDifference(color3* colorDifferenceImage, color3* intermediateYCxImageReference, color3* intermediateCzImageReference, color3* intermediateYCxImageTest, color3* intermediateCzImageTest, color3* pFilterYCx, color3* pFilterCz, const int3 dim, const int3 filterDim, const float cmax, const float pccmax)
     {
@@ -1728,7 +1734,9 @@ namespace FLIP
         }
 #endif
 
-        static void setSpatialFilters(image<color3>& filterYCx, image<color3>& filterCz, float ppd, int filterRadius) // For details, see separatedConvolutions.pdf in the FLIP repository.
+        // For details, see separatedConvolutions.pdf in the FLIP repository.
+        // https://github.com/NVlabs/flip/blob/main/misc/separatedConvolutions.pdf.
+        static void setSpatialFilters(image<color3>& filterYCx, image<color3>& filterCz, float ppd, int filterRadius) 
         {
             float deltaX = 1.0f / ppd;
             color3 filterSumYCx = { 0.0f, 0.0f, 0.0f };
@@ -1765,7 +1773,9 @@ namespace FLIP
             }
         }
 
-        static void setFeatureFilter(image<color3>& filter, const float ppd) // For details, see separatedConvolutions.pdf in the FLIP repository.
+        // For details, see separatedConvolutions.pdf in the FLIP repository:
+        // https://github.com/NVlabs/flip/blob/main/misc/separatedConvolutions.pdf
+        static void setFeatureFilter(image<color3>& filter, const float ppd)
         {
             const float stdDev = 0.5f * FLIPConstants.gw * ppd;
             const int radius = int(std::ceil(3.0f * stdDev));
@@ -1812,7 +1822,8 @@ namespace FLIP
 
 #ifndef FLIP_ENABLE_CUDA
         // Performs spatial filtering (and clamps the results) on both the reference and test image at the same time (for better performance).
-        // Filtering has been changed to separable filtering for better performance. For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
+        // Filtering has been changed to separable filtering for better performance. For details on the convolution, see separatedConvolutions.pdf in the FLIP repository:
+        // https://github.com/NVlabs/flip/blob/main/misc/separatedConvolutions.pdf
         // After filtering, compute color differences. referenceImage and testImage are expected to be in YCxCz space.
         void computeColorDifference(const FLIP::image<color3>& referenceImage, const FLIP::image<color3>& testImage, const FLIP::image<color3>& filterYCx, const FLIP::image<color3>& filterCz)
         {
@@ -1939,7 +1950,8 @@ namespace FLIP
             image<color3> intermediateFeaturesImageTest(w, h);
 
             // Convolve in x direction (1st and 2nd derivative for filter in x direction, Gaussian in y direction).
-            // For details, see separatedConvolutions.pdf in the FLIP repository.
+            // For details, see separatedConvolutions.pdf in the FLIP repository:
+            // https://github.com/NVlabs/flip/blob/main/misc/separatedConvolutions.pdf
             // We filter both reference and test image simultaneously (for better performance).
             const float oneOver116 = 1.0f / 116.0f;
             const float sixteenOver116 = 16.0f / 116.0f;
@@ -1979,7 +1991,8 @@ namespace FLIP
             }
 
             // Convolve in y direction (1st and 2nd derivative for filter in y direction, Gaussian in x direction), then compute difference.
-            // For details on the convolution, see separatedConvolutions.pdf in the FLIP repository.
+            // For details on the convolution, see separatedConvolutions.pdf in the FLIP repository:
+            // https://github.com/NVlabs/flip/blob/main/misc/separatedConvolutions.pdf
             // We filter both reference and test image simultaneously (for better performance).
 #pragma omp parallel for
             for (int y = 0; y < h; y++)
@@ -2265,7 +2278,8 @@ namespace FLIP
             test.LinearRGB2YCxCz();
 
             // Prepare separated spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
-            // (YCx for the Achromatic and Red-Green channels and Cz for the Blue-Yellow channel). For details, see separatedConvolutions.pdf in the FLIP repository.
+            // (YCx for the Achromatic and Red-Green channels and Cz for the Blue-Yellow channel). For details, see separatedConvolutions.pdf in the FLIP repository:
+            // https://github.com/NVlabs/flip/blob/main/misc/separatedConvolutions.pdf
             int spatialFilterRadius = calculateSpatialFilterRadius(ppd);
             int spatialFilterWidth = 2 * spatialFilterRadius + 1;
             image<color3> spatialFilterYCx(spatialFilterWidth, 1);
@@ -2299,15 +2313,15 @@ namespace FLIP
     /** Main function for computing (the image metric called) FLIP between a reference image and a test image.
      *  See FLIP-tool.cpp for usage of this function.
      *
-     * @param[in] useHDR Set to true if the input images are to be considered contain HDR content, i.e., not necessarily in [0,1].
+     * @param[in] useHDR Set to true if the input images are to be considered containing HDR content, i.e., not necessarily in [0,1].
      * @param[in,out] parameters Contains parameters (e.g., PPD, exposure settings,etc). If the exposures have not been set by the user, then those will be computed (and returned).
      * @param[in] referenceImageInput Reference input image. For LDR, the content should be in [0,1]. Input is expected in linear RGB.
      * @param[in] testImageInput Test input image. For LDR, the content should be in [0,1]. Input is expected in linear RGB.
      * @param[out] errorMapFLIPOutput The FLIP error image in [0,1], a single channel (grayscale).
-                   The user should map it using MapMagma if that is desired (with: imageWithMagma.colorMap(errorMapFLIP, FLIP::magmaMap);)
+                   The user should map it using MapMagma if that is desired (with: errorMapWithMagma.colorMap(errorMapFLIP, FLIP::magmaMap);)
      * @param[out] maxErrorExposureMapOutput Exposure map output (only for HDR content).
      * @param[in] returnLDRFLIPImages True if the next argument should be filled in by FLIP::evaluate().
-     * @param[out] hdrOutputFlipLDRImages A list of temporary output LDR FLIP images (in linear RGB) from HDR-FLIP.
+     * @param[out] hdrOutputFlipLDRImages A list of temporary output LDR FLIP error images from HDR-FLIP.
      * @param[in] returnLDRImages True if the next argument should be filled in by FLIP::evaluate().
      * @param[out] hdrOutputLDRImages A list of temporary tonemapped output LDR images (in linear RGB) from HDR-FLIP. Images in this order: Ref0, Test0, Ref1, Test1,...
      */
@@ -2318,12 +2332,13 @@ namespace FLIP
     {
         FLIP::image<FLIP::color3> referenceImage(referenceImageInput.getWidth(), referenceImageInput.getHeight());
         FLIP::image<FLIP::color3> testImage(referenceImageInput.getWidth(), referenceImageInput.getHeight());
-        referenceImage.copy(referenceImageInput);               // Make a copy, since image::FLIP() destroys the input images.
+        referenceImage.copy(referenceImageInput);               // Make a copy, since image::LDR_FLIP() destroys the input images.
         testImage.copy(testImageInput);
 
         if (useHDR)         // Set parameters for HDR-FLIP.
         {
             // If startExposure/stopExposure are inf, they have not been set by the user. If so, compute from referenceImage.
+            // See our paper about HDR-FLIP about the details.
             if (parameters.startExposure == std::numeric_limits<float>::infinity() || parameters.stopExposure == std::numeric_limits<float>::infinity())
             {
                 float startExp, stopExp;
@@ -2388,7 +2403,7 @@ namespace FLIP
         }
     }
 
-    // This variant does not return any LDR images computing for HDR-FLIP and thus avoids two parameters (since using those is a rare use case).
+    // This variant does not return any LDR images computed by HDR-FLIP and thus avoids two parameters (since using those is a rare use case).
     static void evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
          FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMapOutput)
     {
@@ -2405,20 +2420,22 @@ namespace FLIP
         FLIP::evaluate(useHDR, parameters, referenceImageInput, testImageInput, errorMapFLIPOutput, maxErrorExposureMapOutput);
     }
 
-    /** A simplified function for computing (the image metric called) FLIP between a reference image and a test image, without using FLIP::image etc.
+    /** A simplified function for computing (the image metric called) FLIP between a reference image and a test image, without the input images being defined using FLIP::image, etc.
      *
+     * Note that the user is responsible for deallocating the output image in the varible errorMapFLIPOutput. See the desciption of errorMapFLIPOutput below.
+     * 
      * @param[in] useHDR Set to true if the input images are to be considered contain HDR content, i.e., not necessarily in [0,1].
      * @param[in,out] parameters Contains parameters (e.g., PPD, exposure settings,etc). If the exposures have not been set by the user, then those will be computed (and returned).
      * @param[in] imageWidth Width of the reference and test images.
      * @param[in] imageHeight Height of the reference and test images.
      * @param[in] referenceThreeChannelImage Reference input image. For LDR, the content should be in [0,1]. The image is expected to have 3 floats per pixel and they
-     *            are interleaved, i.e., they come in the order: R0G0B0, R1G1B1, etc. Input is expected in linear RGB.
+     *            are interleaved, i.e., they come in the order: R0G0B0, R1G1B1, etc. Input is expected to be in linear RGB.
      * @param[in] testThreeChannelImage Test input image. For LDR, the content should be in [0,1]. The image is expected to have 3 floats per pixel and they are interleaved.
-                  Input is expected in linear RGB
+                  Input is expected to be in linear RGB
      * @param[in] applyMagmaMapToOutput A boolean indicating whether the output should have the MagmaMap applied to it before the image is returned.
      * @param[out] errorMapFLIPOutput The computed FLIP error image is returned in this variable. If applyMagmaMapToOutput is true, the function will allocate
-     *             three channels (and store the magma mapped FLIP images in sRGB), and 
-                   if it is false, only one channel will be allocated (and the FLIP error is returned in that gray scale image).
+     *             three channels (and store the magma-mapped FLIP images in sRGB), and 
+                   if it is false, only one channel will be allocated (and the FLIP error is returned in that grayscale image).
      *             Note that the user is responsible for deallocating the errorMapFLIPOutput image.
      */
     static void evaluate(const bool useHDR, FLIP::Parameters& parameters, const int imageWidth, const int imageHeight,

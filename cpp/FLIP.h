@@ -2321,7 +2321,8 @@ namespace FLIP
                    The user should map it using MapMagma if that is desired (with: errorMapWithMagma.colorMap(errorMapFLIP, FLIP::magmaMap);)
      * @param[out] maxErrorExposureMapOutput Exposure map output (only for HDR content).
      * @param[in] returnLDRFLIPImages True if the next argument should be filled in by FLIP::evaluate().
-     * @param[out] hdrOutputFlipLDRImages A list of temporary output LDR FLIP error images from HDR-FLIP.
+     * @param[out] hdrOutputFlipLDRImages A list of temporary output LDR-FLIP error maps (in grayscale) from HDR-FLIP.
+                   See explanation of the errorMapFLIPOutput parameter for how to convert the maps to magma.
      * @param[in] returnLDRImages True if the next argument should be filled in by FLIP::evaluate().
      * @param[out] hdrOutputLDRImages A list of temporary tonemapped output LDR images (in linear RGB) from HDR-FLIP. Images in this order: Ref0, Test0, Ref1, Test1,...
      */

@@ -219,6 +219,7 @@ static void setExposureStrings(const int exposureCount, const float exposure, st
     expString = ss.str();
 }
 
+// Optionally store the intermediate LDR images and LDR-FLIP error maps produced during the evaluation of HDR-FLIP.
 static void saveHDROutputLDRImages(const commandline& commandLine, const FLIP::Parameters& parameters, const std::string& basename, const FLIP::filename& flipFileName,
     const FLIP::filename& referenceFileName, const FLIP::filename& testFileName, const std::string& destinationDirectory,
     std::vector<FLIP::image<float>*> hdrOutputFlipLDRImages, std::vector<FLIP::image<FLIP::color3>*> hdrOutputLDRImages)

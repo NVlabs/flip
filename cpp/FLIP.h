@@ -1734,7 +1734,7 @@ namespace FLIP
         }
 #endif
 
-        // For details, see separatedConvolutions.pdf in the FLIP repository.
+        // For details, see separatedConvolutions.pdf in the FLIP repository:
         // https://github.com/NVlabs/flip/blob/main/misc/separatedConvolutions.pdf.
         static void setSpatialFilters(image<color3>& filterYCx, image<color3>& filterCz, float ppd, int filterRadius) 
         {

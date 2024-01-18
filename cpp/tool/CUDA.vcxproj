@@ -62,9 +62,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <TargetName>flip-cuda</TargetName>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);../</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>flip-cuda</TargetName>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);../</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

@@ -38,6 +38,7 @@ find_package(FLIP REQUIRED CONFIG) # Exercise CMake config in cmake/ directory
 project(flip-cli LANGUAGES CXX)
 add_executable(${PROJECT_NAME} FLIP-tool.cpp)
 target_link_libraries(${PROJECT_NAME} FLIP::flip)
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME flip)
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 ## CUDA version ##
@@ -46,6 +47,9 @@ if (FLIP_ENABLE_CUDA)
   project(flip-cuda-cli LANGUAGES CUDA)
   add_executable(${PROJECT_NAME} FLIP-tool.cu)
   target_link_libraries(${PROJECT_NAME} FLIP::flip)
-  set_property(TARGET ${PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES OFF)
+  set_target_properties(${PROJECT_NAME} PROPERTIES
+    CUDA_ARCHITECTURES OFF
+    OUTPUT_NAME flip-cuda
+  )
   install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()

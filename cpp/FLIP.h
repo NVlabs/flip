@@ -226,75 +226,75 @@ namespace FLIP
             this->z = c.z;
         }
 
-        HOST_DEVICE_FOR_CUDA bool operator==(const color3 v) const
+        HOST_DEVICE_FOR_CUDA bool operator==(const color3 c) const
         {
-            return this->x == v.x && this->y == v.y && this->z == v.z;
+            return this->x == c.x && this->y == c.y && this->z == c.z;
         }
 
-        HOST_DEVICE_FOR_CUDA bool operator!=(const color3 v) const
+        HOST_DEVICE_FOR_CUDA bool operator!=(const color3 c) const
         {
-            return !(*this == v);
+            return !(*this == c);
         }
 
-        HOST_DEVICE_FOR_CUDA color3 operator+(const color3 v) const
+        HOST_DEVICE_FOR_CUDA color3 operator+(const color3 c) const
         {
-            return color3(this->x + v.x, this->y + v.y, this->z + v.z);
+            return color3(this->x + c.x, this->y + c.y, this->z + c.z);
         }
 
-        HOST_DEVICE_FOR_CUDA color3 operator-(const color3 v) const
+        HOST_DEVICE_FOR_CUDA color3 operator-(const color3 c) const
         {
-            return color3(this->x - v.x, this->y - v.y, this->z - v.z);
+            return color3(this->x - c.x, this->y - c.y, this->z - c.z);
         }
 
-        HOST_DEVICE_FOR_CUDA color3 operator*(const float v) const
+        HOST_DEVICE_FOR_CUDA color3 operator*(const float c) const
         {
-            return color3(this->x * v, this->y * v, this->z * v);
+            return color3(this->x * c, this->y * c, this->z * c);
         }
 
-        HOST_DEVICE_FOR_CUDA color3 operator*(const color3 v) const
+        HOST_DEVICE_FOR_CUDA color3 operator*(const color3 c) const
         {
-            return color3(this->x * v.x, this->y * v.y, this->z * v.z);
+            return color3(this->x * c.x, this->y * c.y, this->z * c.z);
         }
 
-        HOST_DEVICE_FOR_CUDA color3 operator/(const float v) const
+        HOST_DEVICE_FOR_CUDA color3 operator/(const float c) const
         {
-            return color3(this->x / v, this->y / v, this->z / v);
+            return color3(this->x / c, this->y / c, this->z / c);
         }
 
-        HOST_DEVICE_FOR_CUDA color3 operator/(const color3 v) const
+        HOST_DEVICE_FOR_CUDA color3 operator/(const color3 c) const
         {
-            return color3(this->x / v.x, this->y / v.y, this->z / v.z);
+            return color3(this->x / c.x, this->y / c.y, this->z / c.z);
         }
 
-        HOST_DEVICE_FOR_CUDA color3 operator+=(const color3 v)
+        HOST_DEVICE_FOR_CUDA color3 operator+=(const color3 c)
         {
-            this->x += v.x;
-            this->y += v.y;
-            this->z += v.z;
+            this->x += c.x;
+            this->y += c.y;
+            this->z += c.z;
             return *this;
         }
 
-        HOST_DEVICE_FOR_CUDA color3 operator*=(const color3 v)
+        HOST_DEVICE_FOR_CUDA color3 operator*=(const color3 c)
         {
-            this->x *= v.x;
-            this->y *= v.y;
-            this->z *= v.z;
+            this->x *= c.x;
+            this->y *= c.y;
+            this->z *= c.z;
             return *this;
         }
 
-        HOST_DEVICE_FOR_CUDA color3 operator/=(const color3 v)
+        HOST_DEVICE_FOR_CUDA color3 operator/=(const color3 c)
         {
-            this->x /= v.x;
-            this->y /= v.y;
-            this->z /= v.z;
+            this->x /= c.x;
+            this->y /= c.y;
+            this->z /= c.z;
             return *this;
         }
 
-        HOST_DEVICE_FOR_CUDA void clear(const color3 v = { 0.0f, 0.0f, 0.0f })
+        HOST_DEVICE_FOR_CUDA void clear(const color3 c = { 0.0f, 0.0f, 0.0f })
         {
-            this->x = v.x;
-            this->y = v.y;
-            this->z = v.z;
+            this->x = c.x;
+            this->y = c.y;
+            this->z = c.z;
         }
 
         HOST_DEVICE_FOR_CUDA static inline color3 min(color3 v0, color3 v1)
@@ -611,7 +611,6 @@ namespace FLIP
 
     static int calculateSpatialFilterRadius(const float ppd)
     {
-        const float deltaX = 1.0f / ppd;
         const float pi_sq = float(PI * PI);
 
         float maxScaleParameter = std::max(std::max(std::max(GaussianConstants.b1.x, GaussianConstants.b1.y), std::max(GaussianConstants.b1.z, GaussianConstants.b2.x)), std::max(GaussianConstants.b2.y, GaussianConstants.b2.z));
@@ -1036,9 +1035,9 @@ namespace FLIP
     class tensor
     {
     protected:
-        int3 mDim;
-        int mArea, mVolume;
-        T* mvpHostData;
+        int3 mDim = {0, 0, 0};
+        int mArea = 0, mVolume = 0;
+        T* mvpHostData = nullptr;
 #ifdef FLIP_ENABLE_CUDA
         T* mvpDeviceData;
         CudaTensorState mState = CudaTensorState::UNINITIALIZED;
@@ -1135,7 +1134,10 @@ namespace FLIP
         tensor(const color3* pColorMap, int size)
         {
             this->init({ size, 1, 1 });
-            memcpy(this->mvpHostData, pColorMap, size * sizeof(color3));
+            if (this->mvpHostData != nullptr)
+            {
+                memcpy(this->mvpHostData, pColorMap, size * sizeof(color3));
+            }
         }
 #else   // FLIP_ENABLE_CUDA
         // Constructors for the CUDA side.
@@ -2232,9 +2234,6 @@ namespace FLIP
 #ifndef FLIP_ENABLE_CUDA
         void LDR_FLIP(image<color3>& reference, image<color3>& test, float ppd)     // Both reference and test are assumed to be in linear RGB.
         {
-            int width = reference.getWidth();
-            int height = reference.getHeight();
-
             // Transform from linear RGB to YCxCz.
             reference.LinearRGB2YCxCz();
             test.LinearRGB2YCxCz();

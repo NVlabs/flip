@@ -55,7 +55,10 @@
 #include <chrono>
 #include <filesystem>
 
+#if defined(_WIN32) && !defined(NOMINMAX)
 #define NOMINMAX
+#endif
+
 #define FIXED_DECIMAL_DIGITS(x, d) std::fixed << std::setprecision(d) << (x)
 
 #include "FLIP.h"
@@ -399,6 +402,11 @@ static void gatherStatisticsAndSaveOutput(commandline& commandLine, FLIP::image<
         {
             testQuantity = pooledValues.getMaxValue();
         }
+        else
+        {
+            std::cout << "Exiting with failure code because exit-on-text-quantity was " << exitOnTestQuantity << ", and expects to be mean, weighted-median, or max.\n";
+            exit(EXIT_FAILURE);     // From stdlib.h: equal to 1.
+        }
 
         if (testQuantity > exitOnTestThresholdValue)
         {
@@ -460,7 +468,6 @@ int main(int argc, char** argv)
 
     FLIP::Parameters parameters;
     FLIP::filename referenceFileName(commandLine.getOptionValue("reference"));
-    std::vector<std::string>& testFileNames = commandLine.getOptionValues("test");
     bool bUseHDR = (referenceFileName.getExtension() == "exr");
     std::string destinationDirectory = ".";
     std::string basename = (commandLine.optionSet("basename") ? commandLine.getOptionValue("basename") : "");

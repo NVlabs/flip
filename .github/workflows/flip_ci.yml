@@ -1,0 +1,35 @@
+name: FLIP CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        config: [Release, Debug]
+
+    steps:
+    - name: Checkout Sources
+      uses: actions/checkout@v3
+
+    - name: Install CUDA
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: sudo apt install -y nvidia-cuda-toolkit g++-10
+
+    - name: Configure CMake
+      run: >
+        cmake -LA -B ${{github.workspace}}/build
+        -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+        -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build/install
+        -DCMAKE_CUDA_ARCHITECTURES=all
+        -DCMAKE_CUDA_HOST_COMPILER=g++-10
+        -DFLIP_ENABLE_CUDA=${{ matrix.os == 'ubuntu-latest' }}
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{ matrix.config }} --target install

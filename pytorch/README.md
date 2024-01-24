@@ -1,6 +1,6 @@
 # ꟻLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.3)
 By
-[Pontus Andersson](https://research.nvidia.com/person/pontus-andersson),
+[Pontus Ebelin](https://research.nvidia.com/person/pontus-ebelin),
 Jim Nilsson,
 and
 [Tomas Akenine-Möller](https://research.nvidia.com/person/tomas-akenine-m%C3%B6ller),

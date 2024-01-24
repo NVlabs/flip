@@ -49,7 +49,7 @@
 // Single header code by Pontus Ebelin (formerly Andersson) and Tomas Akenine-Moller.
 //
 // We provide the following FLIP::evaluate() functions with different in/out parameters (see bottom of this file for more explanations):
-// 
+//
 // 1. FLIP::evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
 //                  FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMapOutput,
 //                  const bool returnLDRFLIPImages, std::vector<FLIP::image<float>*>& hdrOutputFlipLDRImages,
@@ -57,7 +57,7 @@
 //
 //    # This is the one with most parameters and is used by FLIP-tool.cpp in main().
 //    # See the function at the bottom of this file for detailed description of the parameters.
-// 
+//
 // 2. FLIP::evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
 //                  FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMap);
 //
@@ -1738,7 +1738,7 @@ namespace FLIP
 
         // For details, see separatedConvolutions.pdf in the FLIP repository:
         // https://github.com/NVlabs/flip/blob/main/misc/separatedConvolutions.pdf.
-        static void setSpatialFilters(image<color3>& filterYCx, image<color3>& filterCz, float ppd, int filterRadius) 
+        static void setSpatialFilters(image<color3>& filterYCx, image<color3>& filterCz, float ppd, int filterRadius)
         {
             float deltaX = 1.0f / ppd;
             color3 filterSumYCx = { 0.0f, 0.0f, 0.0f };
@@ -2262,7 +2262,7 @@ namespace FLIP
             this->computeFeatureDifferenceAndFinalError(reference, test, featureFilter);
         }
 #else
-        void image<T>::LDR_FLIP(image<color3>& reference, image<color3>& test, float ppd)     // Both reference and test are assumed to be in linear RGB.
+        void LDR_FLIP(image<color3>& reference, image<color3>& test, float ppd)     // Both reference and test are assumed to be in linear RGB.
         {
             int width = reference.getWidth();
             int height = reference.getHeight();
@@ -2327,7 +2327,7 @@ namespace FLIP
      */
     static void evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
         FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMapOutput,
-        const bool returnLDRFLIPImages, std::vector<FLIP::image<float>*>& hdrOutputFlipLDRImages, 
+        const bool returnLDRFLIPImages, std::vector<FLIP::image<float>*>& hdrOutputFlipLDRImages,
         const bool returnLDRImages, std::vector<FLIP::image<FLIP::color3>*>& hdrOutputLDRImages)
     {
         FLIP::image<FLIP::color3> referenceImage(referenceImageInput.getWidth(), referenceImageInput.getHeight());
@@ -2423,7 +2423,7 @@ namespace FLIP
     /** A simplified function for computing (the image metric called) FLIP between a reference image and a test image, without the input images being defined using FLIP::image, etc.
      *
      * Note that the user is responsible for deallocating the output image in the varible errorMapFLIPOutput. See the desciption of errorMapFLIPOutput below.
-     * 
+     *
      * @param[in] useHDR Set to true if the input images are to be considered contain HDR content, i.e., not necessarily in [0,1].
      * @param[in,out] parameters Contains parameters (e.g., PPD, exposure settings,etc). If the exposures have not been set by the user, then those will be computed (and returned).
      * @param[in] imageWidth Width of the reference and test images.
@@ -2434,7 +2434,7 @@ namespace FLIP
                   Input is expected to be in linear RGB
      * @param[in] applyMagmaMapToOutput A boolean indicating whether the output should have the MagmaMap applied to it before the image is returned.
      * @param[out] errorMapFLIPOutput The computed FLIP error image is returned in this variable. If applyMagmaMapToOutput is true, the function will allocate
-     *             three channels (and store the magma-mapped FLIP images in sRGB), and 
+     *             three channels (and store the magma-mapped FLIP images in sRGB), and
                    if it is false, only one channel will be allocated (and the FLIP error is returned in that grayscale image).
      *             Note that the user is responsible for deallocating the errorMapFLIPOutput image.
      */

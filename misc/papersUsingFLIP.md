@@ -206,6 +206,9 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Thomson TG, Jeppe Revall Frisvad, Ravi Ramamoorthi, and Henrik Wann Jensen, ["Neural BSSRDF: Object Appearance Representation Including Heterogeneous Subsurface Scattering"](https://arxiv.org/abs/2312.15711), 	arXiv:2312.15711, December 2023.
 
+1. Rafal K. Mantiuk, Param Hanji, Maliha Ashraf, Yuta Asano, and Alexandre Chapiro, ["ColorVideoVDP: A visual difference predictor for image, video and display distortions"](https://arxiv.org/abs/2401.11485), arXiv:2401.11485, January 2024.
+
+1. Yu-Ting Wu and I-Chao Shen, ["Improving cache placement for efficient cache-based rendering"](https://link.springer.com/article/10.1007/s00371-023-03231-z), The Visual Computer, January 2024.
 
 
 

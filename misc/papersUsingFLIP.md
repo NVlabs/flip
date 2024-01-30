@@ -210,6 +210,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Yu-Ting Wu and I-Chao Shen, ["Improving cache placement for efficient cache-based rendering"](https://link.springer.com/article/10.1007/s00371-023-03231-z), The Visual Computer, January 2024.
 
+1. Zhongye Shen, Chunyi Chen, Ripei Zhang, Haiyang Yu, and Ling Li, ["Perception-JND-driven path tracing for reducing sample budget"](https://link-springer-com.ludwig.lub.lu.se/article/10.1007/s00371-023-03199-w), The Visual Computer, January 2024.
+
 
 
 

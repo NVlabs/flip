@@ -212,6 +212,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Zhongye Shen, Chunyi Chen, Ripei Zhang, Haiyang Yu, and Ling Li, ["Perception-JND-driven path tracing for reducing sample budget"](https://link-springer-com.ludwig.lub.lu.se/article/10.1007/s00371-023-03199-w), The Visual Computer, January 2024.
 
+1. Rohan Sawhney, Daqi Lin, Markus Kettunen, Benedikt Bitterli, Ravi Ramamoorthi, Chris Wyman, and Matt Pharr, ["Decorrelating ReSTIR Samplers via MCMC Mutations"](https://dl.acm.org/doi/full/10.1145/3629166), ACM Transactions on Graphics, vol. 43, no. 1, pp 1–15, 2024.
+
 
 
 

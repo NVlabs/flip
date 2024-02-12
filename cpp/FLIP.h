@@ -2454,7 +2454,7 @@ namespace FLIP
 #endif
         if (applyMagmaMapToOutput)
         {
-            *errorMapFLIPOutput = new float[imageWidth * imageWidth * 3];
+            *errorMapFLIPOutput = new float[imageWidth * imageHeight * 3];
             FLIP::image<FLIP::color3> magmaMappedFLIPImage(imageWidth, imageHeight);
             magmaMappedFLIPImage.colorMap(errorMapFLIPOutputImage, FLIP::magmaMap);
 #ifdef FLIP_ENABLE_CUDA
@@ -2465,7 +2465,7 @@ namespace FLIP
         }
         else    // No MagmaMap applied, which means that we will return the gray scale image.
         {
-            *errorMapFLIPOutput = new float[imageWidth * imageWidth];
+            *errorMapFLIPOutput = new float[imageWidth * imageHeight];
             memcpy(*errorMapFLIPOutput, errorMapFLIPOutputImage.getHostData(), size_t(imageWidth) * imageHeight * sizeof(float));
         }
     }

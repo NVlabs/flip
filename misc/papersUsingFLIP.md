@@ -216,6 +216,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Qian Fu, Linlin Liu, Fei Hou, and Ying He, ["Hierarchical vectorization for facial images"](https://link.springer.com/article/10.1007/s41095-022-0314-4), Computational Visual Media, vol. 10, pages 97–118, 2024.
 
+1. H.Kim and J-H Na, ["Comparative Analysis of the Deep-Learning-based Super-Resolution Methods for Generating Texture Maps"](https://koreascience.kr/article/JAKO202335243375915.pdf), Journal of the Korea Computer Graphics Society, December, 2023.
+
 
 
 

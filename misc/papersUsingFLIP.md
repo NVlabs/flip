@@ -218,6 +218,10 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. H.Kim and J-H Na, ["Comparative Analysis of the Deep-Learning-based Super-Resolution Methods for Generating Texture Maps"](https://koreascience.kr/article/JAKO202335243375915.pdf), Journal of the Korea Computer Graphics Society, December, 2023.
 
+1. Jaroslav Nejedly, ["Neural representations for differentiable volume rendering"](https://dspace.cuni.cz/bitstream/handle/20.500.11956/188516/120469729.pdf?sequence=1), Master's thesis, Charles University, Prague, 2024.
+
+1. N.Violante, A.Gauthier, S.Diolatzis. T.Leimkühler, and G.Drettakis, ["Physically-BasedLightingfor3DGenerativeModelsofCars"](https://hal.science/hal-04493971/file/lighting_3D_generative_cars.pdf), Eurographics, 2024.
+
 
 
 

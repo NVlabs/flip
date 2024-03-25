@@ -84,6 +84,7 @@
 #include <sstream>
 #include <fstream>
 #include <limits>
+#include "tool/pooling.h"
 
 #ifdef FLIP_ENABLE_CUDA
 #include "cuda_runtime.h"
@@ -2183,7 +2184,7 @@ namespace FLIP
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
 #endif
-        void computeExposures(std::string tm, float& startExposure, float& stopExposure)
+        void computeExposures(const std::string tm, float& startExposure, float& stopExposure)
         {
             int toneMapper = 1;
             if (tm == "reinhard")
@@ -2312,10 +2313,10 @@ namespace FLIP
     /** Main function for computing (the image metric called) FLIP between a reference image and a test image.
      *  See FLIP-tool.cpp for usage of this function.
      *
-     * @param[in] useHDR Set to true if the input images are to be considered containing HDR content, i.e., not necessarily in [0,1].
-     * @param[in,out] parameters Contains parameters (e.g., PPD, exposure settings,etc). If the exposures have not been set by the user, then those will be computed (and returned).
      * @param[in] referenceImageInput Reference input image. For LDR, the content should be in [0,1]. Input is expected in linear RGB.
      * @param[in] testImageInput Test input image. For LDR, the content should be in [0,1]. Input is expected in linear RGB.
+     * @param[in] useHDR Set to true if the input images are to be considered containing HDR content, i.e., not necessarily in [0,1].
+     * @param[in,out] parameters Contains parameters (e.g., PPD, exposure settings,etc). If the exposures have not been set by the user, then those will be computed (and returned).
      * @param[out] errorMapFLIPOutput The FLIP error image in [0,1], a single channel (grayscale).
                    The user should map it using MapMagma if that is desired (with: errorMapWithMagma.colorMap(errorMapFLIP, FLIP::magmaMap);)
      * @param[out] maxErrorExposureMapOutput Exposure map output (only for HDR content).
@@ -2325,8 +2326,8 @@ namespace FLIP
      * @param[in] returnLDRImages True if the next argument should be filled in by FLIP::evaluate().
      * @param[out] hdrOutputLDRImages A list of temporary tonemapped output LDR images (in linear RGB) from HDR-FLIP. Images in this order: Ref0, Test0, Ref1, Test1,...
      */
-    static void evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
-        FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMapOutput,
+    static void evaluate(FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+        const bool useHDR, FLIP::Parameters& parameters, FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMapOutput,
         const bool returnLDRFLIPImages, std::vector<FLIP::image<float>*>& hdrOutputFlipLDRImages,
         const bool returnLDRImages, std::vector<FLIP::image<FLIP::color3>*>& hdrOutputLDRImages)
     {
@@ -2404,42 +2405,45 @@ namespace FLIP
     }
 
     // This variant does not return any LDR images computed by HDR-FLIP and thus avoids two parameters (since using those is a rare use case).
-    static void evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
-         FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMapOutput)
+    static void evaluate(FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+         const bool useHDR, FLIP::Parameters& parameters, FLIP::image<float>& errorMapFLIPOutput, FLIP::image<float>& maxErrorExposureMapOutput)
     {
         std::vector<FLIP::image<float>*> hdrOutputFlipLDRImages;
         std::vector<FLIP::image<FLIP::color3>*> hdrOutputLDRImages;
-        FLIP::evaluate(useHDR, parameters, referenceImageInput, testImageInput, errorMapFLIPOutput, maxErrorExposureMapOutput, false, hdrOutputFlipLDRImages, false, hdrOutputLDRImages);
+        FLIP::evaluate(referenceImageInput, testImageInput, useHDR, parameters, errorMapFLIPOutput, maxErrorExposureMapOutput, false, hdrOutputFlipLDRImages, false, hdrOutputLDRImages);
     }
 
     // This variant does not return the exposure map, which may also be used quite seldom.
-    static void evaluate(const bool useHDR, FLIP::Parameters& parameters, FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput,
+    static void evaluate(FLIP::image<FLIP::color3>& referenceImageInput, FLIP::image<FLIP::color3>& testImageInput, const bool useHDR, FLIP::Parameters& parameters,
          FLIP::image<float>& errorMapFLIPOutput)
     {
         FLIP::image<float> maxErrorExposureMapOutput(referenceImageInput.getWidth(), referenceImageInput.getHeight());
-        FLIP::evaluate(useHDR, parameters, referenceImageInput, testImageInput, errorMapFLIPOutput, maxErrorExposureMapOutput);
+        FLIP::evaluate(referenceImageInput, testImageInput, useHDR, parameters, errorMapFLIPOutput, maxErrorExposureMapOutput);
     }
 
     /** A simplified function for computing (the image metric called) FLIP between a reference image and a test image, without the input images being defined using FLIP::image, etc.
      *
      * Note that the user is responsible for deallocating the output image in the varible errorMapFLIPOutput. See the desciption of errorMapFLIPOutput below.
      *
-     * @param[in] useHDR Set to true if the input images are to be considered contain HDR content, i.e., not necessarily in [0,1].
-     * @param[in,out] parameters Contains parameters (e.g., PPD, exposure settings,etc). If the exposures have not been set by the user, then those will be computed (and returned).
-     * @param[in] imageWidth Width of the reference and test images.
-     * @param[in] imageHeight Height of the reference and test images.
      * @param[in] referenceThreeChannelImage Reference input image. For LDR, the content should be in [0,1]. The image is expected to have 3 floats per pixel and they
      *            are interleaved, i.e., they come in the order: R0G0B0, R1G1B1, etc. Input is expected to be in linear RGB.
      * @param[in] testThreeChannelImage Test input image. For LDR, the content should be in [0,1]. The image is expected to have 3 floats per pixel and they are interleaved.
-                  Input is expected to be in linear RGB
+                  Input is expected to be in linear RGB.
+     * @param[in] imageWidth Width of the reference and test images.
+     * @param[in] imageHeight Height of the reference and test images.
+     * @param[in,out] parameters Contains parameters (e.g., PPD, exposure settings,etc). If the exposures have not been set by the user, then those will be computed (and returned).
+     * @param[in] useHDR Set to true if the input images are to be considered containing HDR content, i.e., not necessarily in [0,1].
+     * @param[in] computeMeanFLIPError Set to true if the mean FLIP error should be computed. If false, mean error is set to 0.
      * @param[in] applyMagmaMapToOutput A boolean indicating whether the output should have the MagmaMap applied to it before the image is returned.
      * @param[out] errorMapFLIPOutput The computed FLIP error image is returned in this variable. If applyMagmaMapToOutput is true, the function will allocate
      *             three channels (and store the magma-mapped FLIP images in sRGB), and
-                   if it is false, only one channel will be allocated (and the FLIP error is returned in that grayscale image).
+     *             if it is false, only one channel will be allocated (and the FLIP error is returned in that grayscale image).
      *             Note that the user is responsible for deallocating the errorMapFLIPOutput image.
+     * @param[out] meanFLIPError Mean FLIP error in the test (testThreeChannelImage) compared to the reference (referenceThreeChannelImage).
      */
-    static void evaluate(const bool useHDR, FLIP::Parameters& parameters, const int imageWidth, const int imageHeight,
-        const float* referenceThreeChannelImage, const float* testThreeChannelImage, const bool applyMagmaMapToOutput, float** errorMapFLIPOutput)
+    static void evaluate(const float* referenceThreeChannelImage, const float* testThreeChannelImage,
+        const int imageWidth, const int imageHeight, FLIP::Parameters& parameters, const bool useHDR,
+        const bool computeMeanFLIPError, const bool applyMagmaMapToOutput, float** errorMapFLIPOutput, float& meanFLIPError)
     {
         FLIP::image<FLIP::color3> referenceImage;
         FLIP::image<FLIP::color3> testImage;
@@ -2447,11 +2451,27 @@ namespace FLIP
         referenceImage.setPixels(referenceThreeChannelImage, imageWidth, imageHeight);
         testImage.setPixels(testThreeChannelImage, imageWidth, imageHeight);
 
-        FLIP::evaluate(useHDR, parameters, referenceImage, testImage, errorMapFLIPOutputImage);
+        FLIP::evaluate(referenceImage, testImage, useHDR, parameters, errorMapFLIPOutputImage);
 
 #ifdef FLIP_ENABLE_CUDA
         errorMapFLIPOutputImage.synchronizeHost();
 #endif
+
+        // Compute mean FLIP error, if desired.
+        if (computeMeanFLIPError)
+        {
+            FLIPPooling::pooling<float> pooledValues;
+// #pragma omp parallel for // TODO: Use pragma here? Does it work for CUDA?
+            for (int y = 0; y < errorMapFLIPOutputImage.getHeight(); y++)
+            {
+                for (int x = 0; x < errorMapFLIPOutputImage.getWidth(); x++)
+                {
+                    pooledValues.update(x, y, errorMapFLIPOutputImage.get(x, y));
+                }
+            }
+            meanFLIPError = pooledValues.getMean();
+        }
+
         if (applyMagmaMapToOutput)
         {
             *errorMapFLIPOutput = new float[imageWidth * imageHeight * 3];

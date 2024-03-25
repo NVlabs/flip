@@ -3,6 +3,23 @@
 In addition to various minor changes, the following was
 changed for the different versions of ꟻLIP:
 
+# Version 1.4 (commit nnnnnnn)
+- Changed the Python version of ꟻLIP so that it leverages the C++ code through [pybind11](https://github.com/pybind/pybind11).
+	- Results (only evaluation, not including file load/save, etc):
+		- 16-26x faster for LDR/HDR CPU (depends on CPU setup).
+		- Timings for 1920x1080 images:
+			- Python/LDR: 91 ms
+			- Python/HDR: 1291 ms
+	- NOTE: The Python version can currently _not_ run the CUDA version of ꟻLIP (see issue nnnnnn).
+	- NOTE: The Python tool now uses the C++ tool. Compared to before, you will need to change `_` to `-` when calling flip.py (e.g., `python flip.py -r reference.exr -t test.exr --start_exposure 3` is now `python flip.py -r reference.exr -t test.exr --start-exposure 3`; see `python flip.py -h`).
+- ꟻLIP can now be installed using `pip` (run `pip install .` from the `python` folder).
+- The code for the C++/CUDA tool is now in `FLIPToolHelpers.h`.
+- NOTE: The fourth `evaluate()` function in `FLIP.h` now takes two additional arguments: `computeMeanError` and `meanError`. Furthermore, its list of arguments has been partly reordered.
+- Added check for OpenMP for CMake build.
+- Overlapped histograms are now available in the C++ tool code. These are created when one reference and _two_ test images are input, together with the `--histogram` flag.
+- Text file output are now available in the C++ tool code. These are created when the `--textfile` flag is input.
+- The Python and C++ tests now use the same targets.
+
 # Version 1.3 (commit a00bc7d)
 - Changed to CUDA 12.3.
 - Rewrote C++ code so that ꟻLIP is in a single header (both CPP/CUDA).
@@ -17,7 +34,7 @@ changed for the different versions of ꟻLIP:
     - Uses separable filters.
     - Merges several functions/kernels into fewer.
     - Uses OpenMP for the CPU.
-    - Results (not incuding file load/save):
+    - Results (not including file load/save):
         - 111-124x faster for LDR/HDR CPU (depends on CPU setup, though).
         - 2.4-2.8x faster LDR/HDR CUDA (depends on CPU/GPU setup)
 		- Timings for 1920x1080 images:

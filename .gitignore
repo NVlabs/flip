@@ -32,6 +32,8 @@ _ReSharper*/
 
 #  Python ignores
 *__pycache__*
+python/build/
+python/*.egg-info/
 
 #  LaTeX ignores
 *.synctex.gz
@@ -42,3 +44,6 @@ _ReSharper*/
 
 #  VSCode ignores
 *.vscode
+
+# Ignore build
+build/

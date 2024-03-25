@@ -20,6 +20,8 @@ can be found [here](misc/separatedConvolutions.pdf).
 
 With v1.3, we have switched to a single header [FLIP.h](FLIP.h) for easier integration into other projects.
 
+Since v1.4, the code is contained in [FLIPToolHelpers.h](FLIPToolHelpers.h), but is still run through [FLIP-tool.cpp](FLIP-tool.cpp) and [FLIP-tool.cu](FLIP-tool.cu), respectively.
+
 
 # License
 
@@ -47,13 +49,13 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
   ```  
 - The FLIP.sln solution contains one CUDA backend project and one pure C++ backend project for the FLIP tool.
 - Compiling the CUDA project requires a CUDA compatible GPU. Instruction on how to install CUDA can be found [here](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html).
-- Alternatively, a CMake build can be done by creating a build directory and invoking CMake on the source `cpp` dir:
+- Alternatively, a CMake build can be done by creating a build directory and invoking CMake on the source `cpp` dir (add `--config Release` to build release configuration on Windows):
 
   ```
   mkdir build
   cd build
   cmake ..
-  cmake --build .
+  cmake --build . [--config Release]
   ```
 
   CUDA support is enabled via the `FLIP_ENABLE_CUDA`, which can be passed to CMake on the command line with `-DFLIP_ENABLE_CUDA=ON` or set interactively with `ccmake` or `cmake-gui`.
@@ -61,7 +63,7 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
 - Usage: `flip[-cuda].exe --reference reference.{exr|png} --test test.{exr|png} [options]`, where the list of options can be seen by `flip[-cuda].exe -h`.
 - Tested on Windows 10 version 22H2 and Windows 11 version 23H2 with CUDA 12.3. Compiled with Visual Studio 2022. If you use another version of CUDA, you will need to change the `CUDA 12.3` strings in the `CUDA.vcxproj` file accordingly.
 - `../tests/test.py` contains simple tests used to test whether code updates alter results.
-- Weighted histograms are output as Python scripts. Running the script will create a PDF version of the histogram. Note that the python script has some dependencies, so it is best to `conda activate flip` before it is executed. See [README.md](https://github.com/NVlabs/flip/blob/main/python/README.md) for our Python code to set this up.
+- Weighted histograms are output as Python scripts. Running the script will create a PDF version of the histogram. Notice that those scripts require `numpy` and `matplotlib`, both of which may be installed using pip. These are automantically installed when installing the Python version of ꟻLIP (see [README.md](https://github.com/NVlabs/flip/blob/main/python/README.md)).
 - The naming convention used for the ꟻLIP tool's output is as follows (where `ppd` is the assumed number of pixels per degree,
   `tm` is the tone mapper assumed by HDR-ꟻLIP, `cstart` and `cstop` are the shortest and longest exposures, respectively, assumed by HDR-ꟻLIP,
   with `p` indicating a positive value and `m` indicating a negative value,
@@ -74,6 +76,8 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
 
     LDR-ꟻLIP: `flip.<reference>.<test>.<ppd>ppd.ldr.png`<br>
     Weighted histogram: `weighted_histogram.reference>.<test>.<ppd>ppd.ldr.py`<br>
+    Overlapping weighted histogram: `overlapping_weighted_histogram.<reference>.<test1>.<test2>.<ppd>ppd.ldr.pdf`<br>
+    Text file: `pooled_values.<reference>.<test>.<ppd>ppd.ldr.txt`<br>
 
   *High dynamic range images:*<br>
 
@@ -82,6 +86,8 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
     Intermediate LDR-ꟻLIP maps: `flip.<reference>.<test>.<ppd>ppd.ldr.<tm>.<nnn>.<exp>.png`<br>
     Intermediate LDR images: `<reference|test>.<tm>.<nnn>.<exp>.png`<br>
     Weighted histogram: `weighted_histogram.<reference>.<test>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.py`<br>
+    Overlapping weighted histogram: `overlapping_weighted_histogram.<reference>.<test1>.<test2>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.pdf`<br>
+    Text file: `pooled_values.<reference>.<test>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.txt`<br>
 
   **With** `--basename <name>` **(note: not applicable if more than one test image is evaluated):**
 
@@ -89,6 +95,8 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
 
     LDR-ꟻLIP: `<name>.png`<br>
     Weighted histogram: `<name>.py`<br>
+    Overlapping weighted histogram: N/A<br>
+    Text file: `<name>.txt`<br>
 
   *High dynamic range images:*<br>
 
@@ -97,6 +105,8 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
     Intermediate LDR-ꟻLIP maps: `<name>.<nnn>.png`<br>
     Intermediate LDR images: `<name>.reference|test.<nnn>.png`<br>
     Weighted histogram: `<name>.py`<br>
+    Overlapping weighted histogram: N/A<br>
+    Text file: `<name>.txt`<br>
 
  **Example usage:**
 After compiling the `FLIP.sln` project, navigate to the `flip[-cuda].exe` executable and try:

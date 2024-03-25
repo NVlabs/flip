@@ -8,6 +8,9 @@
     <ClInclude Include="filename.h">
       <Filter>tool</Filter>
     </ClInclude>
+    <ClInclude Include="FLIPToolHelpers.h">
+      <Filter>tool</Filter>
+    </ClInclude>
     <ClInclude Include="imagehelpers.h">
       <Filter>tool</Filter>
     </ClInclude>

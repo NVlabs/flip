@@ -47,7 +47,7 @@
 # Magnus Oskarsson, Kalle Astrom, and Mark D. Fairchild.
 # Pointer to the paper: https://research.nvidia.com/publication/2020-07_FLIP.
 
-# Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
+# Code by Pontus Ebelin (formerly Andersson), Jim Nilsson, and Tomas Akenine-Moller.
 import numpy as np
 import torch
 import torch.nn as nn

@@ -46,7 +46,7 @@
 // Magnus Oskarsson, Kalle Astrom, and Mark D. Fairchild.
 // Pointer to the paper: https://research.nvidia.com/publication/2020-07_FLIP.
 
-// Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
+// Code by Pontus Ebelin (formerly Andersson), Jim Nilsson, and Tomas Akenine-Moller.
 
 #pragma once
 
@@ -58,7 +58,8 @@
 #include <iostream>
 #include <algorithm>
 
-namespace FLIP
+
+namespace FLIPPooling
 {
     template <typename T>
     class histogram
@@ -98,9 +99,9 @@ namespace FLIP
         T getMaxValue() const { return this->mMaxValue; }
         T getBucketStep() const { return (this->mMaxValue - this->mMinValue) / this->mvBuckets.size(); }
 
-        void clear(size_t value = 0)
+        void clear()
         {
-            this->mvBuckets.resize(mvBuckets.size(), value);
+            this->mvBuckets.resize(mvBuckets.size(), 0);
         }
 
         void resize(size_t buckets)
@@ -139,7 +140,7 @@ namespace FLIP
             }
         }
 
-        std::string toPython(std::string fileName, size_t numPixels, T meanValue, T maxValue, T minValue, T weightedMedian, T firstWeightedQuartile, T thirdWeightedQuartile, const bool optionLog, const bool includeValues, const float yMax) const
+        std::string toPython(const std::string fileName, const size_t numPixels, const T meanValue, const T maxValue, const T minValue, const T weightedMedian, const T firstWeightedQuartile, const T thirdWeightedQuartile, const bool optionLog, const bool includeValues, const float yMax) const
         {
             std::stringstream ss;
 
@@ -224,9 +225,13 @@ namespace FLIP
             ss << "fig.set_size_inches(dimensions[0] / 2.54, dimensions[1] / 2.54)\n";
 
             if (optionLog)
+            {
                 ss << "axes.set(title = 'Weighted \\uA7FBLIP Histogram', xlabel = '\\uA7FBLIP error', ylabel = 'log(weighted \\uA7FBLIP sum per megapixel)')\n\n";
+            }
             else
+            {
                 ss << "axes.set(title = 'Weighted \\uA7FBLIP Histogram', xlabel = '\\uA7FBLIP error', ylabel = 'Weighted \\uA7FBLIP sum per megapixel')\n\n";
+            }
 
             ss << "plt.bar(dataX, weightedDataFLIP, width = " << bucketStep << ", color = fillColor, edgecolor = lineColor)\n\n";
 
@@ -386,7 +391,7 @@ namespace FLIP
             }
         }
 
-        void save(const std::string& fileName, size_t imgWidth, size_t imgHeight, const bool optionLog, const std::string referenceFileName, const std::string testFileName, const bool includeValues, const float yMax)
+        void save(const std::string& fileName, size_t imgWidth, size_t imgHeight, const bool optionLog, const std::string referenceFileName, const std::string testFileName, const bool includeValues, const float yMax) // TODO: Remove ref and test file name.
         {
             std::ofstream file;
             std::string pyFileName = fileName;
@@ -397,6 +402,159 @@ namespace FLIP
             std::ofstream pythonHistogramFile;
             pythonHistogramFile.open(pyFileName);
             pythonHistogramFile << mHistogram.toPython(pyFileName, area, getMean(), getMaxValue(), getMinValue(), getPercentile(0.5f, true), getPercentile(0.25f, true), getPercentile(0.75f, true), optionLog, includeValues, yMax);
+            pythonHistogramFile.close();
+        }
+
+        void saveOverlappedHistogram(pooling firstPooledValues, const std::string& fileName, const size_t imgWidth, const size_t imgHeight, const bool optionLog, const std::string referenceFileName, const std::string firstTestFileName, const std::string testFileName, const bool includeValues, const float yMax) const
+        {
+            // Create histogram.
+            size_t numPixels = size_t(imgWidth) * size_t(imgHeight);
+
+            size_t bucketsSize = firstPooledValues.getHistogram().size();
+            size_t bucketsSize2 = this->mHistogram.size();
+            T bucketStep = this->mHistogram.getBucketStep();
+
+            float firstPooledValuesMean = firstPooledValues.getMean();
+            float meanValue = this->getMean();
+
+            std::stringstream ss;
+
+            //  Imports.
+            ss << "import matplotlib.pyplot as plt\n";
+            ss << "import sys\n";
+            ss << "import numpy as np\n";
+            ss << "from matplotlib.ticker import (MultipleLocator)\n\n";
+
+            ss << "dimensions = (25, 15)  #  centimeters\n\n";
+
+            ss << "lineColor = 'green'\n";
+            ss << "lineColor2 = 'blue'\n";
+            ss << "fillColorBelow = [118 / 255, 185 / 255, 0]\n";
+            ss << "fillColorAbove = 'lightblue'\n";
+            ss << "meanLineColor = [107 / 255, 168 / 255, 0]\n";
+            ss << "meanLineColor2 = [113 / 255, 171 / 255, 189 / 255]\n";
+            ss << "fontSize = 14\n\n";
+            ss << "numPixels = " << numPixels << "\n\n";
+
+            ss << "font = { 'family' : 'serif', 'style' : 'normal', 'weight' : 'normal', 'size' : fontSize }\n";
+            ss << "lineHeight = fontSize / (dimensions[1] * 15)\n";
+            ss << "plt.rc('font', **font)\n\n";
+
+            ss << "fig = plt.figure()\n";
+            ss << "fig.set_size_inches(dimensions[0] / 2.54, dimensions[1] / 2.54)\n";
+
+            ss << "meanValue = " << firstPooledValuesMean << "\n";
+            ss << "meanValue2 = " << meanValue << "\n";
+
+            //  X-axis.
+            ss << "dataX = [";
+            for (size_t bucketId = 0; bucketId < bucketsSize; bucketId++)
+            {
+                ss << (bucketId > 0 ? ", " : "");
+                ss << bucketStep * bucketId + 0.5 * bucketStep;
+            }
+            ss << "]\n\n";
+
+            // FLIP histogram.
+            ss << "dataFLIP = [";
+            for (size_t bucketId = 0; bucketId < bucketsSize; bucketId++)
+            {
+                ss << (bucketId > 0 ? ", " : "");
+                ss << firstPooledValues.getHistogram().getBucketValue(bucketId);
+            }
+            ss << "]\n\n";
+            ss << "dataFLIP2 = [";
+            for (size_t bucketId = 0; bucketId < bucketsSize; bucketId++)
+            {
+                ss << (bucketId > 0 ? ", " : "");
+                ss << this->mHistogram.getBucketValue(bucketId);
+            }
+            ss << "]\n\n";
+
+            // Weighted FLIP histogram.
+            ss << "bucketStep = " << bucketStep << "\n";
+            ss << "weightedDataFLIP = np.empty(" << bucketsSize << ")\n";
+            ss << "weightedDataFLIP2 = np.empty(" << bucketsSize << ")\n";
+            ss << "for i in range(" << bucketsSize << ") :\n";
+            ss << "\tweight = (i + 0.5) * bucketStep\n";
+            ss << "\tweightedDataFLIP[i] = dataFLIP[i] * weight\n";
+            ss << "\tweightedDataFLIP2[i] = dataFLIP2[i] * weight\n";
+            ss << "weightedDataFLIP /= (numPixels /(1024 * 1024))  # normalized with the number of megapixels in the image\n";
+            ss << "weightedDataFLIP2 /= (numPixels /(1024 * 1024))  # normalized with the number of megapixels in the image\n\n";
+            if (optionLog)
+            {
+                ss << "for i in range(" << bucketsSize << ") :\n";
+                ss << "\tif weightedDataFLIP[i] > 0 :\n";
+                ss << "\t\tweightedDataFLIP[i] = np.log10(weightedDataFLIP[i])  # avoid log of zero\n";
+                ss << "\tif weightedDataFLIP2[i] > 0 :\n";
+                ss << "\t\tweightedDataFLIP2[i] = np.log10(weightedDataFLIP2[i])  # avoid log of zero\n\n";
+            }
+
+            if (yMax != 0.0f)
+            {
+                ss << "maxY = " << yMax << "\n\n";
+            }
+            else
+            {
+                ss << "maxY = 1.05 * max(max(weightedDataFLIP), max(weightedDataFLIP2))\n\n";
+            }
+
+            ss << "axes = plt.axes()\n";
+            ss << "axes.xaxis.set_minor_locator(MultipleLocator(0.1))\n";
+            ss << "axes.xaxis.set_major_locator(MultipleLocator(0.2))\n";
+            ss << "axes.set_xlim(0.0, 1.0)\n";
+            ss << "axes.set_ylim(0.0, maxY)\n\n";
+
+            if (optionLog)
+            {
+                ss << "axes.set(title = 'Weighted \\uA7FBLIP Histogram', xlabel = '\\uA7FBLIP error', ylabel = 'log(weighted \\uA7FBLIP sum per megapixel)')\n";
+            }
+            else
+            {
+                ss << "axes.set(title = 'Weighted \\uA7FBLIP Histogram', xlabel = '\\uA7FBLIP error', ylabel = 'Weighted \\uA7FBLIP sum per megapixel')\n";
+            }
+
+            if (includeValues)
+            {
+                ss << "if " << includeValues << ":\n";
+                ss << "\taxes.axvline(x = meanValue, color = meanLineColor, linewidth = 1.5)\n";
+                ss << "\taxes.axvline(x = meanValue2, color = meanLineColor2, linewidth = 1.5)\n";
+                ss << "\tplt.text(0.99, 1.0 - 1 * lineHeight, 'Mean (" << firstTestFileName << "): ' + str(f'{meanValue:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes, color = meanLineColor)\n";
+                ss << "\tplt.text(0.99, 1.0 - 2 * lineHeight, 'Mean (" << testFileName << "): ' + str(f'{meanValue2:.4f}'), ha = 'right', fontsize = fontSize, transform = axes.transAxes, color = meanLineColor2)\n";
+            }
+
+
+            ss << "sumWeightedDataFLIP = sum(weightedDataFLIP)\n\n";
+            ss << "sumWeightedDataFLIP2 = sum(weightedDataFLIP2)\n\n";
+
+            ss << "bins = np.arange(101) / 100\n";
+            ss << "plt.hist(bins[:-1], bins = bins, weights = weightedDataFLIP, ec = lineColor, alpha = 0.5, color = fillColorBelow)\n";
+            ss << "plt.hist(bins[:-1], bins = bins, weights = weightedDataFLIP2, ec = lineColor2, alpha = 0.5, color = fillColorAbove)\n\n";
+
+            // Construct final histogram filename.
+            std::string finalFileName;
+            std::string subFileName = fileName;
+            size_t lastIndex = subFileName.find_last_of("/");
+            finalFileName = subFileName.substr(0, lastIndex) + "/" + (optionLog ? "log_" : "") + "overlapping_weighted_histogram.flip." + referenceFileName + ".";
+            subFileName = subFileName.substr(lastIndex + 1);
+            size_t firstIndex;
+            for (int q = 0; q < 3; q++)
+            {
+                firstIndex = subFileName.find_first_of(".");
+                subFileName = subFileName.substr(firstIndex + 1);
+            }
+            finalFileName.append(firstTestFileName).append(".").append(subFileName);
+
+            ss << "plt.savefig(\"" << finalFileName.substr(0, finalFileName.size() - 3) << ".pdf\")";
+
+            ss << std::endl;
+
+            // Save histogram (see save() above).
+            std::ofstream file;
+            std::string pyFileName = finalFileName;
+            std::ofstream pythonHistogramFile;
+            pythonHistogramFile.open(pyFileName);
+            pythonHistogramFile << ss.str();
             pythonHistogramFile.close();
         }
     };

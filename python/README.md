@@ -11,9 +11,9 @@ with
 and
 [Peter Shirley](https://research.nvidia.com/person/peter-shirley).
 
-This [repository](https://github.com/NVlabs/flip) holds implementations of the [LDR-ꟻLIP](https://research.nvidia.com/publication/2020-07_FLIP)
-and [HDR-ꟻLIP](https://research.nvidia.com/publication/2021-05_HDR-FLIP) image error metrics in Python.
-It also holds code for the ꟻLIP tool, presented in [Ray Tracing Gems II](https://www.realtimerendering.com/raytracinggems/rtg2/index.html).
+This [repository](https://github.com/NVlabs/flip) implementats the [LDR-ꟻLIP](https://research.nvidia.com/publication/2020-07_FLIP)
+and [HDR-ꟻLIP](https://research.nvidia.com/publication/2021-05_HDR-FLIP) image error metrics in Python, using the C++ implementation through [pybind11](https://github.com/pybind/pybind11).
+Similarly, it implements the ꟻLIP tool, presented in [Ray Tracing Gems II](https://www.realtimerendering.com/raytracinggems/rtg2/index.html).
 
 # License
 
@@ -29,18 +29,17 @@ For individual contributions to the project, please confer the [Individual Contr
 For business inquiries, please visit our website and submit the form: [NVIDIA Research Licensing](https://www.nvidia.com/en-us/research/inquiries/).
 
 # Python (API and Tool)
-- **Setup** (with Anaconda3):
+- **Setup** (with pip, from root directory):
   ```
-  conda create -n flip python numpy matplotlib
-  conda activate flip
-  conda install -c conda-forge opencv
-  conda install -c conda-forge openexr-python
+  cd python
+  pip install -r requirements.txt .
   ```
-- Remember to activate the `flip` environment through `conda activate flip` before using the tool.
-- Usage: `python flip.py --reference reference.{exr|png} --test test.{exr|png} [--options]`, where the list of options can be seen by `python flip.py -h`.
-- Tested with Conda 4.10.0, Python 3.8.3, NumPy 1.19.0, OpenCV 4.0.1, and OpenEXR b1.3.2.
-- The ꟻLIP tool is provided in `flip.py`, which also contains several tool-specific utility functions.
-  The API is provided in `flip-api.py` and image loading/saving/manipulation functions in `data.py`.
+  After this, you may `import flip` from any Python script.
+- Usage (API): See example in the script `flip/api_example.py`. Note that the script requires `matplotlib`. 
+- Usage (tool): `python flip.py --reference reference.{exr|png} --test test.{exr|png} [--options]`, where the list of options can be seen by `python flip.py -h`.
+- Tested with pip 24.0, Python 3.11.8, pybind11 2.11.1, and C++20.
+- The code that implements ꟻLIP metrics and the ꟻLIP tool is available in [FLIP.h](https://github.com/NVlabs/flip/blob/main/cpp/FLIP.h) and [flip/cpp/tool](https://github.com/NVlabs/flip/blob/main/cpp/tool), respectively.
+  The Python API is provided in `flip/python/flip/main.py`.
   `../tests/test.py` contains simple tests used to test whether code updates alter results.
 - The naming convention used for the ꟻLIP tool's output is as follows (where `ppd` is the assumed number of pixels per degree,
   `tm` is the tone mapper assumed by HDR-ꟻLIP, `cstart` and `cstop` are the shortest and longest exposures, respectively, assumed by HDR-ꟻLIP,
@@ -73,6 +72,7 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
     
     LDR-ꟻLIP: `<name>.png`<br>
     Weighted histogram: `<name>.pdf`<br>
+    Overlapping weighted histogram: N/A<br>
     Text file: `<name>.txt`<br>
 
   *High dynamic range images:*<br>
@@ -86,9 +86,11 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
     Text file: `<name>.txt`<br>
 
 **Example usage:**
-First navigate to the directory containing the `flip.py` script and the rest of the Python files. Then start an Ananconda prompt and try:
+To test the API, please inspect the `flip/api_example.py` script. This shows how the available API commands may be used. Note that the script requires `matplotlib`.
+Please note that not all capabilities of the tool is available through the Python API. For example, the exposure map is not output when running HDR-ꟻLIP. For that, use the tool or the C++ API in [FLIP.h](https://github.com/NVlabs/flip/blob/main/cpp/FLIP.h).
+
+To test the tool, first navigate to the directory containing the `flip.py` script. Then start a shell and try:
   ```
-  conda activate flip
   python flip.py -r ../images/reference.exr -t ../images/test.exr
   ```
 The result should be:
@@ -101,11 +103,11 @@ Invoking HDR-FLIP
         Number of exposures: 14
 
 FLIP between reference image <reference.exr> and test image <test.exr>:
-        Mean: 0.283547
-        Weighted median: 0.339469
-        1st weighted quartile: 0.251148
-        3rd weighted quartile: 0.434763
-        Min: 0.003120
+        Mean: 0.283478
+        Weighted median: 0.339430
+        1st weighted quartile: 0.251123
+        3rd weighted quartile: 0.434673
+        Min: 0.003119
         Max: 0.962022
         Evaluation time: <t> seconds
   ```

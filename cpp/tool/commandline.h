@@ -46,7 +46,7 @@
 // Magnus Oskarsson, Kalle Astrom, and Mark D. Fairchild.
 // Pointer to the paper: https://research.nvidia.com/publication/2020-07_FLIP.
 
-// Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
+// Code by Pontus Ebelin (formerly Andersson), Jim Nilsson, and Tomas Akenine-Moller.
 
 #pragma once
 
@@ -117,6 +117,62 @@ typedef struct
     std::vector<commandline_option> options;
 } commandline_options;
 
+static const commandline_options getAllowedCommandLineOptions(const bool cpptool = true)
+{
+    commandline_options commandLineOptions =
+    {
+        "Compute FLIP between reference.<png|exr> and test.<png|exr>.\n"
+        "Reference and test(s) must have same resolution and format.\n"
+        "If pngs are entered, LDR-FLIP will be evaluated. If exrs are entered, HDR-FLIP will be evaluated.\n"
+        "For HDR-FLIP, the reference is used to automatically calculate start exposure and/or stop exposure and/or number of exposures, if they are not entered.\n",
+        {
+        { "help", "h", 0, false, "", "show this help message and exit" },
+        { "reference", "r", 1, true, "REFERENCE", "Relative or absolute path (including file name and extension) for reference image" },
+        { "test", "t", -1, true, "TEST", "Relative or absolute path(s) (including file name and extension) for test image(s)" },
+        { "pixels-per-degree", "ppd", 1, false, "PIXELS-PER-DEGREE", "Observer's number of pixels per degree of visual angle. Default corresponds to\nviewing the images at 0.7 meters from a 0.7 meter wide 4K display" },
+        { "viewing-conditions", "vc", 3, false, "MONITOR-DISTANCE MONITOR-WIDTH MONITOR-WIDTH-PIXELS", "Distance to monitor (in meters), width of monitor (in meters), width of monitor (in pixels).\nDefault corresponds to viewing the monitor at 0.7 meters from a 0.7 meters wide 4K display" },
+        { "tone-mapper", "tm", 1, false, "ACES | HABLE | REINHARD", "Tone mapper used for HDR-FLIP. Supported tone mappers are ACES, Hable, and Reinhard (default: ACES)" },
+        { "num-exposures", "n", 1, false, "NUM-EXPOSURES", "Number of exposures between (and including) start and stop exposure used to compute HDR-FLIP" },
+        { "start-exposure", "cstart", 1, false, "C-START", "Start exposure used to compute HDR-FLIP" },
+        { "stop-exposure", "cstop", 1, false, "C-STOP", "Stop exposure used to comput HDR-FLIP" },
+        { "verbosity", "v", 1, false, "VERBOSITY", "Level of verbosity (default: 2).\n0: no printed output,\n\t\t1: print mean FLIP error,\n\t\t2: print pooled FLIP errors, PPD, and evaluation time and (for HDR-FLIP) start and stop exposure and number of exposures"},
+        { "basename", "b", 1, false, "BASENAME", "Basename for outfiles, e.g., error and exposure maps. Only compatible with one test image as input" },
+        { "textfile", "txt", 0, false, "", "Save text file with pooled FLIP values (mean, weighted median and weighted 1st and 3rd quartiles as well as minimum and maximum error)" },
+        { "csv", "c", 1, false, "CSV_FILENAME", "Write results to a csv file. Input is the desired file name (including .csv extension).\nResults are appended if the file already exists" },
+        { "histogram", "hist", 0, false, "", "Save weighted histogram of the FLIP error map(s)" },
+        { "y-max", "", 1, true, "", "Set upper limit of weighted histogram's y-axis" },
+        { "log", "lg", 0, false, "", "Use logarithmic scale on y-axis in histogram" },
+        { "exclude-pooled-values", "epv", 0, false, "", "Do not include pooled FLIP values in the weighted histogram" },
+        { "save-ldr-images", "sli", 0, false, "", "Save all exposure compensated and tone mapped LDR images (png) used for HDR-FLIP" },
+        { "save-ldrflip", "slf", 0, false, "", "Save all LDR-FLIP maps used for HDR-FLIP" },
+        { "no-magma", "nm", 0, false, "", "Save FLIP error maps in grayscale instead of magma" },
+        { "no-exposure-map", "nexm", 0, false, "", "Do not save the HDR-FLIP exposure map" },
+        { "no-error-map", "nerm", 0, false, "", "Do not save the FLIP error map" },
+        { "directory", "d", 1, false, "Relative or absolute path to save directory"},
+    } };
+
+    // Add C++ specific options.
+    std::vector<commandline_option> cppSpecific;
+    if (cpptool)
+    {
+        cppSpecific =
+        {
+            { "exit-on-test", "et", 0, false, "", "Do exit(EXIT_FAILURE) if the selected FLIP QUANTITY is greater than THRESHOLD"},
+            { "exit-test-parameters", "etp", 2, false, "QUANTITY = {MEAN (default) | WEIGHTED-MEDIAN | MAX} THRESHOLD (default = 0.05) ", "Test parameters for selected quantity and threshold value (in [0,1]) for exit on test"},
+        };
+    }
+    else
+    {
+        cppSpecific = {};
+    }
+    for (auto opt : cppSpecific)
+    {
+        commandLineOptions.options.push_back(opt);
+    }
+
+
+    return commandLineOptions;
+}
 
 
 class commandline
@@ -132,6 +188,8 @@ private:
     std::string mErrorString;
 
 public:
+    commandline() = default;
+
     commandline(int argc, char* argv[], const commandline_options& allowedOptions = {}) :
         mArgc(argc),
         mppArgv(argv),

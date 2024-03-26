@@ -41,6 +41,7 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
 - The code that implements ꟻLIP metrics and the ꟻLIP tool is available in [FLIP.h](https://github.com/NVlabs/flip/blob/main/cpp/FLIP.h) and [flip/cpp/tool](https://github.com/NVlabs/flip/blob/main/cpp/tool), respectively.
   The Python API is provided in `flip/python/flip/main.py`.
   `../tests/test.py` contains simple tests used to test whether code updates alter results.
+- Weighted histograms are output as Python scripts. Running the script will create a PDF version of the histogram. Notice that those scripts require `numpy` and `matplotlib`, both of which are automatically installed during setup.
 - The naming convention used for the ꟻLIP tool's output is as follows (where `ppd` is the assumed number of pixels per degree,
   `tm` is the tone mapper assumed by HDR-ꟻLIP, `cstart` and `cstop` are the shortest and longest exposures, respectively, assumed by HDR-ꟻLIP,
   with `p` indicating a positive value and `m` indicating a negative value,
@@ -52,8 +53,8 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
   *Low dynamic range images:*<br>
 
     LDR-ꟻLIP: `flip.<reference>.<test>.<ppd>ppd.ldr.png`<br>
-    Weighted histogram: `weighted_histogram.reference>.<test>.<ppd>ppd.ldr.pdf`<br>
-    Overlapping weighted histogram: `overlapping_weighted_histogram.<reference>.<test1>.<test2>.<ppd>ppd.ldr.pdf`<br>
+    Weighted histogram: `weighted_histogram.reference>.<test>.<ppd>ppd.ldr.py`<br>
+    Overlapping weighted histogram: `overlapping_weighted_histogram.<reference>.<test1>.<test2>.<ppd>ppd.ldr.py`<br>
     Text file: `pooled_values.<reference>.<test>.<ppd>ppd.ldr.txt`<br>
 
   *High dynamic range images:*<br>
@@ -62,8 +63,8 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
     Exposure map: `exposure_map.<reference>.<test>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.png`<br>
     Intermediate LDR-ꟻLIP maps: `flip.<reference>.<test>.<ppd>ppd.ldr.<tm>.<nnn>.<exp>.png`<br>
     Intermediate LDR images: `<reference|test>.<tm>.<nnn>.<exp>.png`<br>
-    Weighted histogram: `weighted_histogram.<reference>.<test>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.pdf`<br>
-    Overlapping weighted histogram: `overlapping_weighted_histogram.<reference>.<test1>.<test2>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.pdf`<br>
+    Weighted histogram: `weighted_histogram.<reference>.<test>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.py`<br>
+    Overlapping weighted histogram: `overlapping_weighted_histogram.<reference>.<test1>.<test2>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.py`<br>
     Text file: `pooled_values.<reference>.<test>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.txt`<br>
 
   **With** `--basename <name>` **(note: not applicable if more than one test image is evaluated):**
@@ -71,7 +72,7 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
   *Low dynamic range images:*<br>
     
     LDR-ꟻLIP: `<name>.png`<br>
-    Weighted histogram: `<name>.pdf`<br>
+    Weighted histogram: `<name>.py`<br>
     Overlapping weighted histogram: N/A<br>
     Text file: `<name>.txt`<br>
 
@@ -81,7 +82,7 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
     Exposure map: `<name>.exposure_map.png`<br>
     Intermediate LDR-ꟻLIP maps: `<name>.<nnn>.png`<br>
     Intermediate LDR images: `<name>.reference|test.<nnn>.png`<br>
-    Weighted histogram: `<name>.pdf`<br>
+    Weighted histogram: `<name>.py`<br>
     Overlapping weighted histogram: N/A<br>
     Text file: `<name>.txt`<br>
 

@@ -1,2 +1,2 @@
-matplotlib # Required for api_example.py and the C++ tool's weighted histograms.
-numpy # Required for the C++ tool's weighted histograms.
+matplotlib
+numpy

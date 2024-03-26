@@ -243,18 +243,26 @@ std::tuple<py::array_t<float>, float, py::dict> evaluate(const py::array_t<float
 commandline generateCommandLine(const py::list argvPy)
 {
     size_t argc = argvPy.size();
-    char** argv = new char* [argc]; // TODO: Delete?
+    char** argv = new char* [argc];
 
     int counter = 0;
     for (auto item : argvPy)
     {
         const std::string it = py::reinterpret_steal<py::str>(item);
-        argv[counter] = new char[it.length()]; // TODO: Delete?
+        argv[counter] = new char[it.length()];
         std::strcpy(argv[counter], it.c_str());
         counter++;
     }
 
-    return commandline(int(argc), argv, getAllowedCommandLineOptions(false));
+    commandline cmd = commandline(int(argc), argv, getAllowedCommandLineOptions(false));
+
+    for (int i = 0; i < counter; i++)
+    {
+        delete [] argv[i];
+    }
+    delete [] argv;
+
+    return cmd;
 }
 
 // Run the FLIP tool based on Python command line string.

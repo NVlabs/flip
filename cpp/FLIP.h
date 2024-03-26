@@ -2184,7 +2184,7 @@ namespace FLIP
             this->setState(CudaTensorState::DEVICE_ONLY);
         }
 #endif
-        void computeExposures(const std::string tm, float& startExposure, float& stopExposure)
+        void computeExposures(const std::string& tm, float& startExposure, float& stopExposure)
         {
             int toneMapper = 1;
             if (tm == "reinhard")

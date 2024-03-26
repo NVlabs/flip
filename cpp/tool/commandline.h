@@ -152,7 +152,7 @@ static const commandline_options getAllowedCommandLineOptions(const bool cpptool
     } };
 
     // Add C++ specific options.
-    std::vector<commandline_option> cppSpecific;
+    std::vector<commandline_option> cppSpecific = {};
     if (cpptool)
     {
         cppSpecific =
@@ -160,10 +160,6 @@ static const commandline_options getAllowedCommandLineOptions(const bool cpptool
             { "exit-on-test", "et", 0, false, "", "Do exit(EXIT_FAILURE) if the selected FLIP QUANTITY is greater than THRESHOLD"},
             { "exit-test-parameters", "etp", 2, false, "QUANTITY = {MEAN (default) | WEIGHTED-MEDIAN | MAX} THRESHOLD (default = 0.05) ", "Test parameters for selected quantity and threshold value (in [0,1]) for exit on test"},
         };
-    }
-    else
-    {
-        cppSpecific = {};
     }
     for (auto opt : cppSpecific)
     {

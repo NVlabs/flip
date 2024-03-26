@@ -41,6 +41,11 @@ target_link_libraries(${PROJECT_NAME} FLIP::flip)
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME flip)
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
+find_package(OpenMP)
+if (TARGET OpenMP::OpenMP_CXX)
+  target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
+endif()
+
 ## CUDA version ##
 
 if (FLIP_ENABLE_CUDA)

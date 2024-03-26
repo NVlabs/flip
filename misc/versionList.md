@@ -10,11 +10,11 @@ changed for the different versions of ꟻLIP:
 		- Timings for 1920x1080 images:
 			- Python/LDR: 91 ms
 			- Python/HDR: 1291 ms
-	- NOTE: The Python version can currently _not_ run the CUDA version of ꟻLIP (see issue nnnnnn).
-	- NOTE: The Python tool now uses the C++ tool. Compared to before, you will need to change `_` to `-` when calling flip.py (e.g., `python flip.py -r reference.exr -t test.exr --start_exposure 3` is now `python flip.py -r reference.exr -t test.exr --start-exposure 3`; see `python flip.py -h`).
-- ꟻLIP can now be installed using `pip` (run `pip install .` from the `python` folder).
+	- **NOTE**: The Python version can currently _not_ run the CUDA version of ꟻLIP (see issue nnnnnn).
+	- **NOTE**: The Python tool now uses the C++ tool. Compared to before, you will need to change `_` to `-` when calling flip.py (e.g., `python flip.py -r reference.exr -t test.exr --start_exposure 3` is now `python flip.py -r reference.exr -t test.exr --start-exposure 3`; see `python flip.py -h`).
+- The Python version of ꟻLIP can now be installed using `pip` (run `pip install -r requirements.txt .` from the `python` folder).
 - The code for the C++/CUDA tool is now in `FLIPToolHelpers.h`.
-- NOTE: The fourth `evaluate()` function in `FLIP.h` now takes two additional arguments: `computeMeanError` and `meanError`. Furthermore, its list of arguments has been partly reordered.
+- **NOTE**: The fourth `evaluate()` function in `FLIP.h` now takes two additional arguments: `computeMeanError` and `meanError`. Furthermore, its list of arguments has been partly reordered.
 - Added check for OpenMP for CMake build.
 - Overlapped histograms are now available in the C++ tool code. These are created when one reference and _two_ test images are input, together with the `--histogram` flag.
 - Text file output are now available in the C++ tool code. These are created when the `--textfile` flag is input.

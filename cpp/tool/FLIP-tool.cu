@@ -46,7 +46,7 @@
  // Magnus Oskarsson, Kalle Astrom, and Mark D. Fairchild.
  // Pointer to the paper: https://research.nvidia.com/publication/2020-07_FLIP.
 
- // Code by Pontus Andersson, Jim Nilsson, and Tomas Akenine-Moller.
+ // Code by Pontus Ebelin (formerly Andersson), Jim Nilsson, and Tomas Akenine-Moller.
 
 #define FLIP_ENABLE_CUDA    // Let FLIP.h know that we want the CUDA implementation.
 #include "FLIP-tool.cpp"    // This was done so that all code could be shared between the CPU and CUDA versions of the tool.

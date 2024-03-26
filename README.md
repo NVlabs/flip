@@ -42,18 +42,18 @@ For individual contributions to the project, please confer the [Individual Contr
 For business inquiries, please visit our website and submit the form: [NVIDIA Research Licensing](https://www.nvidia.com/en-us/research/inquiries/).
 
 # Python (API and Tool)
-**Setup** (with Anaconda3):
+**Setup** (with pip):
 ```
-conda create -n flip python numpy matplotlib
-conda activate flip
-conda install -c conda-forge opencv
-conda install -c conda-forge openexr-python
+cd python
+pip install -r requirements.txt .
 ```
 
-**Usage:**
+**Usage:**<br>
 
-*Remember to activate the* `flip` *environment through* `conda activate flip` *before using the tool.*
+API:<br>
+See the example script `python/api_example.py`. Note that the script requires `matplotlib`.
 
+Tool:
 ```
 python flip.py --reference reference.{exr|png} --test test.{exr|png} [--options]
 ```
@@ -67,20 +67,25 @@ The `FLIP.sln` solution contains one CUDA backend project and one pure C++ backe
 
 Compiling the CUDA project requires a CUDA compatible GPU. Instruction on how to install CUDA can be found [here](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html).
 
-Alternatively, a CMake build can be done by creating a build directory and invoking CMake on the source dir:
+Alternatively, a CMake build can be done by creating a build directory and invoking CMake on the source dir (add `--config Release` to build release configuration on Windows):
 
 ```
 mkdir build
 cd build
 cmake ..
-cmake --build .
+cmake --build . [--config Release]
 ```
 
 CUDA support is enabled via the `FLIP_ENABLE_CUDA`, which can be passed to CMake on the command line with
 `-DFLIP_ENABLE_CUDA=ON` or set interactively with `ccmake` or `cmake-gui`.
 `FLIP_LIBRARY` option allows to output a library rather than an executable.
 
-**Usage:**
+**Usage:**<br>
+
+API:<br>
+See the [README](cpp/README.md).
+
+Tool:
 ```
 flip[-cuda].exe --reference reference.{exr|png} --test test.{exr|png} [options]
 ```
@@ -118,4 +123,4 @@ Should your work use the ꟻLIP tool in a more general fashion, please cite the 
 
 # Acknowledgements
 We appreciate the following peoples' contributions to this repository:
-Jonathan Granskog, Jacob Munkberg, Jon Hasselgren, Jefferson Amstutz, Alan Wolfe, Killian Herveau, Vinh Truong, Philippe Dagobert, Hannes Hergeth, and Matt Pharr.
+Jonathan Granskog, Jacob Munkberg, Jon Hasselgren, Jefferson Amstutz, Alan Wolfe, Killian Herveau, Vinh Truong, Philippe Dagobert, Hannes Hergeth, Matt Pharr, and Tizian Zeltner.

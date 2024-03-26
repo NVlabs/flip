@@ -20,7 +20,7 @@ jobs:
 
     - name: Install CUDA
       if: ${{ matrix.os == 'ubuntu-latest' }}
-      run: sudo apt install -y nvidia-cuda-toolkit g++-10
+      run: sudo apt update && sudo apt install -y nvidia-cuda-toolkit g++-10
 
     - name: Configure CMake
       run: >

@@ -26,7 +26,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# SPDX-FileCopyrightText: Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES
+# SPDX-FileCopyrightText: Copyright (c) 2020-2024 NVIDIA CORPORATION & AFFILIATES
 # SPDX-License-Identifier: BSD-3-Clause
 #################################################################################
 
@@ -40,6 +40,11 @@ add_executable(${PROJECT_NAME} FLIP-tool.cpp)
 target_link_libraries(${PROJECT_NAME} FLIP::flip)
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME flip)
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+find_package(OpenMP)
+if (TARGET OpenMP::OpenMP_CXX)
+  target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
+endif()
 
 ## CUDA version ##
 

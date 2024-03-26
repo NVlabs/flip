@@ -48,8 +48,8 @@ cd python
 pip install -r requirements.txt .
 ```
 
-**Usage:**<br>
-API:
+**Usage:**<br><br>
+API:<br>
 See the example script `python/api_example.py`. Note that the script requires `matplotlib`.
 
 Tool:
@@ -79,8 +79,8 @@ CUDA support is enabled via the `FLIP_ENABLE_CUDA`, which can be passed to CMake
 `-DFLIP_ENABLE_CUDA=ON` or set interactively with `ccmake` or `cmake-gui`.
 `FLIP_LIBRARY` option allows to output a library rather than an executable.
 
-**Usage:**<br>
-API:
+**Usage:**<br><br>
+API:<br>
 See the [README](cpp/README.md).
 
 Tool:

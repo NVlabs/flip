@@ -76,7 +76,7 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
 
     LDR-ꟻLIP: `flip.<reference>.<test>.<ppd>ppd.ldr.png`<br>
     Weighted histogram: `weighted_histogram.reference>.<test>.<ppd>ppd.ldr.py`<br>
-    Overlapping weighted histogram: `overlapping_weighted_histogram.<reference>.<test1>.<test2>.<ppd>ppd.ldr.pdf`<br>
+    Overlapping weighted histogram: `overlapping_weighted_histogram.<reference>.<test1>.<test2>.<ppd>ppd.ldr.py`<br>
     Text file: `pooled_values.<reference>.<test>.<ppd>ppd.ldr.txt`<br>
 
   *High dynamic range images:*<br>
@@ -86,7 +86,7 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
     Intermediate LDR-ꟻLIP maps: `flip.<reference>.<test>.<ppd>ppd.ldr.<tm>.<nnn>.<exp>.png`<br>
     Intermediate LDR images: `<reference|test>.<tm>.<nnn>.<exp>.png`<br>
     Weighted histogram: `weighted_histogram.<reference>.<test>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.py`<br>
-    Overlapping weighted histogram: `overlapping_weighted_histogram.<reference>.<test1>.<test2>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.pdf`<br>
+    Overlapping weighted histogram: `overlapping_weighted_histogram.<reference>.<test1>.<test2>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.py`<br>
     Text file: `pooled_values.<reference>.<test>.<ppd>ppd.hdr.<tm>.<cstart>_to_<cstop>.<N>.txt`<br>
 
   **With** `--basename <name>` **(note: not applicable if more than one test image is evaluated):**

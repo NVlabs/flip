@@ -166,7 +166,6 @@ static const commandline_options getAllowedCommandLineOptions(const bool cpptool
         commandLineOptions.options.push_back(opt);
     }
 
-
     return commandLineOptions;
 }
 
@@ -174,8 +173,6 @@ static const commandline_options getAllowedCommandLineOptions(const bool cpptool
 class commandline
 {
 private:
-    int mArgc;
-    char** mppArgv;
     std::string mCommand;
     commandline_options mAllowedOptions;
     std::map<std::string, std::vector<std::string>> mOptions;
@@ -187,8 +184,6 @@ public:
     commandline() = default;
 
     commandline(int argc, char* argv[], const commandline_options& allowedOptions = {}) :
-        mArgc(argc),
-        mppArgv(argv),
         mAllowedOptions(allowedOptions)
     {
         clear();

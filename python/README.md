@@ -11,7 +11,7 @@ with
 and
 [Peter Shirley](https://research.nvidia.com/person/peter-shirley).
 
-This [repository](https://github.com/NVlabs/flip) implementats the [LDR-ꟻLIP](https://research.nvidia.com/publication/2020-07_FLIP)
+This [repository](https://github.com/NVlabs/flip) implements the [LDR-ꟻLIP](https://research.nvidia.com/publication/2020-07_FLIP)
 and [HDR-ꟻLIP](https://research.nvidia.com/publication/2021-05_HDR-FLIP) image error metrics in Python, using the C++ implementation through [pybind11](https://github.com/pybind/pybind11).
 Similarly, it implements the ꟻLIP tool, presented in [Ray Tracing Gems II](https://www.realtimerendering.com/raytracinggems/rtg2/index.html).
 

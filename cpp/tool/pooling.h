@@ -391,7 +391,7 @@ namespace FLIPPooling
             }
         }
 
-        void save(const std::string& fileName, size_t imgWidth, size_t imgHeight, const bool optionLog, const std::string referenceFileName, const std::string testFileName, const bool includeValues, const float yMax) // TODO: Remove ref and test file name.
+        void save(const std::string& fileName, size_t imgWidth, size_t imgHeight, const bool optionLog, const bool includeValues, const float yMax)
         {
             std::ofstream file;
             std::string pyFileName = fileName;

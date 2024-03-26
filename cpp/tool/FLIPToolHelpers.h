@@ -332,7 +332,7 @@ namespace FLIPTool
             bool optionLog = commandLine.optionSet("log");
             bool optionExcludeValues = commandLine.optionSet("exclude-pooled-values");
             float yMax = (commandLine.optionSet("y-max") ? std::stof(commandLine.getOptionValue("y-max")) : 0.0f);
-            pooledValues.save(destinationDirectory + "/" + histogramFileName.toString(), errorMapFLIP.getWidth(), errorMapFLIP.getHeight(), optionLog, referenceFileName.toString(), testFileName.toString(), !optionExcludeValues, yMax);
+            pooledValues.save(destinationDirectory + "/" + histogramFileName.toString(), errorMapFLIP.getWidth(), errorMapFLIP.getHeight(), optionLog, !optionExcludeValues, yMax);
         }
 
         // Collect pooled values and elapsed time.

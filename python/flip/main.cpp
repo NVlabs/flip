@@ -163,15 +163,14 @@ void updateInputParameters(const FLIP::Parameters& parameters, py::dict& inputPa
 *
 * @param[in] referenceInput Reference input image. For LDR, the content should be in [0,1]. The image is expected to have 3 floats per pixel.
 * @param[in] testInput Test input image. For LDR, the content should be in [0,1].
-* @param[in,out] parameters Contains parameters (e.g., PPD, exposure settings,etc). If the exposures have not been set by the user, then those will be computed (and returned).
 * @param[in] useHDR Set to true if the input images are to be considered containing HDR content, i.e., not necessarily in [0,1].
-* @param[in] applyMagmaMapToOutput A boolean indicating whether the output should have the MagmaMap applied to it before the image is returned.
-* @param[out] errorMapFLIPOutput The computed FLIP error image is returned in this variable. If applyMagmaMapToOutput is true, the function will allocate
-*             three channels (and store the magma-mapped FLIP images in sRGB), and
-*             if it is false, only one channel will be allocated (and the FLIP error is returned in that grayscale image).
-*             Note that the user is responsible for deallocating the errorMapFLIPOutput image.
+* @param[in] inputsRGB Set to true if the input images are given in the sRGB color space.
+* @param[in] applyMagma A boolean indicating whether the output should have the Magma map applied to it before the image is returned.
+* @param[in] computeMeanFLIPError A boolean indicating whether the mean FLIP error should be computed. If false, the returned mean error is -1.
+* @param[in,out] inputParameters Contains parameters (e.g., PPD, exposure settings, etc). If the exposures have not been set by the user, then those will be computed (and returned).
+* @return tuple containing FLIP error map (in Magma if applyMagma is true), the mean FLIP error (computed if computeMeanFLIPError is true, else -1), and dictionary of parameters.
 */
-std::tuple<py::array_t<float>, float, py::dict> evaluate(const py::array_t<float> referenceInput, const py::array_t<float> testInput, const bool inputHDR, const bool inputsRGB = true, const bool returnMeanError = true, const bool applyMagma = true, py::dict inputParameters = {})
+std::tuple<py::array_t<float>, float, py::dict> evaluate(const py::array_t<float> referenceInput, const py::array_t<float> testInput, const bool useHDR, const bool inputsRGB = true, const bool applyMagma = true, const bool computeMeanFLIPError = true, py::dict inputParameters = {})
 {
     py::buffer_info r_buf = referenceInput.request(), t_buf = testInput.request();
     
@@ -216,8 +215,8 @@ std::tuple<py::array_t<float>, float, py::dict> evaluate(const py::array_t<float
 
     // Run FLIP.
     FLIP::Parameters parameters = setParameters(inputParameters);
-    float meanError = 0;
-    FLIP::evaluate(ptr_r, ptr_t, nCols, nRows, parameters, inputHDR, returnMeanError, applyMagma, &flip, meanError);
+    float meanError = -1;
+    FLIP::evaluate(ptr_r, ptr_t, nCols, nRows, useHDR, parameters, applyMagma, computeMeanFLIPError, meanError, &flip);
 
     // Move output array info to correct buffer.
 #pragma omp parallel for
@@ -266,10 +265,10 @@ commandline generateCommandLine(const py::list argvPy)
 }
 
 // Run the FLIP tool based on Python command line string.
-int main(const py::list argvPy)
+int execute(const py::list argvPy)
 {
     commandline commandLine = generateCommandLine(argvPy);
-    FLIPTool::main(commandLine);
+    FLIPTool::execute(commandLine);
 
     return 0;
 }
@@ -280,5 +279,5 @@ PYBIND11_MODULE(pbflip, handle)
     handle.doc() = "Load images (load), evaluate FLIP (evaluate), or run the full FLIP tool (run_tool).";
     handle.def("evaluate", &evaluate);
     handle.def("load", &load);
-    handle.def("run_tool", &main);
+    handle.def("execute", &execute);
 }

@@ -35,22 +35,22 @@ import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
     # Print docs for flip.evaluate.
-    print("\n############################### DOCS ###############################")
+    print("\n############################### DOCS ###############################\n")
     help(flip.evaluate)
 
     # Compute FLIP for reference and test image.
-    ref = "../images/reference.exr" # TODO: Use correct paths.
+    ref = "../images/reference.exr"
     test = "../images/test.exr"
     flipErrorMap, meanFLIPError, parameters = flip.evaluate(ref, test, "HDR")
 
     # NOTE: An alternative to the above is to run flip.evaluate() with numpy arrays as input.
     #       Images may be loaded using flip.load(imagePath).
-    # ref = flip.load("reference.exr") # TODO: Use correct paths.
-    # test = flip.load("test.exr")
+    # ref = flip.load("../images/reference.exr")
+    # test = flip.load("../images/test.exr")
     # flipErrorMap, meanFLIPError, parameters = flip.evaluate(ref, test, "HDR")
 
-    print("\n############################### FLIP OUTPUT ###############################")
-    print("Mean FLIP error: ", round(meanFLIPError, 6))
+    print("\n############################### FLIP OUTPUT ###############################\n")
+    print("Mean FLIP error: ", round(meanFLIPError, 6), "\n")
 
     print("The following parameters were used:")
     for key in parameters:

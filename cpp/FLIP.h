@@ -2433,17 +2433,17 @@ namespace FLIP
      * @param[in] imageHeight Height of the reference and test images.
      * @param[in,out] parameters Contains parameters (e.g., PPD, exposure settings,etc). If the exposures have not been set by the user, then those will be computed (and returned).
      * @param[in] useHDR Set to true if the input images are to be considered containing HDR content, i.e., not necessarily in [0,1].
-     * @param[in] computeMeanFLIPError Set to true if the mean FLIP error should be computed. If false, mean error is set to 0.
      * @param[in] applyMagmaMapToOutput A boolean indicating whether the output should have the MagmaMap applied to it before the image is returned.
+     * @param[in] computeMeanFLIPError Set to true if the mean FLIP error should be computed. If false, mean error is set to -1.
+     * @param[out] meanFLIPError Mean FLIP error in the test (testThreeChannelImage) compared to the reference (referenceThreeChannelImage).
      * @param[out] errorMapFLIPOutput The computed FLIP error image is returned in this variable. If applyMagmaMapToOutput is true, the function will allocate
      *             three channels (and store the magma-mapped FLIP images in sRGB), and
      *             if it is false, only one channel will be allocated (and the FLIP error is returned in that grayscale image).
      *             Note that the user is responsible for deallocating the errorMapFLIPOutput image.
-     * @param[out] meanFLIPError Mean FLIP error in the test (testThreeChannelImage) compared to the reference (referenceThreeChannelImage).
      */
     static void evaluate(const float* referenceThreeChannelImage, const float* testThreeChannelImage,
-        const int imageWidth, const int imageHeight, FLIP::Parameters& parameters, const bool useHDR,
-        const bool computeMeanFLIPError, const bool applyMagmaMapToOutput, float** errorMapFLIPOutput, float& meanFLIPError)
+        const int imageWidth, const int imageHeight, const bool useHDR, FLIP::Parameters& parameters,
+        const bool applyMagmaMapToOutput, const bool computeMeanFLIPError, float& meanFLIPError, float** errorMapFLIPOutput)
     {
         FLIP::image<FLIP::color3> referenceImage;
         FLIP::image<FLIP::color3> testImage;
@@ -2457,20 +2457,19 @@ namespace FLIP
         errorMapFLIPOutputImage.synchronizeHost();
 #endif
 
-        // Compute mean FLIP error, if desired.
-        if (computeMeanFLIPError)
+    // Compute mean FLIP error, if desired.
+    if (computeMeanFLIPError)
+    {
+        FLIPPooling::pooling<float> pooledValues;
+        for (int y = 0; y < errorMapFLIPOutputImage.getHeight(); y++)
         {
-            FLIPPooling::pooling<float> pooledValues;
-// #pragma omp parallel for // TODO: Use pragma here? Does it work for CUDA?
-            for (int y = 0; y < errorMapFLIPOutputImage.getHeight(); y++)
+            for (int x = 0; x < errorMapFLIPOutputImage.getWidth(); x++)
             {
-                for (int x = 0; x < errorMapFLIPOutputImage.getWidth(); x++)
-                {
-                    pooledValues.update(x, y, errorMapFLIPOutputImage.get(x, y));
-                }
+                pooledValues.update(x, y, errorMapFLIPOutputImage.get(x, y));
             }
-            meanFLIPError = pooledValues.getMean();
         }
+        meanFLIPError = pooledValues.getMean();
+    }
 
         if (applyMagmaMapToOutput)
         {

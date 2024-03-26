@@ -20,7 +20,7 @@ can be found [here](misc/separatedConvolutions.pdf).
 
 With v1.3, we have switched to a single header [FLIP.h](FLIP.h) for easier integration into other projects.
 
-Since v1.4, the code is contained in [FLIPToolHelpers.h](FLIPToolHelpers.h), but is still run through [FLIP-tool.cpp](FLIP-tool.cpp) and [FLIP-tool.cu](FLIP-tool.cu), respectively.
+Since v1.4, the majority of the code for the tool is contained in [FLIPToolHelpers.h](FLIPToolHelpers.h), but the tool is still run through [FLIP-tool.cpp](FLIP-tool.cpp) and [FLIP-tool.cu](FLIP-tool.cu), respectively.
 
 
 # License

@@ -464,7 +464,7 @@ namespace FLIPTool
         }
     }
 
-    int main(commandline commandLine)
+    int execute(commandline commandLine)
     {
         std::string FLIPString = "FLIP";
         int MajorVersion = 1;

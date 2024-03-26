@@ -33,7 +33,7 @@
 import pbflip
 import sys, os
 
-def evaluate(reference, test, dynamicRangeString, inputsRGB=True, computeMeanError=True, applyMagma=True, parameters={}):
+def evaluate(reference, test, dynamicRangeString, inputsRGB=True, applyMagma=True, computeMeanError=True, parameters={}):
     """
     Compute the FLIP error map between two images.
 
@@ -43,8 +43,8 @@ def evaluate(reference, test, dynamicRangeString, inputsRGB=True, computeMeanErr
                  numpy array containing test image (with HxWxC layout and nonnegative values in the case of HDR and values in [0,1] in the case of LDR)
     :param dynamicRangeString:  string describing the assumed dynamic range of the reference and test image, valid arguments are \"LDR\" (low dynamic range) and \"HDR\" (high dynamic range)
     :param inputsRGB: (optional) bool describing if input images are in sRGB. LDR images are assumed to be sRGB while HDR images are assumed to be in linear sRGB
-    :param computeMeanError: (optional) bool saying if mean FLIP error should be computed, default is True
-    :param stop_exposure: (optional) bool saying if the magma color map should be applied to the error map, default is True
+    :param applyMagma: (optional) bool saying if the magma color map should be applied to the error map, default is True
+    :param computeMeanError: (optional) bool saying if mean FLIP error should be computed, default is True. If False, -1 is returned.
     :param parameters: (optional)   dictionary containing non-default settings for the FLIP evaluation:
                                     \"ppd\": float describing assumed pixels per degree of visual angle (default is 67 PPD). Should not be included in the dictionary if \"vc\" is included, and vice versa
                                     \"vc\": list of three floats. First float is the distance to display (meters), second is display width (pixels), and third is display width (meters). Should not be included if \"ppd\" is included, and vice versa
@@ -52,7 +52,7 @@ def evaluate(reference, test, dynamicRangeString, inputsRGB=True, computeMeanErr
                                     \"startExposure\": float setting the stop exposre (c_stop). Its value is computed by FLIP if not entered. stopExposure must be greater than or equal to startExposure
                                     \"numExposures\": int setting the number of exposure steps. Its value is computed by FLIP if not entered
                                     \"tonemapper\": string setting the assumed tone mapper. Allowed options are \"ACES\", \"Hable\", and \"Reinhard\"
-    :return: tuple containing 1: the FLIP error map, 2: the mean FLIP error (optionally computed, otherwise 0), 3: the parameter dictionary used to compute the results
+    :return: tuple containing 1: the FLIP error map, 2: the mean FLIP error (computed if computeMeanError is True, else -1), 3: the parameter dictionary used to compute the results
     """
     # Set correct bools based on if HDR- or LDR-FLIP should be used.
     if dynamicRangeString.lower() == "hdr":
@@ -74,7 +74,7 @@ def evaluate(reference, test, dynamicRangeString, inputsRGB=True, computeMeanErr
         if parameters["vc"][0] <= 0 or parameters["vc"][1] <= 0 or parameters["vc"][2] <= 0:
             print("Viewing condition options must be positive.\nExiting.")
             sys.exit(1)
-    if "ppd" in parameters:
+    elif "ppd" in parameters:
         if parameters["ppd"] <= 0:
             print("The number of pixels per degree must be positive.\nExiting.")
             sys.exit(1)
@@ -99,13 +99,13 @@ def evaluate(reference, test, dynamicRangeString, inputsRGB=True, computeMeanErr
     # Evaluate FLIP. Return error map.
     return pbflip.evaluate(reference, test, useHDR, inputsRGB, computeMeanError, applyMagma, parameters)
 
-def run_tool(cmdline):
+def execute(cmdline):
     """
     Run the FLIP tool, based on the C++ tool code.
 
     :param cmdline: string containing the command line for the FLIP tool (run python flip.py to see all available input)
     """
-    pbflip.run_tool(cmdline)
+    pbflip.execute(cmdline)
 
 def load(imgpath):
     """

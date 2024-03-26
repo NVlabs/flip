@@ -55,5 +55,5 @@
 int main(int argc, char** argv)
 {
     commandline commandLine = commandline(argc, argv, getAllowedCommandLineOptions());
-    FLIPTool::main(commandLine);
+    FLIPTool::execute(commandLine);
 }

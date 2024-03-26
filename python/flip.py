@@ -34,6 +34,6 @@ import flip
 import sys
 
 if __name__ == '__main__':
-    flip.run_tool(sys.argv)
+    flip.execute(sys.argv)
 
 

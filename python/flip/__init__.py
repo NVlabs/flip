@@ -30,4 +30,4 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #################################################################################
 
-from .main import evaluate, run_tool, load
+from .main import evaluate, execute, load

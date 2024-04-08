@@ -10,7 +10,7 @@ changed for the different versions of ꟻLIP:
 		- Timings for 1920x1080 images:
 			- Python/LDR: 81 ms
 			- Python/HDR: 1370 ms
-	- **NOTE**: The Python version can currently _not_ run the CUDA version of ꟻLIP (see issue nnnnnn).
+	- **NOTE**: The Python version can currently _not_ run the CUDA version of ꟻLIP (see issue [#22](https://github.com/NVlabs/flip/issues/22)).
 	- **NOTE**: The Python tool now uses the C++ tool. Compared to before, you will need to change `_` to `-` when calling flip.py (e.g., `python flip.py -r reference.exr -t test.exr --start_exposure 3` is now `python flip.py -r reference.exr -t test.exr --start-exposure 3`; see `python flip.py -h`).
 - The Python version of ꟻLIP can now be installed using `pip` (run `pip install -r requirements.txt .` from the `python` folder).
 - The code for the C++/CUDA tool is now in `FLIPToolHelpers.h`.

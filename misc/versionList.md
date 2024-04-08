@@ -6,10 +6,10 @@ changed for the different versions of ꟻLIP:
 # Version 1.4 (commit nnnnnnn)
 - Changed the Python version of ꟻLIP so that it leverages the C++ code through [pybind11](https://github.com/pybind/pybind11).
 	- Results (only evaluation, not including file load/save, etc):
-		- 16-26x faster for LDR/HDR CPU (depends on CPU setup).
+		- 19-34x faster for LDR/HDR CPU (measured on an AMD Ryzen Threadripper 3970X 32-Core Processor, 3693 MHz, with 32 Cores and 64 Logical Processors).
 		- Timings for 1920x1080 images:
-			- Python/LDR: 91 ms
-			- Python/HDR: 1291 ms
+			- Python/LDR: 81 ms
+			- Python/HDR: 1370 ms
 	- **NOTE**: The Python version can currently _not_ run the CUDA version of ꟻLIP (see issue nnnnnn).
 	- **NOTE**: The Python tool now uses the C++ tool. Compared to before, you will need to change `_` to `-` when calling flip.py (e.g., `python flip.py -r reference.exr -t test.exr --start_exposure 3` is now `python flip.py -r reference.exr -t test.exr --start-exposure 3`; see `python flip.py -h`).
 - The Python version of ꟻLIP can now be installed using `pip` (run `pip install -r requirements.txt .` from the `python` folder).
@@ -35,8 +35,8 @@ changed for the different versions of ꟻLIP:
     - Merges several functions/kernels into fewer.
     - Uses OpenMP for the CPU.
     - Results (not including file load/save):
-        - 111-124x faster for LDR/HDR CPU (depends on CPU setup, though).
-        - 2.4-2.8x faster LDR/HDR CUDA (depends on CPU/GPU setup)
+        - 111-124x faster for LDR/HDR CPU (measured on an AMD Ryzen Threadripper 3970X 32-Core Processor, 3693 MHz, with 32 Cores and 64 Logical Processors).
+        - 2.4-2.8x faster LDR/HDR CUDA (measured on an AMD Ryzen Threadripper 3970X 32-Core Processor, 3693 MHz, with 32 Cores and 64 Logical Processors, together with an NVIDIA RTX 3090).
 		- Timings for 1920x1080 images:
 			- CPP/LDR: 63 ms
 			- CPP/HDR: 1050 ms

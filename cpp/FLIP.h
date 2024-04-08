@@ -2369,7 +2369,6 @@ namespace FLIP
             FLIP::image<FLIP::color3> rImage(referenceImage.getWidth(), referenceImage.getHeight());
             FLIP::image<FLIP::color3> tImage(referenceImage.getWidth(), referenceImage.getHeight());
             FLIP::image<float> tmpErrorMap(referenceImage.getWidth(), referenceImage.getHeight(), 0.0f);
-            FLIP::image<float> prevTmpErrorMap(referenceImage.getWidth(), referenceImage.getHeight());
 
             float exposureStepSize = (parameters.stopExposure - parameters.startExposure) / (parameters.numExposures - 1);
             for (int i = 0; i < parameters.numExposures; i++)

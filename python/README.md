@@ -1,4 +1,4 @@
-# ꟻLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.3)
+# ꟻLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.4)
 By
 [Pontus Ebelin](https://research.nvidia.com/person/pontus-ebelin),
 Jim Nilsson,
@@ -106,9 +106,9 @@ Invoking HDR-FLIP
 FLIP between reference image <reference.exr> and test image <test.exr>:
         Mean: 0.283478
         Weighted median: 0.339430
-        1st weighted quartile: 0.251123
+        1st weighted quartile: 0.251122
         3rd weighted quartile: 0.434673
-        Min: 0.003119
+        Min: 0.003123
         Max: 0.962022
         Evaluation time: <t> seconds
   ```

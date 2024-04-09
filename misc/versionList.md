@@ -5,16 +5,22 @@ changed for the different versions of ꟻLIP:
 
 # Version 1.4 (commit nnnnnnn)
 - Changed the Python version of ꟻLIP so that it leverages the C++ code through [pybind11](https://github.com/pybind/pybind11).
-	- Results (only evaluation, not including file load/save, etc):
-		- 19-34x faster for LDR/HDR CPU (measured on an AMD Ryzen Threadripper 3970X 32-Core Processor, 3693 MHz, with 32 Cores and 64 Logical Processors).
+	- Results (only evaluation, not including file load/save, etc; measured on an AMD Ryzen Threadripper 3970X 32-Core Processor, 3693 MHz, with 32 Cores and 64 Logical Processors):
+		- 20-47x faster for LDR/HDR CPU.
 		- Timings for 1920x1080 images:
-			- Python/LDR: 81 ms
-			- Python/HDR: 1370 ms
+			- Python/LDR: 77 ms
+			- Python/HDR: 1007 ms
 	- **NOTE**: The Python version can currently _not_ run the CUDA version of ꟻLIP (see issue [#22](https://github.com/NVlabs/flip/issues/22)).
 	- **NOTE**: The Python tool now uses the C++ tool. Compared to before, you will need to change `_` to `-` when calling flip.py (e.g., `python flip.py -r reference.exr -t test.exr --start_exposure 3` is now `python flip.py -r reference.exr -t test.exr --start-exposure 3`; see `python flip.py -h`).
 - The Python version of ꟻLIP can now be installed using `pip` (run `pip install -r requirements.txt .` from the `python` folder).
 - The code for the C++/CUDA tool is now in `FLIPToolHelpers.h`.
 - **NOTE**: The fourth `evaluate()` function in `FLIP.h` now takes two additional arguments: `computeMeanError` and `meanError`. Furthermore, its list of arguments has been partly reordered.
+- **NOTE**: The median computation (used for automatic start and stop expsoure computations in HDR-ꟻLIP) in the C++/CUDA code has been changed, sometimes causing a minor change in results but always resulting in a significant speedup. The tests have been updated following this change.
+  - Timings for 1920x1080 images (only evaluation, not including file load/save, etc, *but* measured with another GPU and including more code than the numbers presented in the v1.2 update, so the numbers are not directly comparable; measured on an AMD Ryzen Threadripper 3970X 32-Core Processor, 3693 MHz, with 32 Cores and 64 Logical Processors and an NVIDIA RTX 4090 GPU):
+    - CPP/LDR: 86 ms
+    - CPP/HDR: 1179 ms
+    - CUDA/LDR: 8 ms
+    - CUDA/HDR: 131 ms
 - Added check for OpenMP for CMake build.
 - Overlapped histograms are now available in the C++ tool code. These are created when one reference and _two_ test images are input, together with the `--histogram` flag.
 - Text file output are now available in the C++ tool code. These are created when the `--textfile` flag is input.

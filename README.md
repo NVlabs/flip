@@ -1,8 +1,6 @@
 ![Teaser image](images/teaser.png "Teaser image")
 
-# ꟻLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.3)
-
-**NOTE**: we are working on a new version of FLIP, namely v1.4, but we screwed up a bit, so please use this commit `d3f25e6` (v1.3 with some fixes) until the title on this page says (v1.4).
+# ꟻLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.4)
 
 By
 [Pontus Ebelin](https://research.nvidia.com/person/pontus-ebelin),

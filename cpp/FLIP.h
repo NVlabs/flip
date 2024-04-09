@@ -2224,9 +2224,10 @@ namespace FLIP
                     Ymax = std::max(luminance, Ymax);
                 }
             }
-            std::sort(luminances.begin(), luminances.end());
-            size_t medianLocation = luminances.size() / 2 - 1;
-            float Ymedian = (luminances[medianLocation] + luminances[medianLocation + 1]) * 0.5f;
+
+            size_t medianLocation = luminances.size() / 2;
+            std::nth_element(luminances.begin(), luminances.begin() + medianLocation, luminances.end());
+            float Ymedian = luminances[medianLocation];
 
             startExposure = log2(xMax / Ymax);
             stopExposure = log2(xMax / Ymedian);

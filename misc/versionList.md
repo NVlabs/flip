@@ -3,7 +3,7 @@
 In addition to various minor changes, the following was
 changed for the different versions of ꟻLIP:
 
-# Version 1.4 (commit nnnnnnn)
+# Version 1.4 (commits 6265f80 to 0349494)
 - Changed the Python version of ꟻLIP so that it leverages the C++ code through [pybind11](https://github.com/pybind/pybind11).
 	- Results (only evaluation, not including file load/save, etc; measured on an AMD Ryzen Threadripper 3970X 32-Core Processor, 3693 MHz, with 32 Cores and 64 Logical Processors):
 		- 20-47x faster for LDR/HDR CPU.

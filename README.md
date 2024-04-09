@@ -4,10 +4,10 @@
 
 By
 [Pontus Ebelin](https://research.nvidia.com/person/pontus-ebelin),
-Jim Nilsson,
 and
 [Tomas Akenine-Möller](https://research.nvidia.com/person/tomas-akenine-m%C3%B6ller),
 with
+Jim Nilsson,
 [Magnus Oskarsson](https://www1.maths.lth.se/matematiklth/personal/magnuso/),
 [Kalle Åström](https://www.maths.lu.se/staff/kalleastrom/),
 [Mark D. Fairchild](https://www.rit.edu/directory/mdfpph-mark-fairchild),

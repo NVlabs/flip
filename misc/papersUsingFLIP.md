@@ -220,7 +220,7 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Jaroslav Nejedly, ["Neural representations for differentiable volume rendering"](https://dspace.cuni.cz/bitstream/handle/20.500.11956/188516/120469729.pdf?sequence=1), Master's thesis, Charles University, Prague, 2024.
 
-1. N.Violante, A.Gauthier, S.Diolatzis. T.Leimkühler, and G.Drettakis, ["Physically-BasedLightingfor3DGenerativeModelsofCars"](https://hal.science/hal-04493971/file/lighting_3D_generative_cars.pdf), Eurographics, 2024.
+1. N.Violante, A.Gauthier, S.Diolatzis. T.Leimkühler, and G.Drettakis, ["Physically-Based Lighting for 3D Generative Models of Cars"](https://hal.science/hal-04493971/file/lighting_3D_generative_cars.pdf), Eurographics, 2024.
 
 
 

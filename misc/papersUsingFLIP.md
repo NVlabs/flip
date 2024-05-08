@@ -226,6 +226,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. H. B. Vernooij, ["A Fresnel Model for Coated Materials"](https://diglib.eg.org/bitstream/handle/10.2312/egs20241028/13_egs20241028.pdf?sequence=1&isAllowed=n), Eurographics, short papers, 2024.
 
+1. Chuanyu Shen, ["Visual Perception-Driven Dynamic Adaptive Shading"](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=10504239),  International Conference on Consumer Electronics and Computer Engineering, 2024.
+
 
 
 **Citing ꟻLIP (but not using):**

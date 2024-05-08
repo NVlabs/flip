@@ -222,6 +222,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. N.Violante, A.Gauthier, S.Diolatzis. T.Leimkühler, and G.Drettakis, ["Physically-Based Lighting for 3D Generative Models of Cars"](https://hal.science/hal-04493971/file/lighting_3D_generative_cars.pdf), Eurographics, 2024.
 
+1. Simon Lucas, Mickaël Ribardière, Romain Pacanowski, Pascal Barla, ["A Fully-correlated Anisotropic Micrograin BSDF Model"](https://hal.science/hal-04567402/file/CorrelatedMG.pdf), in submission, May 2024.
+
 
 
 

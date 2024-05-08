@@ -224,6 +224,7 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Simon Lucas, Mickaël Ribardière, Romain Pacanowski, Pascal Barla, ["A Fully-correlated Anisotropic Micrograin BSDF Model"](https://hal.science/hal-04567402/file/CorrelatedMG.pdf), in submission, May 2024.
 
+1. H. B. Vernooij, ["A Fresnel Model for Coated Materials"](https://diglib.eg.org/bitstream/handle/10.2312/egs20241028/13_egs20241028.pdf?sequence=1&isAllowed=n), Eurographics, short papers, 2024.
 
 
 

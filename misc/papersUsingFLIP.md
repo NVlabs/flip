@@ -228,6 +228,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Chuanyu Shen, ["Visual Perception-Driven Dynamic Adaptive Shading"](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=10504239),  International Conference on Consumer Electronics and Computer Engineering, 2024.
 
+1. LOUIS DE OLIVEIRA, ["Continuous Appearance for Material Textures with Neural Rendering"](https://www.diva-portal.org/smash/get/diva2:1853321/FULLTEXT02), Royal Institute of Technology, Sweden, 2024.
+
 
 
 **Citing ꟻLIP (but not using):**

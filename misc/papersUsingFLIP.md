@@ -232,6 +232,9 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Haolin Lu, Wesley Chang, Trevor Hedstrom, and Tzu-Mao Li, ["Real-Time Path Guiding Using Bounding Voxel Sampling"](https://suikasibyl.github.io/files/vxpg/paper.pdf), ACM Transactions on Graphics (SIGGRAPH), 2024.
 
+1. Philippe Weier, Iliyan Georgiev, Alexander Rath, Philipp Slusallek, Élie Michel, and Tamy Boubekeur
+ ["N-BVH: Neural ray queries with bounding volume hierarchies"](https://weiphil.s3.eu-central-1.amazonaws.com/neural_bvh.pdf), ACM Transactions on Graphics (SIGGRAPH), 2024.
+
 
 
 **Citing ꟻLIP (but not using):**

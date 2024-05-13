@@ -230,6 +230,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. LOUIS DE OLIVEIRA, ["Continuous Appearance for Material Textures with Neural Rendering"](https://www.diva-portal.org/smash/get/diva2:1853321/FULLTEXT02), Royal Institute of Technology, Sweden, 2024.
 
+1. Haolin Lu, Wesley Chang, Trevor Hedstrom, and Tzu-Mao Li, ["Real-Time Path Guiding Using Bounding Voxel Sampling"](https://suikasibyl.github.io/files/vxpg/paper.pdf), ACM Transactions on Graphics (SIGGRAPH), 2024.
+
 
 
 **Citing ꟻLIP (but not using):**

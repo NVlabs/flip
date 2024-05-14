@@ -235,6 +235,16 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 1. Philippe Weier, Iliyan Georgiev, Alexander Rath, Philipp Slusallek, Élie Michel, and Tamy Boubekeur
  ["N-BVH: Neural ray queries with bounding volume hierarchies"](https://weiphil.s3.eu-central-1.amazonaws.com/neural_bvh.pdf), ACM Transactions on Graphics (SIGGRAPH), 2024.
 
+1. Coomans, Arno, Dominici, Edoardo Alberto, Döring, Christian, Mueller, Joerg H., Hladky, Jozef, and Steinberger, Markus, ["Real-time Neural Rendering of Dynamic Light Fields"](https://diglib.eg.org/bitstream/handle/10.1111/cgf15014/v43i2_10_15014.pdf), Computer Graphics Forum, vol. 43, no. 2, 2024.
+
+1. Çogalan, Ugur, Bemana, Mojtaba, Seidel, Hans-Peter, and Myszkowski, Karol, ["Enhancing Image Quality Prediction with Self-supervised Visual Masking"](https://diglib.eg.org/bitstream/handle/10.1111/cgf15051/v43i2_39_15051.pdf), Computer Graphics Forum, vol. 43, no. 2, 2024.
+
+1. Clément Weinreich, Louis De Oliveira, Antoine Houdard, and Georges Nader, ["Real-Time Neural Materials using Block-Compressed Features"](https://diglib.eg.org/bitstream/handle/10.1111/cgf15013/v43i2_11_15013.pdf), Computer Graphics Forum, vol. 43, no. 2, 2024.
+
+
+
+
+
 
 
 **Citing ꟻLIP (but not using):**

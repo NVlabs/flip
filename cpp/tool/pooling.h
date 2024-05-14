@@ -53,6 +53,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <cstdint>
 #include <sstream>
 #include <fstream>
 #include <iostream>

@@ -179,7 +179,7 @@ namespace ImageHelpers
         hdrPixels = new float[imgWidth * imgHeight * 3];
 
         // 1 channel images can be loaded into either scalar or vector formats.
-        if (exrHeader.num_channels == 1)
+        if (numRecognizedChannels == 1)
         {
             for (int y = 0; y < imgHeight; y++)
             {
@@ -196,7 +196,7 @@ namespace ImageHelpers
         }
 
         // 2 channel images can only be loaded into vector2/3/4 formats.
-        if (exrHeader.num_channels == 2)
+        if (numRecognizedChannels == 2)
         {
             assert(idxR != -1 && idxG != -1);
 
@@ -215,7 +215,7 @@ namespace ImageHelpers
         }
 
         // 3 channel images can only be loaded into vector3/4 formats.
-        if (exrHeader.num_channels == 3)
+        if (numRecognizedChannels == 3)
         {
             assert(idxR != -1 && idxG != -1 && idxB != -1);
 
@@ -234,7 +234,7 @@ namespace ImageHelpers
         }
 
         // 4 channel images can only be loaded into vector4 formats.
-        if (exrHeader.num_channels == 4)
+        if (numRecognizedChannels == 4)
         {
             assert(idxR != -1 && idxG != -1 && idxB != -1);
 

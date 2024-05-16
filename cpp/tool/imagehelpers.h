@@ -160,17 +160,6 @@ namespace ImageHelpers
             {
                 ++numRecognizedChannels;
             }
-            else
-            {
-                std::cerr << "Undefined EXR channel name: " << exrHeader.channels[c].name << std::endl;
-            }
-        }
-        if (numRecognizedChannels < exrHeader.num_channels)
-        {
-            std::cerr << "EXR channels may be loaded in the wrong order." << std::endl;
-            idxR = 0;
-            idxG = 1;
-            idxB = 2;
         }
 
         auto rawImgChn = reinterpret_cast<float**>(exrImage.images);
@@ -178,8 +167,8 @@ namespace ImageHelpers
 
         hdrPixels = new float[imgWidth * imgHeight * 3];
 
-        // 1 channel images can be loaded into either scalar or vector formats.
-        if (numRecognizedChannels == 1)
+        
+        if (numRecognizedChannels == 1)             // 1 channel images can be loaded into either scalar or vector formats.
         {
             for (int y = 0; y < imgHeight; y++)
             {
@@ -193,13 +182,10 @@ namespace ImageHelpers
                 }
             }
             loaded = true;
-        }
-
-        // 2 channel images can only be loaded into vector2/3/4 formats.
-        if (numRecognizedChannels == 2)
+        }        
+        else if (numRecognizedChannels == 2)        // 2 channel images can only be loaded into vector2/3/4 formats.
         {
             assert(idxR != -1 && idxG != -1);
-
 #pragma omp parallel for
             for (int y = 0; y < imgHeight; y++)
             {
@@ -213,31 +199,9 @@ namespace ImageHelpers
             }
             loaded = true;
         }
-
-        // 3 channel images can only be loaded into vector3/4 formats.
-        if (numRecognizedChannels == 3)
+        else if (numRecognizedChannels == 3 || numRecognizedChannels == 4) // 3 or 4 channel images can only be loaded into vector3/4 formats.
         {
             assert(idxR != -1 && idxG != -1 && idxB != -1);
-
-#pragma omp parallel for
-            for (int y = 0; y < imgHeight; y++)
-            {
-                for (int x = 0; x < imgWidth; x++)
-                {
-                    int linearIdx = y * imgWidth + x;
-                    hdrPixels[3 * linearIdx + 0] = rawImgChn[idxR][linearIdx];
-                    hdrPixels[3 * linearIdx + 1] = rawImgChn[idxG][linearIdx];
-                    hdrPixels[3 * linearIdx + 2] = rawImgChn[idxB][linearIdx];
-                }
-            }
-            loaded = true;
-        }
-
-        // 4 channel images can only be loaded into vector4 formats.
-        if (numRecognizedChannels == 4)
-        {
-            assert(idxR != -1 && idxG != -1 && idxB != -1);
-
 #pragma omp parallel for
             for (int y = 0; y < imgHeight; y++)
             {

@@ -241,7 +241,7 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Clément Weinreich, Louis De Oliveira, Antoine Houdard, and Georges Nader, ["Real-Time Neural Materials using Block-Compressed Features"](https://diglib.eg.org/bitstream/handle/10.1111/cgf15013/v43i2_11_15013.pdf), Computer Graphics Forum, vol. 43, no. 2, 2024.
 
-
+1. Bora Yalçıner and Ahmet Oğuz Akyüz, ["Path Guiding for Wavefront Path Tracing: A Memory Efficient Approach for GPU Path Tracers"](https://arxiv.org/abs/2405.06997), arXiv:2405.06997, May 2024.
 
 
 

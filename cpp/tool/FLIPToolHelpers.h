@@ -205,7 +205,7 @@ namespace FLIPTool
             }
             else
             {
-                pngResult.copyFloat2Color3(errorMapFLIP);
+                pngResult.copyFloatToColor3(errorMapFLIP);
             }
             ImageHelpers::pngSave(destinationDirectory + "/" + flipFileName.toString(), pngResult);
         }
@@ -266,8 +266,8 @@ namespace FLIPTool
                 FLIP::image<FLIP::color3>* tImage = hdrOutputLDRImages[1];
                 hdrOutputLDRImages.erase(hdrOutputLDRImages.begin());
                 hdrOutputLDRImages.erase(hdrOutputLDRImages.begin());
-                rImage->LinearRGB2sRGB();
-                tImage->LinearRGB2sRGB();
+                rImage->LinearRGBTosRGB();
+                tImage->LinearRGBTosRGB();
                 ImageHelpers::pngSave(destinationDirectory + "/" + rFileName.toString(), *rImage);
                 ImageHelpers::pngSave(destinationDirectory + "/" + tFileName.toString(), *tImage);
                 delete rImage;
@@ -299,7 +299,7 @@ namespace FLIPTool
                 }
                 else
                 {
-                    pngResult.copyFloat2Color3(*flipImage);
+                    pngResult.copyFloatToColor3(*flipImage);
                 }
                 if (basename == "")
                 {
@@ -510,7 +510,7 @@ namespace FLIPTool
         ImageHelpers::load(referenceImage, referenceFileName.toString());   // Load reference image.
         if (!bUseHDR)
         {
-            referenceImage.sRGB2LinearRGB();
+            referenceImage.sRGBToLinearRGB();
         }
 
         // Save firstTestFileName and firstPooledValue for optional overlapped histogram.
@@ -532,7 +532,7 @@ namespace FLIPTool
             ImageHelpers::load(testImage, testFileName.toString());     // Load test image.
             if (!bUseHDR)
             {
-                testImage.sRGB2LinearRGB();
+                testImage.sRGBToLinearRGB();
             }
 
             FLIP::image<float> errorMapFLIP(referenceImage.getWidth(), referenceImage.getHeight(), 0.0f);

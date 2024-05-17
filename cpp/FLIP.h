@@ -323,12 +323,12 @@ namespace FLIP
             return color3(Min(Max(v.x, _min), _max), Min(Max(v.y, _min), _max), Min(Max(v.z, _min), _max));
         }
 
-        HOST_DEVICE_FOR_CUDA static inline float linearRGB2Luminance(color3 linearRGB)
+        HOST_DEVICE_FOR_CUDA static inline float linearRGBToLuminance(color3 linearRGB)
         {
             return 0.2126f * linearRGB.r + 0.7152f * linearRGB.g + 0.0722f * linearRGB.b;
         }
 
-        HOST_DEVICE_FOR_CUDA static inline float sRGB2LinearRGB(float sC)
+        HOST_DEVICE_FOR_CUDA static inline float sRGBToLinearRGB(float sC)
         {
             if (sC <= 0.04045f)
             {
@@ -337,7 +337,7 @@ namespace FLIP
             return powf((sC + 0.055f) / 1.055f, 2.4f);
         }
 
-        HOST_DEVICE_FOR_CUDA static inline float LinearRGB2sRGB(float lC)
+        HOST_DEVICE_FOR_CUDA static inline float LinearRGBTosRGB(float lC)
         {
             if (lC <= 0.0031308f)
             {
@@ -347,25 +347,25 @@ namespace FLIP
             return 1.055f * powf(lC, 1.0f / 2.4f) - 0.055f;
         }
 
-        HOST_DEVICE_FOR_CUDA static inline color3 sRGB2LinearRGB(color3 sRGB)
+        HOST_DEVICE_FOR_CUDA static inline color3 sRGBToLinearRGB(color3 sRGB)
         {
-            float R = sRGB2LinearRGB(sRGB.x);
-            float G = sRGB2LinearRGB(sRGB.y);
-            float B = sRGB2LinearRGB(sRGB.z);
+            float R = sRGBToLinearRGB(sRGB.x);
+            float G = sRGBToLinearRGB(sRGB.y);
+            float B = sRGBToLinearRGB(sRGB.z);
 
             return color3(R, G, B);
         }
 
-        HOST_DEVICE_FOR_CUDA static inline color3 LinearRGB2sRGB(color3 RGB)
+        HOST_DEVICE_FOR_CUDA static inline color3 LinearRGBTosRGB(color3 RGB)
         {
-            float sR = LinearRGB2sRGB(RGB.x);
-            float sG = LinearRGB2sRGB(RGB.y);
-            float sB = LinearRGB2sRGB(RGB.z);
+            float sR = LinearRGBTosRGB(RGB.x);
+            float sG = LinearRGBTosRGB(RGB.y);
+            float sB = LinearRGBTosRGB(RGB.z);
 
             return color3(sR, sG, sB);
         }
 
-        HOST_DEVICE_FOR_CUDA static inline color3 LinearRGB2XYZ(color3 RGB)
+        HOST_DEVICE_FOR_CUDA static inline color3 LinearRGBToXYZ(color3 RGB)
         {
             // Source: https://www.image-engineering.de/library/technotes/958-how-to-convert-between-srgb-and-ciexyz
             // Assumes D65 standard illuminant.
@@ -386,7 +386,7 @@ namespace FLIP
             return XYZ;
         }
 
-        HOST_DEVICE_FOR_CUDA static inline color3 XYZ2LinearRGB(color3 XYZ)
+        HOST_DEVICE_FOR_CUDA static inline color3 XYZToLinearRGB(color3 XYZ)
         {
             // Return values in linear RGB, assuming D65 standard illuminant.
             const float a11 = 3.241003275f;
@@ -406,7 +406,7 @@ namespace FLIP
             return RGB;
         }
 
-        HOST_DEVICE_FOR_CUDA static inline color3 XYZ2CIELab(color3 XYZ, const color3 invReferenceIlluminant = INV_DEFAULT_ILLUMINANT)
+        HOST_DEVICE_FOR_CUDA static inline color3 XYZToCIELab(color3 XYZ, const color3 invReferenceIlluminant = INV_DEFAULT_ILLUMINANT)
         {
             const float delta = 6.0f / 29.0f;
             const float deltaSquare = delta * delta;
@@ -425,7 +425,7 @@ namespace FLIP
             return color3(L, a, b);
         }
 
-        HOST_DEVICE_FOR_CUDA static inline color3 CIELab2XYZ(color3 Lab, const color3 referenceIlluminant = DEFAULT_ILLUMINANT)
+        HOST_DEVICE_FOR_CUDA static inline color3 CIELabToXYZ(color3 Lab, const color3 referenceIlluminant = DEFAULT_ILLUMINANT)
         {
             // The default illuminant is D65.
             float Y = (Lab.x + 16.0f) / 116.0f;
@@ -441,7 +441,7 @@ namespace FLIP
             return color3(X, Y, Z) * referenceIlluminant;
         }
 
-        HOST_DEVICE_FOR_CUDA static inline color3 XYZ2YCxCz(color3 XYZ, const color3 invReferenceIlluminant = INV_DEFAULT_ILLUMINANT)
+        HOST_DEVICE_FOR_CUDA static inline color3 XYZToYCxCz(color3 XYZ, const color3 invReferenceIlluminant = INV_DEFAULT_ILLUMINANT)
         {
             // The default illuminant is D65.
             XYZ = XYZ * invReferenceIlluminant;
@@ -451,7 +451,7 @@ namespace FLIP
             return color3(Y, Cx, Cz);
         }
 
-        HOST_DEVICE_FOR_CUDA static inline color3 YCxCz2XYZ(color3 YCxCz, const color3 referenceIlluminant = DEFAULT_ILLUMINANT)
+        HOST_DEVICE_FOR_CUDA static inline color3 YCxCzToXYZ(color3 YCxCz, const color3 referenceIlluminant = DEFAULT_ILLUMINANT)
         {
             // The default illuminant is D65.
             const float Y = (YCxCz.x + 16.0f) / 116.0f;
@@ -462,7 +462,7 @@ namespace FLIP
             return color3(X, Y, Z) * referenceIlluminant;
         }
 
-        HOST_DEVICE_FOR_CUDA static inline float YCxCz2Gray(color3 YCxCz)
+        HOST_DEVICE_FOR_CUDA static inline float YCxCzToGray(color3 YCxCz)
         {
             return (YCxCz.x + 16.0f) / 116.0f; // Make it [0,1].
         }
@@ -482,8 +482,8 @@ namespace FLIP
 
         HOST_DEVICE_FOR_CUDA static inline float computeMaxDistance(float gqc)
         {
-            color3 greenLab = color3::XYZ2CIELab(color3::LinearRGB2XYZ(color3(0.0f, 1.0f, 0.0f)));
-            color3 blueLab = color3::XYZ2CIELab(color3::LinearRGB2XYZ(color3(0.0f, 0.0f, 1.0f)));
+            color3 greenLab = color3::XYZToCIELab(color3::LinearRGBToXYZ(color3(0.0f, 1.0f, 0.0f)));
+            color3 blueLab = color3::XYZToCIELab(color3::LinearRGBToXYZ(color3(0.0f, 0.0f, 1.0f)));
             color3 greenLabHunt = color3(greenLab.x, Hunt(greenLab.x, greenLab.y), Hunt(greenLab.x, greenLab.z));
             color3 blueLabHunt = color3(blueLab.x, Hunt(blueLab.x, blueLab.y), Hunt(blueLab.x, blueLab.z));
             return powf(HyAB(greenLabHunt, blueLabHunt), gqc);
@@ -633,7 +633,7 @@ namespace FLIP
         pDstImage[i] = pColorMap[int(pSrcImage[i] * 255.0f + 0.5f) % mapSize];
     }
 
-    __global__ static void kernelFloat2Color3(color3* pDstImage, float* pSrcImage, const int3 dim)
+    __global__ static void kernelFloatToColor3(color3* pDstImage, float* pSrcImage, const int3 dim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -677,7 +677,7 @@ namespace FLIP
         }
     }
 
-    __global__ static void kernelsRGB2YCxCz(color3* pImage, const int3 dim)
+    __global__ static void kernelsRGBToYCxCz(color3* pImage, const int3 dim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -685,10 +685,10 @@ namespace FLIP
         int i = (z * dim.y + y) * dim.x + x;
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-        pImage[i] = color3::XYZ2YCxCz(color3::LinearRGB2XYZ(color3::sRGB2LinearRGB(pImage[i])));
+        pImage[i] = color3::XYZToYCxCz(color3::LinearRGBToXYZ(color3::sRGBToLinearRGB(pImage[i])));
     }
 
-    __global__ static void kernelsRGB2LinearRGB(color3* pImage, const int3 dim)
+    __global__ static void kernelsRGBToLinearRGB(color3* pImage, const int3 dim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -696,11 +696,11 @@ namespace FLIP
         int i = (z * dim.y + y) * dim.x + x;
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-        pImage[i] = color3::sRGB2LinearRGB(pImage[i]);
+        pImage[i] = color3::sRGBToLinearRGB(pImage[i]);
     }
 
 
-    __global__ static void kernelLinearRGB2YCxCz(color3* pImage, const int3 dim)
+    __global__ static void kernelLinearRGBToYCxCz(color3* pImage, const int3 dim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -708,10 +708,10 @@ namespace FLIP
         int i = (z * dim.y + y) * dim.x + x;
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-        pImage[i] = color3::XYZ2YCxCz(color3::LinearRGB2XYZ(pImage[i]));
+        pImage[i] = color3::XYZToYCxCz(color3::LinearRGBToXYZ(pImage[i]));
     }
 
-    __global__ static void kernelLinearRGB2sRGB(color3* pImage, const int3 dim)
+    __global__ static void kernelLinearRGBTosRGB(color3* pImage, const int3 dim)
     {
         int x = blockIdx.x * blockDim.x + threadIdx.x;
         int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -719,7 +719,7 @@ namespace FLIP
         int i = (z * dim.y + y) * dim.x + x;
 
         if (x >= dim.x || y >= dim.y || z >= dim.z) return;
-        pImage[i] = color3::LinearRGB2sRGB(pImage[i]);
+        pImage[i] = color3::LinearRGBTosRGB(pImage[i]);
     }
 
     //  General kernels.
@@ -791,7 +791,7 @@ namespace FLIP
         if (toneMapper == 0)
         {
             color3 color = pImage[i];
-            float luminance = color3::linearRGB2Luminance(color);
+            float luminance = color3::linearRGBToLuminance(color);
             pImage[i] /= (1.0f + luminance);
             return;
         }
@@ -1001,12 +1001,12 @@ namespace FLIP
         // Clamp to [0,1] in linear RGB.
         color3 filteredYCxCzReference = color3(filteredYCxReference.x, filteredYCxReference.y, filteredCzReference.x + filteredCzReference.y);
         color3 filteredYCxCzTest = color3(filteredYCxTest.x, filteredYCxTest.y, filteredCzTest.x + filteredCzTest.y);
-        filteredYCxCzReference = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(filteredYCxCzReference)));
-        filteredYCxCzTest = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(filteredYCxCzTest)));
+        filteredYCxCzReference = FLIP::color3::clamp(FLIP::color3::XYZToLinearRGB(FLIP::color3::YCxCzToXYZ(filteredYCxCzReference)));
+        filteredYCxCzTest = FLIP::color3::clamp(FLIP::color3::XYZToLinearRGB(FLIP::color3::YCxCzToXYZ(filteredYCxCzTest)));
 
         // Move from linear RGB to CIELab.
-        filteredYCxCzReference = color3::XYZ2CIELab(color3::LinearRGB2XYZ(filteredYCxCzReference));
-        filteredYCxCzTest = color3::XYZ2CIELab(color3::LinearRGB2XYZ(filteredYCxCzTest));
+        filteredYCxCzReference = color3::XYZToCIELab(color3::LinearRGBToXYZ(filteredYCxCzReference));
+        filteredYCxCzTest = color3::XYZToCIELab(color3::LinearRGBToXYZ(filteredYCxCzTest));
 
         // Apply Hunt adjustment.
         filteredYCxCzReference.y = color3::Hunt(filteredYCxCzReference.x, filteredYCxCzReference.y);
@@ -1312,13 +1312,13 @@ namespace FLIP
                 {
                     for (int x = 0; x < this->getWidth(); x++)
                     {
-                        this->set(x, y, z, color3::XYZ2YCxCz(color3::LinearRGB2XYZ(color3::sRGB2LinearRGB(this->get(x, y, z)))));
+                        this->set(x, y, z, color3::XYZToYCxCz(color3::LinearRGBToXYZ(color3::sRGBToLinearRGB(this->get(x, y, z)))));
                     }
                 }
             }
         }
 
-        void sRGB2LinearRGB(void)
+        void sRGBToLinearRGB(void)
         {
             for (int z = 0; z < this->getDepth(); z++)
             {
@@ -1327,13 +1327,13 @@ namespace FLIP
                 {
                     for (int x = 0; x < this->getWidth(); x++)
                     {
-                        this->set(x, y, z, color3::sRGB2LinearRGB(this->get(x, y, z)));
+                        this->set(x, y, z, color3::sRGBToLinearRGB(this->get(x, y, z)));
                     }
                 }
             }
         }
 
-        void LinearRGB2YCxCz(void)
+        void LinearRGBToYCxCz(void)
         {
             for (int z = 0; z < this->getDepth(); z++)
             {
@@ -1342,13 +1342,13 @@ namespace FLIP
                 {
                     for (int x = 0; x < this->getWidth(); x++)
                     {
-                        this->set(x, y, z, color3::XYZ2YCxCz(color3::LinearRGB2XYZ(this->get(x, y, z))));
+                        this->set(x, y, z, color3::XYZToYCxCz(color3::LinearRGBToXYZ(this->get(x, y, z))));
                     }
                 }
             }
         }
 
-        void LinearRGB2sRGB(void)
+        void LinearRGBTosRGB(void)
         {
             for (int z = 0; z < this->getDepth(); z++)
             {
@@ -1357,7 +1357,7 @@ namespace FLIP
                 {
                     for (int x = 0; x < this->getWidth(); x++)
                     {
-                        this->set(x, y, z, color3::LinearRGB2sRGB(this->get(x, y, z)));
+                        this->set(x, y, z, color3::LinearRGBTosRGB(this->get(x, y, z)));
                     }
                 }
             }
@@ -1406,7 +1406,7 @@ namespace FLIP
                         for (int x = 0; x < this->getWidth(); x++)
                         {
                             color3 color = this->get(x, y, z);
-                            float luminance = color3::linearRGB2Luminance(color);
+                            float luminance = color3::linearRGBToLuminance(color);
                             float factor = 1.0f / (1.0f + luminance);
                             this->set(x, y, z, color * factor);
                         }
@@ -1443,7 +1443,7 @@ namespace FLIP
             }
         }
 
-        void copyFloat2Color3(tensor<float>& srcImage)
+        void copyFloatToColor3(tensor<float>& srcImage)
         {
             for (int z = 0; z < this->getDepth(); z++)
             {
@@ -1494,35 +1494,35 @@ namespace FLIP
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 
-        void sRGB2YCxCz(void)
+        void sRGBToYCxCz(void)
         {
             this->synchronizeDevice();
             kernelsRGB2YCxCz << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
-            checkStatus("kernelsRGB2YCxCz");
+            checkStatus("kernelsRGBToYCxCz");
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 
-        void sRGB2LinearRGB(void)
+        void sRGBToLinearRGB(void)
         {
             this->synchronizeDevice();
-            kernelsRGB2LinearRGB << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
-            checkStatus("kernelsRGB2LinearRGB");
+            kernelsRGBToLinearRGB << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
+            checkStatus("kernelsRGBToLinearRGB");
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 
-        void LinearRGB2YCxCz(void)
+        void LinearRGBToYCxCz(void)
         {
             this->synchronizeDevice();
-            kernelLinearRGB2YCxCz << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
-            checkStatus("kernelLinearRGB2YCxCz");
+            kernelLinearRGBToYCxCz << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
+            checkStatus("kernelLinearRGBToYCxCz");
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 
-        void LinearRGB2sRGB(void)
+        void LinearRGBTosRGB(void)
         {
             this->synchronizeDevice();
-            FLIP::kernelLinearRGB2sRGB << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
-            checkStatus("kernelLinearRGB2sRGB");
+            FLIP::kernelLinearRGBTosRGB << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, this->mDim);
+            checkStatus("kernelLinearRGBTosRGB");
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 
@@ -1602,11 +1602,11 @@ namespace FLIP
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 
-        void copyFloat2Color3(tensor<float>& srcImage)
+        void copyFloatToColor3(tensor<float>& srcImage)
         {
             srcImage.synchronizeDevice();
-            FLIP::kernelFloat2Color3 << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, srcImage.getDeviceData(), this->mDim);
-            checkStatus("kernelFloat2Color3");
+            FLIP::kernelFloatToColor3 << <this->mGridDim, this->mBlockDim >> > (this->mvpDeviceData, srcImage.getDeviceData(), this->mDim);
+            checkStatus("kernelFloatToColor3");
             this->mState = CudaTensorState::DEVICE_ONLY;
         }
 #endif
@@ -1908,12 +1908,12 @@ namespace FLIP
                     // Clamp to [0,1] in linear RGB.
                     color3 filteredYCxCzReference = color3(filteredYCxReference.x, filteredYCxReference.y, filteredCzReference.x + filteredCzReference.y);
                     color3 filteredYCxCzTest = color3(filteredYCxTest.x, filteredYCxTest.y, filteredCzTest.x + filteredCzTest.y);
-                    filteredYCxCzReference = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(filteredYCxCzReference)));
-                    filteredYCxCzTest = FLIP::color3::clamp(FLIP::color3::XYZ2LinearRGB(FLIP::color3::YCxCz2XYZ(filteredYCxCzTest)));
+                    filteredYCxCzReference = FLIP::color3::clamp(FLIP::color3::XYZToLinearRGB(FLIP::color3::YCxCzToXYZ(filteredYCxCzReference)));
+                    filteredYCxCzTest = FLIP::color3::clamp(FLIP::color3::XYZToLinearRGB(FLIP::color3::YCxCzToXYZ(filteredYCxCzTest)));
 
                     // Move from linear RGB to CIELab.
-                    filteredYCxCzReference = color3::XYZ2CIELab(color3::LinearRGB2XYZ(filteredYCxCzReference));
-                    filteredYCxCzTest = color3::XYZ2CIELab(color3::LinearRGB2XYZ(filteredYCxCzTest));
+                    filteredYCxCzReference = color3::XYZToCIELab(color3::LinearRGBToXYZ(filteredYCxCzReference));
+                    filteredYCxCzTest = color3::XYZToCIELab(color3::LinearRGBToXYZ(filteredYCxCzTest));
 
                     // Apply Hunt adjustment.
                     filteredYCxCzReference.y = color3::Hunt(filteredYCxCzReference.x, filteredYCxCzReference.y);
@@ -2215,7 +2215,7 @@ namespace FLIP
             {
                 for (int x = 0; x < this->mDim.x; x++)
                 {
-                    float luminance = color3::linearRGB2Luminance(this->get(x, y));
+                    float luminance = color3::linearRGBToLuminance(this->get(x, y));
                     luminances.push_back(luminance);
                     if (luminance != 0.0f)
                     {
@@ -2237,8 +2237,8 @@ namespace FLIP
         void LDR_FLIP(image<color3>& reference, image<color3>& test, float ppd)     // Both reference and test are assumed to be in linear RGB.
         {
             // Transform from linear RGB to YCxCz.
-            reference.LinearRGB2YCxCz();
-            test.LinearRGB2YCxCz();
+            reference.LinearRGBToYCxCz();
+            test.LinearRGBToYCxCz();
 
             // Prepare separated spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
             // (YCx for the Achromatic and Red-Green channels and Cz for the Blue-Yellow channel).
@@ -2275,8 +2275,8 @@ namespace FLIP
             image<color3> colorFeatureDifference(width, height);
 
             // Transform from linear RGB to YCxCz.
-            reference.LinearRGB2YCxCz();
-            test.LinearRGB2YCxCz();
+            reference.LinearRGBToYCxCz();
+            test.LinearRGBToYCxCz();
 
             // Prepare separated spatial filters. Because the filter for the Blue-Yellow channel is a sum of two Gaussians, we need to separate the spatial filter into two
             // (YCx for the Achromatic and Red-Green channels and Cz for the Blue-Yellow channel). For details, see separatedConvolutions.pdf in the FLIP repository:

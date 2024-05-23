@@ -243,6 +243,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Bora Yalçıner and Ahmet Oğuz Akyüz, ["Path Guiding for Wavefront Path Tracing: A Memory Efficient Approach for GPU Path Tracers"](https://arxiv.org/abs/2405.06997), arXiv:2405.06997, May 2024.
 
+1. Jiayue Liu, Xiao Tang, Freeman Cheng, Roy Yang, Zhihao Li, Jianzhuang Liu, Yi Huang, Jiaqi Lin, Shiyong Liu, Xiaofei Wu, Songcen Xu, and Chun Yuan, ["MirrorGaussian: Reflecting 3D Gaussians for Reconstructing Mirror Reflections"](https://arxiv.org/abs/2405.11921), arXiv:2405.11921, May 2024.
+
 
 
 

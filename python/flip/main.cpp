@@ -175,10 +175,17 @@ std::tuple<py::array_t<float>, float, py::dict> evaluate(const py::array_t<float
     py::buffer_info r_buf = referenceInput.request(), t_buf = testInput.request();
     
     // Check number of dimensions and resolution.
-    if (r_buf.ndim != 3 || t_buf.ndim != 3)
-        throw std::runtime_error("Number of dimensions must be three.");
-    if (r_buf.shape[0] != t_buf.shape[0] || r_buf.shape[1] != t_buf.shape[1] || r_buf.shape[2] != t_buf.shape[2])
-        throw std::runtime_error("Reference and Test image resolutions differ.");
+    if (r_buf.ndim != 3 || t_buf.ndim != 3){
+        std::stringstream message;
+        message << "Number of dimensions must be three. Reference image is " << r_buf.ndim << ", Test image is "<< t_buf.ndim;
+        throw std::runtime_error(message.str());  
+    }
+     
+    if (r_buf.shape[0] != t_buf.shape[0] || r_buf.shape[1] != t_buf.shape[1] || r_buf.shape[2] != t_buf.shape[2]){
+        std::stringstream message;
+        message << "Reference and Test image resolutions differ. Reference image is " << r_buf.shape[0] << "x" << r_buf.shape[1] << ", Test image is "<< t_buf.shape[0] << "x" << t_buf.shape[1];
+        throw std::runtime_error(message.str()); 
+    }
     
     // Arrays for reference and test.
     float* ptr_r = static_cast<float*>(r_buf.ptr);

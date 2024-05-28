@@ -232,10 +232,11 @@ std::tuple<py::array_t<float>, float, py::dict> evaluate(const py::array_t<float
         }
     }
     delete flip;
+    
+    py::dict returnParams = {};
+    updateInputParameters(parameters, returnParams);
 
-    updateInputParameters(parameters, inputParameters);
-
-    return std::make_tuple(flipNumpy, meanError, inputParameters);
+    return std::make_tuple(flipNumpy, meanError, returnParams);
 }
 
 // Create command line, based on the Python command line string, for the FLIP tool to parse.

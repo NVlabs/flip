@@ -175,15 +175,17 @@ std::tuple<py::array_t<float>, float, py::dict> evaluate(const py::array_t<float
     py::buffer_info r_buf = referenceInput.request(), t_buf = testInput.request();
     
     // Check number of dimensions and resolution.
-    if (r_buf.ndim != 3 || t_buf.ndim != 3){
+    if (r_buf.ndim != 3 || t_buf.ndim != 3)
+    {
         std::stringstream message;
-        message << "Number of dimensions must be three. Reference image is " << r_buf.ndim << ", Test image is "<< t_buf.ndim;
+        message << "Number of dimensions must be three. The reference image has " << r_buf.ndim << " dimensions, while the test image has "<< t_buf.ndim << " dimensions.";
         throw std::runtime_error(message.str());  
     }
      
-    if (r_buf.shape[0] != t_buf.shape[0] || r_buf.shape[1] != t_buf.shape[1] || r_buf.shape[2] != t_buf.shape[2]){
+    if (r_buf.shape[0] != t_buf.shape[0] || r_buf.shape[1] != t_buf.shape[1])
+    {
         std::stringstream message;
-        message << "Reference and Test image resolutions differ. Reference image is " << r_buf.shape[0] << "x" << r_buf.shape[1] << ", Test image is "<< t_buf.shape[0] << "x" << t_buf.shape[1];
+        message << "Reference and test image resolutions differ.\nReference image resolution: " << r_buf.shape[0] << "x" << r_buf.shape[1] << "\nTest image resolution: "<< t_buf.shape[0] << "x" << t_buf.shape[1];
         throw std::runtime_error(message.str()); 
     }
     

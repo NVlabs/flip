@@ -245,6 +245,7 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Jiayue Liu, Xiao Tang, Freeman Cheng, Roy Yang, Zhihao Li, Jianzhuang Liu, Yi Huang, Jiaqi Lin, Shiyong Liu, Xiaofei Wu, Songcen Xu, and Chun Yuan, ["MirrorGaussian: Reflecting 3D Gaussians for Reconstructing Mirror Reflections"](https://arxiv.org/abs/2405.11921), arXiv:2405.11921, May 2024.
 
+1. Zhenni Wang, Tze Yui Ho, Yi Xiao, and Chi Sing Leung, ["Temporal vectorized visibility for direct illumination of animated models"](https://link.springer.com/article/10.1007/s41095-023-0339-3), Computational Visual Media, May 2024.
 
 
 

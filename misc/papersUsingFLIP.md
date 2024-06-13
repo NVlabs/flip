@@ -247,6 +247,10 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Zhenni Wang, Tze Yui Ho, Yi Xiao, and Chi Sing Leung, ["Temporal vectorized visibility for direct illumination of animated models"](https://link.springer.com/article/10.1007/s41095-023-0339-3), Computational Visual Media, May 2024.
 
+1. Liwen Wu, Sai Bi, Zexiang Xu, Fujun Luan, Kai Zhang, Iliyan Georgiev, Kalyan Sunkavalli, and Ravi Ramamoorthi, ["Neural Directional Encoding for Efficient and Accurate View-Dependent Appearance Modeling"](https://arxiv.org/abs/2405.14847), 	arXiv:2405.14847 (CVPR), May 2024.
+
+1. Liwen Wu, Sai Bi, Zexiang Xu, Fujun Luan, Kai Zhang, Iliyan Georgiev, Kalyan Sunkavalli, and Ravi Ramamoorthi, ["Supplementary Material: Neural Directional Encoding for Efficient and Accurate View-Dependent Appearance Modeling"](https://openaccess.thecvf.com/content/CVPR2024/supplemental/Wu_Neural_Directional_Encoding_CVPR_2024_supplemental.pdf), CVPR 2024. 
+
 
 
 

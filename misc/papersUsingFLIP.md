@@ -251,6 +251,11 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 
 1. Liwen Wu, Sai Bi, Zexiang Xu, Fujun Luan, Kai Zhang, Iliyan Georgiev, Kalyan Sunkavalli, and Ravi Ramamoorthi, ["Supplementary Material: Neural Directional Encoding for Efficient and Accurate View-Dependent Appearance Modeling"](https://openaccess.thecvf.com/content/CVPR2024/supplemental/Wu_Neural_Directional_Encoding_CVPR_2024_supplemental.pdf), CVPR 2024. 
 
+1. Marcus Holmberg, ["Automated Octree LOD Based on
+Human Perception Metrics"](https://www.diva-portal.org/smash/get/diva2:1868188/FULLTEXT01.pdf), Degree project, KTH Royal Institute of Technology, 2024.
+
+1. T. TG, D. M. Tran, H. W. Jensen, R. Ramamoorthi, and J. R. Frisvad, ["Neural SSS: Lightweight Object Appearance Representation"](https://people.compute.dtu.dk/jerf/papers/neuralsss_lowres.pdf), Eurographics Symposium on Graphics, 2024.
+
 
 
 

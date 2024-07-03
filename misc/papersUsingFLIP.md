@@ -254,6 +254,8 @@ Please let us know if you know of more papers that use/cite ꟻLIP.
 1. Marcus Holmberg, ["Automated Octree LOD Based on
 Human Perception Metrics"](https://www.diva-portal.org/smash/get/diva2:1868188/FULLTEXT01.pdf), Degree project, KTH Royal Institute of Technology, 2024.
 
+1. Hassan Sadeghein, ["An overview and implementation of reservoir-based spatiotemporal importance resampling (ReSTIR) for real-time ray-tracing"](https://oulurepo.oulu.fi/handle/10024/49574), Master's thesis, 2024. 
+
 1. T. TG, D. M. Tran, H. W. Jensen, R. Ramamoorthi, and J. R. Frisvad, ["Neural SSS: Lightweight Object Appearance Representation"](https://people.compute.dtu.dk/jerf/papers/neuralsss_lowres.pdf), Eurographics Symposium on Graphics, 2024.
 
 

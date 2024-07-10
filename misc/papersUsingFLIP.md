@@ -258,6 +258,10 @@ Human Perception Metrics"](https://www.diva-portal.org/smash/get/diva2:1868188/F
 
 1. T. TG, D. M. Tran, H. W. Jensen, R. Ramamoorthi, and J. R. Frisvad, ["Neural SSS: Lightweight Object Appearance Representation"](https://people.compute.dtu.dk/jerf/papers/neuralsss_lowres.pdf), Eurographics Symposium on Graphics, 2024.
 
+1. Eugene d'Eon and Andrea Weidlich, ["VMF Diffuse: A unified rough diffuse BRDF"](https://diglib.eg.org/items/b6dd6989-0856-4937-95d7-9372bc2c2588), Eurographics Symposium on Graphics, 2024.
+
+1. Shah, Ishaan, Gamboa, Luis E., Gruson, Adrien, and Narayanan, P. J., ["Neural Histogram-Based Glint Rendering of Surfaces With Spatially Varying Roughness"](https://diglib.eg.org/items/694fa408-ab37-45ea-8504-8f759067e330), Eurographics Symposium on Graphics, 2024.
+
 
 
 

@@ -262,6 +262,8 @@ Human Perception Metrics"](https://www.diva-portal.org/smash/get/diva2:1868188/F
 
 1. Shah, Ishaan, Gamboa, Luis E., Gruson, Adrien, and Narayanan, P. J., ["Neural Histogram-Based Glint Rendering of Surfaces With Spatially Varying Roughness"](https://diglib.eg.org/items/694fa408-ab37-45ea-8504-8f759067e330), Eurographics Symposium on Graphics, 2024.
 
+1. Zhihua Wang, Keshuo Xu, Keyan Ding, Qiuping Jiang, Yifan Zuo, Zhangkai Ni & Yuming Fang, ["CD-iNet: Deep Invertible Network for Perceptual Image Color Difference Measurement"](https://link.springer.com/article/10.1007/s11263-024-02087-7), International Journal of Computer Vision, July 2024.
+
 
 
 

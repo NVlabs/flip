@@ -264,6 +264,9 @@ Human Perception Metrics"](https://www.diva-portal.org/smash/get/diva2:1868188/F
 
 1. Zhihua Wang, Keshuo Xu, Keyan Ding, Qiuping Jiang, Yifan Zuo, Zhangkai Ni & Yuming Fang, ["CD-iNet: Deep Invertible Network for Perceptual Image Color Difference Measurement"](https://link.springer.com/article/10.1007/s11263-024-02087-7), International Journal of Computer Vision, July 2024.
 
+1. Lingyan Ruan, Martin Bálint, Mojtaba Bemana, Krzysztof Wolski, Hans-Peter Seidel, Karol Myszkowski, and Bin Chen, ["Self-Supervised Video Defocus Deblurring with Atlas Learning"](https://dl.acm.org/doi/fullHtml/10.1145/3641519.3657524), SIGGRAPH 2024.
+
+
 
 
 

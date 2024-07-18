@@ -266,6 +266,7 @@ Human Perception Metrics"](https://www.diva-portal.org/smash/get/diva2:1868188/F
 
 1. Lingyan Ruan, Martin Bálint, Mojtaba Bemana, Krzysztof Wolski, Hans-Peter Seidel, Karol Myszkowski, and Bin Chen, ["Self-Supervised Video Defocus Deblurring with Atlas Learning"](https://dl.acm.org/doi/fullHtml/10.1145/3641519.3657524), SIGGRAPH 2024.
 
+1. Chuanyu Shen, Chunyi Chen, Xiaojuan Hu, ["Scene-content-sensitive real-time adaptive foveated rendering"](https://sid.onlinelibrary.wiley.com/doi/epdf/10.1002/jsid.1346), Journal of the Society for Information Display, 2024. [TODO: need to check that FLIP was actually **used** in this paper. We know it was referenced.]
 
 
 

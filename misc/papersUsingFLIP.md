@@ -268,6 +268,8 @@ Human Perception Metrics"](https://www.diva-portal.org/smash/get/diva2:1868188/F
 
 1. Chuanyu Shen, Chunyi Chen, Xiaojuan Hu, ["Scene-content-sensitive real-time adaptive foveated rendering"](https://sid.onlinelibrary.wiley.com/doi/epdf/10.1002/jsid.1346), Journal of the Society for Information Display, 2024. [TODO: need to check that FLIP was actually **used** in this paper. We know it was referenced.]
 
+1. Jiaqi He, Zhihua Wang, Leon Wang, Tsein-I Liu, Yuming Fang, Qilin Sun, and Kede Ma, ["Multiscale Sliced Wasserstein Distances as Perceptual Color Difference Measure"](https://arxiv.org/abs/2407.10181v1), 	arXiv:2407.10181, ECCV, 2024
+
 
 
 

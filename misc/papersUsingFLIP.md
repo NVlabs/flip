@@ -270,6 +270,8 @@ Human Perception Metrics"](https://www.diva-portal.org/smash/get/diva2:1868188/F
 
 1. Jiaqi He, Zhihua Wang, Leon Wang, Tsein-I Liu, Yuming Fang, Qilin Sun, and Kede Ma, ["Multiscale Sliced Wasserstein Distances as Perceptual Color Difference Measure"](https://arxiv.org/abs/2407.10181v1), 	arXiv:2407.10181, ECCV, 2024
 
+1. Alper Sahistan, Serkan Demirci, Ingo Wald, Stefan Zellmann, Joao Barbosa, Nate Morrical, and Ugur Gudukbay, ["Visualization of Large Non-Trivially Partitioned Unstructured Data with Native Distribution on High-Performance Computing Systems"](https://ieeexplore.ieee.org/abstract/document/10598366), IEEE Transactions on Visualization and Computer Graphics, July 2024.
+
 
 
 

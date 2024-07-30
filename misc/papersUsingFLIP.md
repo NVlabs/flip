@@ -274,6 +274,8 @@ Human Perception Metrics"](https://www.diva-portal.org/smash/get/diva2:1868188/F
 
 1.  Haocheng Ren, Yuchi Huo, Yifan Peng, Hongtao Sheng, Weidong Xue, Hongxiang Huang, Jingzhen Lan, Rui Wang, and Hujun Bao, ["LightFormer: Light-Oriented Global Neural Rendering in Dynamic Scene"](https://dl.acm.org/doi/abs/10.1145/3658229), ACM Transactions on Graphics (TOG), Volume 43, Issue 4, 2024.
 
+1. Wang, Huan, ["Towards efficient deep learning in computer vision via network sparsity and distillation"](https://repository.library.northeastern.edu/files/neu:4f248n05g), PhD thesis, April 2024.
+
 
 
 

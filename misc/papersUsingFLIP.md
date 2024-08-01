@@ -338,7 +338,9 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 
 1. Walter Adame Gonzalez, ["FONDUE: Robust resolution-invariant denoising of Magnetic Resonance Images using Nested UNets"](https://escholarship.mcgill.ca/concern/theses/73666b12s), MSc thesis, McGill University, 2023.
 
-1. Geoffery Agorku, Sarah Hernandez PhD, Maria Falquez, Subhadipto Poddar PhD, and Kwadwo Amankwah-Nkyi, ["Traffic Cameras to detect inland waterway barge traffic: An Application of machine learning. "](https://arxiv.org/abs/2401.03070), arXiv:2401.03070, January 2024. 
+1. Geoffery Agorku, Sarah Hernandez PhD, Maria Falquez, Subhadipto Poddar PhD, and Kwadwo Amankwah-Nkyi, ["Traffic Cameras to detect inland waterway barge traffic: An Application of machine learning. "](https://arxiv.org/abs/2401.03070), arXiv:2401.03070, January 2024.
+
+1. Yinglin Zheng, Ting Zhang, Jianmin Bao, Dong Chen, and Ming Zeng, ["High-fidelity instructional fashion image editing"](https://www.sciencedirect.com/science/article/pii/S1524070324000110), Graphical Models, Volume 135, October 2024.
 
 **Code/frameworks/tools that use ꟻLIP:**
 1. [Falcor](https://github.com/NVIDIAGameWorks/Falcor).

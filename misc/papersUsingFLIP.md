@@ -276,6 +276,8 @@ Human Perception Metrics"](https://www.diva-portal.org/smash/get/diva2:1868188/F
 
 1. Wang, Huan, ["Towards efficient deep learning in computer vision via network sparsity and distillation"](https://repository.library.northeastern.edu/files/neu:4f248n05g), PhD thesis, April 2024.
 
+1. Mohammad Javadi, Rishabh Sharma, Panagiotis Tsiamyrtzis, Andrew G. Webb, Ernst Leiss, and Nikolaos V. Tsekos, ["Let UNet Play an Adversarial Game: Investigating the Effect of Adversarial Training in Enhancing Low-Resolution MRI"](https://link-springer-com.ludwig.lub.lu.se/article/10.1007/s10278-024-01205-8), Journal of Imaging Informatics in Medicine, July 2024.
+
 
 
 
@@ -341,6 +343,11 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 1. Geoffery Agorku, Sarah Hernandez PhD, Maria Falquez, Subhadipto Poddar PhD, and Kwadwo Amankwah-Nkyi, ["Traffic Cameras to detect inland waterway barge traffic: An Application of machine learning. "](https://arxiv.org/abs/2401.03070), arXiv:2401.03070, January 2024.
 
 1. Yinglin Zheng, Ting Zhang, Jianmin Bao, Dong Chen, and Ming Zeng, ["High-fidelity instructional fashion image editing"](https://www.sciencedirect.com/science/article/pii/S1524070324000110), Graphical Models, Volume 135, October 2024.
+
+1. Geoffery Agorku, Sarah Hernandez, and Kwadwo Amankwah-Nkyi, ["Real-Time Barge Detection Using Traffic Cameras and Deep Learning on Inland Waterways"](https://journals.sagepub.com/doi/abs/10.1177/03611981241263574), Journal of the Transportation Research Board, August 2024.
+
+
+
 
 **Code/frameworks/tools that use ꟻLIP:**
 1. [Falcor](https://github.com/NVIDIAGameWorks/Falcor).

@@ -278,6 +278,15 @@ Human Perception Metrics"](https://www.diva-portal.org/smash/get/diva2:1868188/F
 
 1. Mohammad Javadi, Rishabh Sharma, Panagiotis Tsiamyrtzis, Andrew G. Webb, Ernst Leiss, and Nikolaos V. Tsekos, ["Let UNet Play an Adversarial Game: Investigating the Effect of Adversarial Training in Enhancing Low-Resolution MRI"](https://link-springer-com.ludwig.lub.lu.se/article/10.1007/s10278-024-01205-8), Journal of Imaging Informatics in Medicine, July 2024.
 
+1. Michael Steiner,Thomas Köhler,Lukas Radl,Markus Steinberger. ["Frustum Volume Caching for Accelerated NeRF Rendering"](https://dl.acm.org/doi/10.1145/3675370), Proceedings of the ACM on Computer Graphics and Interactive Techniques, Volume 7, Issue 3, 2024.
+
+1.  Elena Denisova, Leonardo Bocchi, ["Converging Algorithm-Agnostic Denoising for Monte Carlo Rendering"](https://dl.acm.org/doi/10.1145/3675384), Proceedings of the ACM on Computer Graphics and Interactive Techniques, Volume 7, Issue 3. 2024.
+
+1.  Wolfgang Tatzgern, Alexander Weinrauch, Pascal Stadlbauer, Joerg H. Mueller, Martin Winter, Markus Steinberger, ["Radiance Caching with On-Surface Caches for Real-Time Global Illumination"](https://dl.acm.org/doi/10.1145/3675382), Proceedings of the ACM on Computer Graphics and Interactive Techniques, Volume 7, Issue 3, 2024.
+
+1.  Lukas Kandlbinder, Addis Dittebrandt, Alexander Schipek, Carsten Dachsbacher, ["Optimizing Path Termination for Radiance Caching Through Explicit Variance Trading"](https://dl.acm.org/doi/abs/10.1145/3675381), Proceedings of the ACM on Computer Graphics and Interactive Techniques, Volume 7, Issue 3, 2024.
+
+
 
 
 
@@ -345,6 +354,8 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 1. Yinglin Zheng, Ting Zhang, Jianmin Bao, Dong Chen, and Ming Zeng, ["High-fidelity instructional fashion image editing"](https://www.sciencedirect.com/science/article/pii/S1524070324000110), Graphical Models, Volume 135, October 2024.
 
 1. Geoffery Agorku, Sarah Hernandez, and Kwadwo Amankwah-Nkyi, ["Real-Time Barge Detection Using Traffic Cameras and Deep Learning on Inland Waterways"](https://journals.sagepub.com/doi/abs/10.1177/03611981241263574), Journal of the Transportation Research Board, August 2024.
+
+1.  Shu-Ho Fan, Kai-Wen Hsiao, Kai Yi Tan, Chih-Yuan Yao, Hung-Kuo Chu, ["Aliasing Detection in Rendered Images via a Multi-Task Learning"](https://dl.acm.org/doi/abs/10.1145/3675379), Proceedings of the ACM on Computer Graphics and Interactive Techniques, Volume 7, Issue 3 Article No.: 41, 2024.
 
 
 

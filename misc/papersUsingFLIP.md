@@ -286,6 +286,9 @@ Human Perception Metrics"](https://www.diva-portal.org/smash/get/diva2:1868188/F
 
 1.  Lukas Kandlbinder, Addis Dittebrandt, Alexander Schipek, Carsten Dachsbacher, ["Optimizing Path Termination for Radiance Caching Through Explicit Variance Trading"](https://dl.acm.org/doi/abs/10.1145/3675381), Proceedings of the ACM on Computer Graphics and Interactive Techniques, Volume 7, Issue 3, 2024.
 
+1. T. TG, J. R. Frisvad, R. Ramamoorthi, and H. W. Jensen, ["NeuPreSS: Compact Neural Precomputed Subsurface Scattering for
+Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.dtu.dk/jerf/papers/neupress_lowres.pdf), Pacific Graphics, 2024.
+
 
 
 

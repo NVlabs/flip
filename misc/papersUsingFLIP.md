@@ -289,7 +289,7 @@ Human Perception Metrics"](https://www.diva-portal.org/smash/get/diva2:1868188/F
 1. T. TG, J. R. Frisvad, R. Ramamoorthi, and H. W. Jensen, ["NeuPreSS: Compact Neural Precomputed Subsurface Scattering for
 Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.dtu.dk/jerf/papers/neupress_lowres.pdf), Pacific Graphics, 2024.
 
-
+1. K. He, J.B.T.M. Roerdink, and J. Kosinka, ["Image vectorization using a sparse patch layout"](https://www.sciencedirect.com/science/article/pii/S1524070324000171), Graphical Models, Volume 135, October 2024.
 
 
 

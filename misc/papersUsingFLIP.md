@@ -291,7 +291,7 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1. K. He, J.B.T.M. Roerdink, and J. Kosinka, ["Image vectorization using a sparse patch layout"](https://www.sciencedirect.com/science/article/pii/S1524070324000171), Graphical Models, Volume 135, October 2024.
 
-1. Polychronakis, Andreas, Koulieris, George Alex, and Mania, Katerina, ["Skipping Spheres: SDF Scaling & Early Ray Termination for Fast Sphere Tracing"](https://surreal.tuc.gr/wp-content/uploads/2024/09/egPublStyle_CGVC2024-compressed.pdf), EG UK Computer Graphics & Visual Computing, 2024.
+1. Polychronakis, Andreas, Koulieris, George Alex, and Mania, Katerina, ["Skipping Spheres: SDF Scaling & Early Ray Termination for Fast Sphere Tracing"]([https://surreal.tuc.gr/wp-content/uploads/2024/09/egPublStyle_CGVC2024-compressed.pdf](https://diglib.eg.org/items/7f21e58c-639e-4359-bf94-414738612006)), EG UK Computer Graphics & Visual Computing, 2024.
 
 
 

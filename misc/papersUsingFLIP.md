@@ -293,6 +293,9 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1. Polychronakis, Andreas, Koulieris, George Alex, and Mania, Katerina, ["Skipping Spheres: SDF Scaling & Early Ray Termination for Fast Sphere Tracing"](https://diglib.eg.org/items/7f21e58c-639e-4359-bf94-414738612006), EG UK Computer Graphics & Visual Computing, 2024.
 
+1. Linda Stadter, Nikolai Hofmann, and Marc Stamminger, ["Neural Volumetric Level of Detail for Path Tracing](https://diglib.eg.org/items/1dd1ca8c-c74e-4a33-a2e8-38d02bc88bd6), Vision, Modeling, and Visualization, 2024.
+
+
 
 
 

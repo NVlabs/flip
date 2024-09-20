@@ -297,6 +297,9 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1. Kevin Napoli, Keith Bugeja, Sandro Spina, and Mark Magro, ["Spectral Transforms for Caustic Denoising: A Comparative Analysis for Monte Carlo Rendering"](https://www.researchgate.net/profile/Sandro-Spina/publication/384073651_Spectral_Transforms_for_Caustic_Denoising_A_Comparative_Analysis_for_Monte_Carlo_Rendering/links/66e981f001cba963bf24ae5e/Spectral-Transforms-for-Caustic-Denoising-A-Comparative-Analysis-for-Monte-Carlo-Rendering.pdf), CGI 2024.
 
+1. Xin Li, Anand Sarwate, ["LASERS: LAtent Space Encoding for Representations with Sparsity for Generative Modeling"](https://arxiv.org/abs/2409.11184), arXiv:2409.11184, 2024.
+
+
 
 
 

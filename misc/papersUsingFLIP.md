@@ -295,6 +295,8 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1. Linda Stadter, Nikolai Hofmann, and Marc Stamminger, ["Neural Volumetric Level of Detail for Path Tracing](https://diglib.eg.org/items/1dd1ca8c-c74e-4a33-a2e8-38d02bc88bd6), Vision, Modeling, and Visualization, 2024.
 
+1. Kevin Napoli, Keith Bugeja, Sandro Spina, and Mark Magro, ["Spectral Transforms for Caustic Denoising: A Comparative Analysis for Monte Carlo Rendering"](https://www.researchgate.net/profile/Sandro-Spina/publication/384073651_Spectral_Transforms_for_Caustic_Denoising_A_Comparative_Analysis_for_Monte_Carlo_Rendering/links/66e981f001cba963bf24ae5e/Spectral-Transforms-for-Caustic-Denoising-A-Comparative-Analysis-for-Monte-Carlo-Rendering.pdf), CGI 2024.
+
 
 
 

@@ -299,6 +299,8 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1. Xin Li, Anand Sarwate, ["LASERS: LAtent Space Encoding for Representations with Sparsity for Generative Modeling"](https://arxiv.org/abs/2409.11184), arXiv:2409.11184, 2024.
 
+1. Pintus, Ruggero, Zorcolo, Antonio, and Gobbetti, Enrico, ["Applying BRDF Monotonicity for Refined Shading Normal Extraction from Multi-Light Image Collections"](https://diglib.eg.org/items/4e5b79b2-4f78-4fa6-b2c7-606ef9f8bcef), Eurographics Workshop on Graphics and Cultural Heritage, 2024.
+
 
 
 

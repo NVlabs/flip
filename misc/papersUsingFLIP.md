@@ -301,11 +301,17 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1. Pintus, Ruggero, Zorcolo, Antonio, and Gobbetti, Enrico, ["Applying BRDF Monotonicity for Refined Shading Normal Extraction from Multi-Light Image Collections"](https://diglib.eg.org/items/4e5b79b2-4f78-4fa6-b2c7-606ef9f8bcef), Eurographics Workshop on Graphics and Cultural Heritage, 2024.
 
+1. Alejandro Cosin Ayerbe, Pierre Poulin, and Gustavo Patow, ["Dynamic Voxel-Based Global Illumination"](https://onlinelibrary.wiley.com/doi/10.1111/cgf.15262?af=R), Computer Graphics Forum, 2024.
+
+1. Cheng Zhang, Yuanhao Wang, Francisco Vicente Carrasco, Chenglei Wu, Jinlong Yang, Thabo Beeler, Fernando De la Torre, ["FabricDiffusion: High-Fidelity Texture Transfer for 3D Garments Generation from In-The-Wild Clothing Images"](https://arxiv.org/abs/2410.01801), arXiv:2410.01801,2024.
+
+1. Ran Bu, Chenwei Xu, Jiwei Shan, Hao Li, Guangming Wang, Yanzi Miao, and Hesheng Wang, ["DnFPlane For Efficient and High-Quality 4D Reconstruction of Deformable Tissues"](https://papers.miccai.org/miccai-2024/paper/2081_paper.pdf), Medical Image Computing and Computer Assisted Intervention, 2024.
 
 
 
 
 
+ 
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 

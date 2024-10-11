@@ -307,7 +307,7 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1. Ran Bu, Chenwei Xu, Jiwei Shan, Hao Li, Guangming Wang, Yanzi Miao, and Hesheng Wang, ["DnFPlane For Efficient and High-Quality 4D Reconstruction of Deformable Tissues"](https://papers.miccai.org/miccai-2024/paper/2081_paper.pdf), Medical Image Computing and Computer Assisted Intervention, 2024.
 
-
+1. Wen Cao, ["Deep image-based Adaptive BRDF Measure"](https://arxiv.org/abs/2410.02917), arXiv:2410.02917, October 2024.
 
 
 
@@ -378,7 +378,7 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 
 1.  Shu-Ho Fan, Kai-Wen Hsiao, Kai Yi Tan, Chih-Yuan Yao, Hung-Kuo Chu, ["Aliasing Detection in Rendered Images via a Multi-Task Learning"](https://dl.acm.org/doi/abs/10.1145/3675379), Proceedings of the ACM on Computer Graphics and Interactive Techniques, Volume 7, Issue 3 Article No.: 41, 2024.
 
-
+1. Rafail Nikou, Aristeidis Tsaknis, Paschalis Margaritis, Stylianos Alvanos, Konstantinos-Filippos Kollias, George S. Maraslidis, Nikolaos Asimopoulos, Panagiotis Sarigiannidis, Vasileios Argyriou, George F. Fragulis, ["Machine learning data-based approaches for autism spectrum disorder classification utilising facial images"], AIP Conference Proceedings, October 2024.
 
 
 **Code/frameworks/tools that use ꟻLIP:**

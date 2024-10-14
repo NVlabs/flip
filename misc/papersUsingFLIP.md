@@ -309,6 +309,8 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1. Wen Cao, ["Deep image-based Adaptive BRDF Measure"](https://arxiv.org/abs/2410.02917), arXiv:2410.02917, October 2024.
 
+1. Zitian Zhang, Frédéric Fortier-Chouinard, Mathieu Garon, Anand Bhattad, Jean-François Lalonde, ["ZEROCOMP: Zero-shot Object Compositing from Image Intrinsics via Diffusion"](https://arxiv.org/abs/2410.08168), 	arXiv:2410.08168, October 2024.
+
 
 
  

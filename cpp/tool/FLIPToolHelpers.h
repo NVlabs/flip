@@ -478,7 +478,7 @@ namespace FLIPTool
         }
         if (!commandLine.optionSet("reference"))
         {
-            std::cout << "Error: you need to set a reference file.\n  Typically done with '-r refimg.{png,exr}' or '--reference refimg.{png,exr}'.\n  Use -h or --help for help message. Exiting\n";
+            std::cout << "Error: you need to set a reference image filename.\n  Typically done with '-r refimg.{png,exr}' or '--reference refimg.{png,exr}'.\n  Use -h or --help for help message. Exiting\n";
             exit(EXIT_FAILURE);
         }
         if (!std::filesystem::exists(commandLine.getOptionValue("reference")))  // Reference does not exist?
@@ -488,7 +488,7 @@ namespace FLIPTool
         } 
         if (!commandLine.optionSet("test"))
         {
-            std::cout << "Error: you need to set a test file.\n  Typically done with '-t testimg.{png,exr}' or '--test testimg.{png,exr}'.\n  Use -h or --help for help message. Exiting\n";
+            std::cout << "Error: you need to set a test image filename.\n  Typically done with '-t testimg.{png,exr}' or '--test testimg.{png,exr}'.\n  Use -h or --help for help message. Exiting\n";
             exit(EXIT_FAILURE);
         }
         if (commandLine.optionSet("help") || (commandLine.optionSet("basename") && commandLine.getOptionValues("test").size() != 1) || commandLine.getError())
@@ -531,7 +531,7 @@ namespace FLIPTool
         bool refImageOk = ImageHelpers::load(referenceImage, referenceFileName.toString());   // Load reference image.
         if (!refImageOk)
         {
-            std::cout << "Error: could not read reference file <" << referenceFileName.toString() << ">. Exiting\n";
+            std::cout << "Error: could not read reference image file <" << referenceFileName.toString() << ">. Exiting\n";
             exit(EXIT_FAILURE);
         }
 
@@ -557,7 +557,7 @@ namespace FLIPTool
 
             if (!std::filesystem::exists(testFileName.toString()))
             {
-                std::cout << "Error: test file <" << testFileName.toString() << "> does not exist. Exiting\n";
+                std::cout << "Error: test image file <" << testFileName.toString() << "> does not exist. Exiting\n";
                 exit(EXIT_FAILURE);
             }
             

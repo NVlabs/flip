@@ -470,7 +470,28 @@ namespace FLIPTool
         int MajorVersion = 1;
         int MinorVersion = 4;
 
-        if (commandLine.optionSet("help") || !commandLine.optionSet("reference") || !commandLine.optionSet("test") || (commandLine.optionSet("basename") && commandLine.getOptionValues("test").size() != 1) || commandLine.getError())
+        if (commandLine.optionSet("help"))
+        {
+            std::cout << "FLIP v" << MajorVersion << "." << MinorVersion << ".\n";
+            commandLine.print();
+            exit(EXIT_FAILURE);
+        }
+        if (!commandLine.optionSet("reference"))
+        {
+            std::cout << "Error: you need to set a reference image filename.\n  Typically done with '-r refimg.{png,exr}' or '--reference refimg.{png,exr}'.\n  Use -h or --help for help message. Exiting\n";
+            exit(EXIT_FAILURE);
+        }
+        if (!std::filesystem::exists(commandLine.getOptionValue("reference")))  // Reference does not exist?
+        {
+            std::cout << "Error: reference file <" << commandLine.getOptionValue("reference") << "> does not exist. Exiting\n";
+            exit(EXIT_FAILURE);
+        } 
+        if (!commandLine.optionSet("test"))
+        {
+            std::cout << "Error: you need to set a test image filename.\n  Typically done with '-t testimg.{png,exr}' or '--test testimg.{png,exr}'.\n  Use -h or --help for help message. Exiting\n";
+            exit(EXIT_FAILURE);
+        }
+        if (commandLine.optionSet("help") || (commandLine.optionSet("basename") && commandLine.getOptionValues("test").size() != 1) || commandLine.getError())
         {
             if (commandLine.getError())
             {
@@ -507,7 +528,13 @@ namespace FLIPTool
         }
 
         FLIP::image<FLIP::color3> referenceImage;
-        ImageHelpers::load(referenceImage, referenceFileName.toString());   // Load reference image.
+        bool refImageOk = ImageHelpers::load(referenceImage, referenceFileName.toString());   // Load reference image.
+        if (!refImageOk)
+        {
+            std::cout << "Error: could not read reference image file <" << referenceFileName.toString() << ">. Exiting\n";
+            exit(EXIT_FAILURE);
+        }
+
         if (!bUseHDR)
         {
             referenceImage.sRGBToLinearRGB();
@@ -528,8 +555,25 @@ namespace FLIPTool
             std::vector<FLIP::image<FLIP::color3>*> hdrOutputLDRImages;
             testFileName = testFileNameString;
 
+            if (!std::filesystem::exists(testFileName.toString()))
+            {
+                std::cout << "Error: test image file <" << testFileName.toString() << "> does not exist. Exiting\n";
+                exit(EXIT_FAILURE);
+            }
+            
             FLIP::image<FLIP::color3> testImage;
-            ImageHelpers::load(testImage, testFileName.toString());     // Load test image.
+            bool testImageOk = ImageHelpers::load(testImage, testFileName.toString());     // Load test image.
+            if (!testImageOk)
+            {
+                std::cout << "Error: could not read test file <" << testFileName.toString() << ">. Exiting\n";
+                exit(EXIT_FAILURE);
+            }
+            if (referenceImage.getWidth() != testImage.getWidth() || referenceImage.getHeight() != testImage.getHeight())
+            {
+                std::cout << "Error: reference <" << referenceImage.getWidth() << "x" << referenceImage.getHeight() << "> and test <" << testImage.getWidth() << "x" << testImage.getHeight() << "> images must be of equal dimensions. Exiting\n";
+                exit(EXIT_FAILURE);
+            }
+
             if (!bUseHDR)
             {
                 testImage.sRGBToLinearRGB();

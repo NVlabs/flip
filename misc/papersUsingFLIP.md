@@ -311,7 +311,7 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1. Zitian Zhang, Frédéric Fortier-Chouinard, Mathieu Garon, Anand Bhattad, Jean-François Lalonde, ["ZEROCOMP: Zero-shot Object Compositing from Image Intrinsics via Diffusion"](https://arxiv.org/abs/2410.08168), 	arXiv:2410.08168, October 2024.
 
-
+1. Åsberg, David, ["Real-time Rendering of Dynamic Baked Clouds"](https://www.diva-portal.org/smash/record.jsf?pid=diva2%3A1895803&dswid=2062), Project work, Royal Institute of Technology, Sweden, 2024.
 
  
 **Citing ꟻLIP (but not using):**

@@ -380,7 +380,7 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 
 1.  Shu-Ho Fan, Kai-Wen Hsiao, Kai Yi Tan, Chih-Yuan Yao, Hung-Kuo Chu, ["Aliasing Detection in Rendered Images via a Multi-Task Learning"](https://dl.acm.org/doi/abs/10.1145/3675379), Proceedings of the ACM on Computer Graphics and Interactive Techniques, Volume 7, Issue 3 Article No.: 41, 2024.
 
-1. Rafail Nikou, Aristeidis Tsaknis, Paschalis Margaritis, Stylianos Alvanos, Konstantinos-Filippos Kollias, George S. Maraslidis, Nikolaos Asimopoulos, Panagiotis Sarigiannidis, Vasileios Argyriou, George F. Fragulis, ["Machine learning data-based approaches for autism spectrum disorder classification utilising facial images"], AIP Conference Proceedings, October 2024.
+1. Rafail Nikou, Aristeidis Tsaknis, Paschalis Margaritis, Stylianos Alvanos, Konstantinos-Filippos Kollias, George S. Maraslidis, Nikolaos Asimopoulos, Panagiotis Sarigiannidis, Vasileios Argyriou, George F. Fragulis, ["Machine learning data-based approaches for autism spectrum disorder classification utilising facial images"](https://pubs.aip.org/aip/acp/article-abstract/3220/1/050013/3315891/Machine-learning-data-based-approaches-for-autism), AIP Conference Proceedings, October 2024.
 
 
 **Code/frameworks/tools that use ꟻLIP:**

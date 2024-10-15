@@ -255,6 +255,7 @@ namespace ImageHelpers
         if (loadImage(fileName, imgWidth, imgHeight, pixels))
         {
             dstImage.setPixels(pixels, imgWidth, imgHeight);
+            return true;
         }
         return false;
     }

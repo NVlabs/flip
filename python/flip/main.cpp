@@ -286,7 +286,7 @@ int execute(const py::list argvPy)
 // Setup the pybind11 module.
 PYBIND11_MODULE(pbflip, handle)
 {
-    handle.doc() = "Load images (load), evaluate FLIP (evaluate), or run the full FLIP tool (run_tool).";
+    handle.doc() = "Load images (load), evaluate FLIP (evaluate), or run the full FLIP tool (execute).";
     handle.def("evaluate", &evaluate);
     handle.def("load", &load);
     handle.def("execute", &execute);

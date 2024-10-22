@@ -313,7 +313,7 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1. Åsberg, David, ["Real-time Rendering of Dynamic Baked Clouds"](https://www.diva-portal.org/smash/record.jsf?pid=diva2%3A1895803&dswid=2062), Project work, Royal Institute of Technology, Sweden, 2024.
 
-1. ZOUBIN BI, YIXIN ZENG, CHONG ZENG, FAN PEI, XIANG FENG, KUN ZHOU, and HONGZHI WU, ["GS3: Efficient Relighting with Triple Gaussian Splatting"](https://arxiv.org/abs/2410.11419), arXiv:2410.11419, 2024.
+1. Arturo Salmi, Szabolcs Cséfalvay, James Imber, ["Fast Local Neural Regression for Low-Cost, Path Traced Lambertian Global Illumination"](https://arxiv.org/abs/2410.11625), arXiv:2410.11625, 2024.
 
 
 

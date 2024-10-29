@@ -315,6 +315,7 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1. Arturo Salmi, Szabolcs Cséfalvay, James Imber, ["Fast Local Neural Regression for Low-Cost, Path Traced Lambertian Global Illumination"](https://arxiv.org/abs/2410.11625), arXiv:2410.11625, 2024.
 
+1. Yu-Ting Wu, ["Efficient Environment Map Rendering Based on Decomposition"](https://onlinelibrary.wiley.com/doi/abs/10.1111/cgf.15264), Computer Graphics Forum, October 2024.
 
 
 

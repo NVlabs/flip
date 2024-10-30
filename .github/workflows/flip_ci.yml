@@ -32,4 +32,4 @@ jobs:
         -DFLIP_ENABLE_CUDA=${{ matrix.os == 'ubuntu-latest' }}
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/flip_evaluator/build --config ${{ matrix.config }} --target install
+      run: cmake -B ${{github.workspace}}/flip_evaluator/build -S ${{github.workspace}}/flip_evaluator/ --build ${{github.workspace}}/flip_evaluator/build --config ${{ matrix.config }} --target install

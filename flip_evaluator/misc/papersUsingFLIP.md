@@ -1,8 +1,8 @@
-# List of papers/code that are using/citing ꟻLIP
+# List of papers/code that are using/citing FLIP
 
-Please let us know if you know of more papers that use/cite ꟻLIP.
+Please let us know if you know of more papers that use/cite FLIP.
 
-**Using ꟻLIP:**
+**Using FLIP:**
 1. Jae-Ho Nah, ["QuickETC2: Fast ETC2 texture compression using Luma differences"](https://dl.acm.org/doi/abs/10.1145/3414685.3417787), *ACM Transactions on Graphics (SIGGRAPH Asia)*, November 2020 Article No. 270
 
 1. Johanna Engman and Hanna Nilsson, ["A Novel Perceptual Metric in Machine Learning"](https://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=9022150&fileOId=9022160), Master's thesis, Lund University, 2020.
@@ -315,13 +315,12 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1. Arturo Salmi, Szabolcs Cséfalvay, James Imber, ["Fast Local Neural Regression for Low-Cost, Path Traced Lambertian Global Illumination"](https://arxiv.org/abs/2410.11625), arXiv:2410.11625, 2024.
 
-1. Yu-Ting Wu, ["Efficient Environment Map Rendering Based on Decomposition"](https://onlinelibrary.wiley.com/doi/abs/10.1111/cgf.15264), Computer Graphics Forum, October 2024.
 
 
 
 
  
-**Citing ꟻLIP (but not using):**
+**Citing FLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.
 
 1. Michael N. Mishourovsky, "Visually Lossless Colour Compression Technology", in *Smart Algorithms for Multimedia and Imaging*, edited by Michael N. Rychagov, Ekaterina V. Tolstaya, and Mikhail Y. Sirotenko, 2021.
@@ -390,7 +389,7 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 1. Rafail Nikou, Aristeidis Tsaknis, Paschalis Margaritis, Stylianos Alvanos, Konstantinos-Filippos Kollias, George S. Maraslidis, Nikolaos Asimopoulos, Panagiotis Sarigiannidis, Vasileios Argyriou, George F. Fragulis, ["Machine learning data-based approaches for autism spectrum disorder classification utilising facial images"](https://pubs.aip.org/aip/acp/article-abstract/3220/1/050013/3315891/Machine-learning-data-based-approaches-for-autism), AIP Conference Proceedings, October 2024.
 
 
-**Code/frameworks/tools that use ꟻLIP:**
+**Code/frameworks/tools that use FLIP:**
 1. [Falcor](https://github.com/NVIDIAGameWorks/Falcor).
 
 1. [The FLOꟼ tool](https://github.com/jeremyong/flop/releases/tag/v1.618).

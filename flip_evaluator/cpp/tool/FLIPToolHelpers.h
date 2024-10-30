@@ -48,6 +48,7 @@
 
 // Code by Pontus Ebelin (formerly Andersson), Jim Nilsson, and Tomas Akenine-Moller.
 
+#pragma once
 #include <cmath>
 #include <iostream>
 #include <fstream>
@@ -232,15 +233,15 @@ namespace FLIPTool
     }
 
     // Optionally store the intermediate LDR images and LDR-FLIP error maps produced during the evaluation of HDR-FLIP.
-    static void saveHDROutputLDRImages(commandline& commandLine, const FLIP::Parameters& parameters, const std::string& basename, const FLIP::filename& flipFileName,
+    static void saveIntermediateHDRFLIPOutput(commandline& commandLine, const FLIP::Parameters& parameters, const std::string& basename, const FLIP::filename& flipFileName,
         const FLIP::filename& referenceFileName, const FLIP::filename& testFileName, const std::string& destinationDirectory,
-        std::vector<FLIP::image<float>*> hdrOutputFlipLDRImages, std::vector<FLIP::image<FLIP::color3>*> hdrOutputLDRImages)
+        std::vector<FLIP::image<float>*> intermediateLDRFLIPImages, std::vector<FLIP::image<FLIP::color3>*> intermediateLDRImages)
     {
-        if (hdrOutputLDRImages.size() > 0)
+        if (intermediateLDRImages.size() > 0)
         {
-            FLIP::filename rFileName(".png");
-            FLIP::filename tFileName(".png");
-            if (hdrOutputLDRImages.size() != parameters.numExposures * 2)
+            FLIP::filename rFileName("tmp.png");
+            FLIP::filename tFileName("tmp.png");
+            if (intermediateLDRImages.size() != size_t(parameters.numExposures * 2))
             {
                 std::cout << "FLIP tool error: the number of LDR images from HDR-FLIP is not the expected number.\nExiting.\n";
                 exit(EXIT_FAILURE);
@@ -262,10 +263,10 @@ namespace FLIPTool
                     rFileName.setName(basename + ".reference." + "." + expCount);
                     tFileName.setName(basename + ".test." + "." + expCount);
                 }
-                FLIP::image<FLIP::color3>* rImage = hdrOutputLDRImages[0];
-                FLIP::image<FLIP::color3>* tImage = hdrOutputLDRImages[1];
-                hdrOutputLDRImages.erase(hdrOutputLDRImages.begin());
-                hdrOutputLDRImages.erase(hdrOutputLDRImages.begin());
+                FLIP::image<FLIP::color3>* rImage = intermediateLDRImages[0];
+                FLIP::image<FLIP::color3>* tImage = intermediateLDRImages[1];
+                intermediateLDRImages.erase(intermediateLDRImages.begin());
+                intermediateLDRImages.erase(intermediateLDRImages.begin());
                 rImage->LinearRGBTosRGB();
                 tImage->LinearRGBTosRGB();
                 ImageHelpers::pngSave(destinationDirectory + "/" + rFileName.toString(), *rImage);
@@ -274,9 +275,9 @@ namespace FLIPTool
                 delete tImage;
             }
         }
-        if (hdrOutputFlipLDRImages.size() > 0)
+        if (intermediateLDRFLIPImages.size() > 0)
         {
-            if (hdrOutputFlipLDRImages.size() != parameters.numExposures)
+            if (intermediateLDRFLIPImages.size() != size_t(parameters.numExposures))
             {
                 std::cout << "FLIP tool error: the number of FLIP LDR images from HDR-FLIP is not the expected number.\nExiting.\n";
                 exit(EXIT_FAILURE);
@@ -288,8 +289,8 @@ namespace FLIPTool
                 std::string expCount, expString;
                 setExposureStrings(i, parameters.startExposure + i * exposureStepSize, expCount, expString);
 
-                FLIP::image<float>* flipImage = hdrOutputFlipLDRImages[0];
-                hdrOutputFlipLDRImages.erase(hdrOutputFlipLDRImages.begin());
+                FLIP::image<float>* flipImage = intermediateLDRFLIPImages[0];
+                intermediateLDRFLIPImages.erase(intermediateLDRFLIPImages.begin());
 
                 FLIP::image<FLIP::color3> pngResult(flipImage->getWidth(), flipImage->getHeight());
 
@@ -468,7 +469,7 @@ namespace FLIPTool
     {
         std::string FLIPString = "FLIP";
         int MajorVersion = 1;
-        int MinorVersion = 4;
+        int MinorVersion = 5;
 
         if (commandLine.optionSet("help"))
         {
@@ -509,10 +510,10 @@ namespace FLIPTool
         bool bUseHDR = (referenceFileName.getExtension() == "exr");
         std::string destinationDirectory = ".";
         std::string basename = (commandLine.optionSet("basename") ? commandLine.getOptionValue("basename") : "");
-        FLIP::filename flipFileName(".png");
-        FLIP::filename histogramFileName(".py");
-        FLIP::filename exposureFileName(".png");
-        FLIP::filename txtFileName(".txt");
+        FLIP::filename flipFileName("tmp.png"); // Dummy file name, but it keeps the file extension (.png).
+        FLIP::filename histogramFileName("tmp.py");
+        FLIP::filename exposureFileName("tmp.png");
+        FLIP::filename txtFileName("tmp.txt");
         FLIP::filename testFileName;
         bool returnLDRImages = false;                                   // Can only happen for HDR.
         bool returnLDRFLIPImages = false;                               // Can only happen for HDR.
@@ -551,8 +552,8 @@ namespace FLIPTool
         for (auto& testFileNameString : commandLine.getOptionValues("test"))
         {
             pooledValues = FLIPPooling::pooling<float>(100); // Reset pooledValues to remove accumulation issues.
-            std::vector<FLIP::image<float>*> hdrOutputFlipLDRImages;
-            std::vector<FLIP::image<FLIP::color3>*> hdrOutputLDRImages;
+            std::vector<FLIP::image<float>*> intermediateLDRFLIPImages;
+            std::vector<FLIP::image<FLIP::color3>*> intermediateLDRImages;
             testFileName = testFileNameString;
 
             if (!std::filesystem::exists(testFileName.toString()))
@@ -583,11 +584,11 @@ namespace FLIPTool
             FLIP::image<float> maxErrorExposureMap(referenceImage.getWidth(), referenceImage.getHeight());
 
             auto t0 = std::chrono::high_resolution_clock::now();
-            FLIP::evaluate(referenceImage, testImage, bUseHDR, parameters, errorMapFLIP, maxErrorExposureMap, returnLDRFLIPImages, hdrOutputFlipLDRImages, returnLDRImages, hdrOutputLDRImages);
+            FLIP::evaluate(referenceImage, testImage, bUseHDR, parameters, errorMapFLIP, maxErrorExposureMap, returnLDRFLIPImages, intermediateLDRFLIPImages, returnLDRImages, intermediateLDRImages);
             float time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count() / 1000000.0f;
 
             saveErrorAndExposureMaps(bUseHDR, commandLine, parameters, basename, errorMapFLIP, maxErrorExposureMap, destinationDirectory, referenceFileName, testFileName, histogramFileName, txtFileName, flipFileName, exposureFileName, verbosity, testFileCount);
-            saveHDROutputLDRImages(commandLine, parameters, basename, flipFileName, referenceFileName, testFileName, destinationDirectory, hdrOutputFlipLDRImages, hdrOutputLDRImages);
+            saveIntermediateHDRFLIPOutput(commandLine, parameters, basename, flipFileName, referenceFileName, testFileName, destinationDirectory, intermediateLDRFLIPImages, intermediateLDRImages);
             gatherStatisticsAndSaveOutput(commandLine, errorMapFLIP, pooledValues, destinationDirectory, referenceFileName, testFileName, histogramFileName, txtFileName, FLIPString, time, ++testFileCount, saveOverlappedHistogram, verbosity);
 
             // Save first set of results for overlapped histogram.

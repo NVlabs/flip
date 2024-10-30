@@ -412,7 +412,6 @@ namespace FLIPPooling
             size_t numPixels = size_t(imgWidth) * size_t(imgHeight);
 
             size_t bucketsSize = firstPooledValues.getHistogram().size();
-            size_t bucketsSize2 = this->mHistogram.size();
             T bucketStep = this->mHistogram.getBucketStep();
 
             float firstPooledValuesMean = firstPooledValues.getMean();

@@ -1,6 +1,6 @@
 # A note about precision
 
-We have several different implementations of ꟻLIP (Python, PyTorch, C++, and CUDA) and we have tried to make
+We have several different implementations of FLIP (Python, PyTorch, C++, and CUDA) and we have tried to make
 the implementations as similar as possible. However, there are several facts about these that make it very hard
 to get perfect matches between the implementations.
 These include:

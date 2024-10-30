@@ -32,8 +32,8 @@ _ReSharper*/
 
 #  Python ignores
 *__pycache__*
-python/build/
-python/*.egg-info/
+dist/
+*.egg-info/
 
 #  LaTeX ignores
 *.synctex.gz

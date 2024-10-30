@@ -234,7 +234,7 @@ public:
                 {
                     longOptionName = allowedOption.longName;
                     shortOptionName = allowedOption.shortName;
-                    if (bIsLong && longOptionName == optionString || !bIsLong && shortOptionName == optionString)
+                    if ((bIsLong && longOptionName == optionString) || (!bIsLong && shortOptionName == optionString))
                     {
                         bFound = true;
                         atOption = true;

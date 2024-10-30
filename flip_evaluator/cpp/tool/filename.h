@@ -170,7 +170,7 @@ namespace FLIP
             int fileNameStringLength = int(fileNameString.length());
             int totalLength = directoryStringLength + fileNameStringLength;
 
-            if (totalLength > maxLen)
+            if (size_t(totalLength) > maxLen)
             {
                 //  First shorten the directory.
                 int overflow = totalLength - int(maxLen);
@@ -412,13 +412,6 @@ namespace FLIP
         bool parse(std::string path)
         {
             init();
-            size_t periodCount = std::count_if(path.begin(), path.end(), [](char c) {return c == '.'; });
-            if (path[0] == '.' && periodCount == 1)
-            {
-                mExtension = path.substr(1);
-                return true;
-            }
-
 
             // Must be at least one slash to contain a directory.
             size_t iLastSlash = path.find_last_of("\\/");

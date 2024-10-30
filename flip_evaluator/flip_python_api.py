@@ -99,14 +99,6 @@ def evaluate(reference, test, dynamicRangeString, inputsRGB=True, applyMagma=Tru
     # Evaluate FLIP. Return error map.
     return pbflip.evaluate(reference, test, useHDR, inputsRGB, computeMeanError, applyMagma, parameters)
 
-def execute(cmdline):
-    """
-    Run the FLIP tool, based on the C++ tool code.
-
-    :param cmdline: string containing the command line for the FLIP tool (run python flip.py to see all available input)
-    """
-    pbflip.execute(cmdline)
-
 def load(imgpath):
     """
     Load an image.
@@ -115,3 +107,9 @@ def load(imgpath):
     :return: numpy array containing the image (with HxWxC layout)
     """
     return pbflip.load(imgpath)
+
+def main():
+    pbflip.execute(sys.argv)
+
+if __name__ == '__main__':
+    main()

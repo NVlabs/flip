@@ -30,11 +30,59 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #################################################################################
 
-[build-system]
-requires = [
-    "setuptools", "pybind11>=2.10.1"
+from pybind11.setup_helpers import Pybind11Extension
+from setuptools import setup
+import os
+import sys
+
+__package_name__ = "flip_evaluator"
+__version__ = "1.5"
+
+# Separate compiler options for Windows.
+extra_compile_args = ["-DNDEBUG"]
+if sys.platform.startswith("win"):
+    extra_compile_args = ["-openmp"]
+    extra_link_args = []
+# Use OpenMP if environment variable is set or not on a Mac.
+elif os.environ.get("USEOPENMP") or not sys.platform.startswith("darwin"):
+    extra_compile_args = ["-fopenmp"]
+    extra_link_args = ["-lgomp"]
+
+ext_modules = [
+    Pybind11Extension(
+        "pbflip", # Name of pybind11 module.
+        [__package_name__ + "/pybindFLIP.cpp"],
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
+        cxx_std=20
+    ),
 ]
 
-[project]
-name = "flip"
-dynamic = ['version', 'description', 'readme', 'requires-python', 'license', 'authors']
+# Get description from README.
+with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
+
+# Run setup.
+setup(
+    name=__package_name__,
+    version=__version__,
+    author="NVIDIA",
+    author_email="pandersson@nvidia.com",
+    description="A Difference Evaluator for Alternating Images",
+    url="https://github.com/nvlabs/flip",
+    license="Berkeley Software Distribution (BSD) 3-Clause",
+    packages=[__package_name__, __package_name__ + '.cpp', __package_name__ + '.cpp.tool'],
+    package_data = {__package_name__: ['cpp/FLIP.h', 'cpp/tool/*.h', 'cpp/tool/.*cpp']},
+    include_package_data = True,
+    install_requires=['numpy', 'matplotlib'],
+    long_description=long_description,
+    long_description_content_type='text/markdown',
+    ext_modules=ext_modules,
+    python_requires=">=3.7",
+    
+    entry_points={
+        'console_scripts': [
+            'flip=' + __package_name__ + '.flip_python_api:main'
+        ]
+    }
+)

@@ -48,13 +48,12 @@
 
  // Code by Pontus Ebelin (formerly Andersson) and Tomas Akenine-Moller.
 
-#pragma once
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
-#include "../../cpp/FLIP.h"
-#include "../../cpp/tool/FLIPToolHelpers.h"
+#include "cpp/FLIP.h"
+#include "cpp/tool/FLIPToolHelpers.h"
 
 namespace py = pybind11;
 
@@ -77,16 +76,6 @@ py::array_t<float> load(std::string fileName)
     return numpyImage;
 }
 
-// Convert linear RGB channel value to sRGB.
-float sRGBToLinearRGB(float sC)
-{
-    if (sC <= 0.04045f)
-    {
-        return sC / 12.92f;
-    }
-    return powf((sC + 0.055f) / 1.055f, 2.4f);
-}
-
 // Convert linear RGB image to sRGB.
 void sRGBToLinearRGB(float* image, const int imageWidth, const int imageHeight)
 {
@@ -96,9 +85,9 @@ void sRGBToLinearRGB(float* image, const int imageWidth, const int imageHeight)
         for (int x = 0; x < imageWidth; x++)
         {
             int idx = (y * imageWidth + x) * 3;
-            image[idx] = sRGBToLinearRGB(image[idx]);
-            image[idx + 1] = sRGBToLinearRGB(image[idx + 1]);
-            image[idx + 2] = sRGBToLinearRGB(image[idx + 2]);
+            image[idx] = FLIP::color3::sRGBToLinearRGB(image[idx]);
+            image[idx + 1] = FLIP::color3::sRGBToLinearRGB(image[idx + 1]);
+            image[idx + 2] = FLIP::color3::sRGBToLinearRGB(image[idx + 2]);
         }
     }
 }
@@ -122,7 +111,7 @@ FLIP::Parameters setParameters(py::dict inputParameters)
             float distanceToDisplay = py::cast<float>(vc[0]);
             float displayWidthPixels = py::cast<float>(vc[1]);
             float displayWidthMeters = py::cast<float>(vc[2]);
-            parameters.PPD = FLIP::calculatePPD(distanceToDisplay, displayWidthPixels, displayWidthPixels);
+            parameters.PPD = FLIP::calculatePPD(distanceToDisplay, displayWidthPixels, displayWidthMeters);
         }
         else if (key == "startExposure")
         {
@@ -194,7 +183,7 @@ std::tuple<py::array_t<float>, float, py::dict> evaluate(const py::array_t<float
     float* ptr_t = static_cast<float*>(t_buf.ptr);
 
     // Image size.
-    const int nRows = int(r_buf.shape[0]), nCols = int(r_buf.shape[1]), nChannels = int(r_buf.shape[2]);
+    const int nRows = int(r_buf.shape[0]), nCols = int(r_buf.shape[1]);
 
     // FLIP
     float* flip;
@@ -204,13 +193,13 @@ std::tuple<py::array_t<float>, float, py::dict> evaluate(const py::array_t<float
     int nChannelsOut;
     if (applyMagma)
     {
-        flipNumpy = py::array_t<float>({ r_buf.shape[0], r_buf.shape[1], r_buf.shape[2] });
         nChannelsOut = 3;
+        flipNumpy = py::array_t<float>({ nRows, nCols, nChannelsOut});
     }
     else
     {
-        flipNumpy = py::array_t<float>({ r_buf.shape[0], r_buf.shape[1] });
         nChannelsOut = 1;
+        flipNumpy = py::array_t<float>({ nRows, nCols });
     }
     py::buffer_info flipNumpy_buf = flipNumpy.request();
     float* ptr_flipNumpy = static_cast<float*>(flipNumpy_buf.ptr);
@@ -258,8 +247,7 @@ commandline generateCommandLine(const py::list argvPy)
     for (auto item : argvPy)
     {
         const std::string it = py::reinterpret_steal<py::str>(item);
-        argv[counter] = new char[it.length()];
-        std::strcpy(argv[counter], it.c_str());
+        argv[counter] = strdup(it.c_str());
         counter++;
     }
 
@@ -287,7 +275,7 @@ int execute(const py::list argvPy)
 PYBIND11_MODULE(pbflip, handle)
 {
     handle.doc() = "Load images (load), evaluate FLIP (evaluate), or run the full FLIP tool (execute).";
-    handle.def("evaluate", &evaluate);
     handle.def("load", &load);
+    handle.def("evaluate", &evaluate);
     handle.def("execute", &execute);
 }

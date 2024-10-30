@@ -30,10 +30,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #################################################################################
 
-import flip
-import sys
+[build-system]
+requires = [
+    "setuptools", "pybind11>=2.10.1"
+]
 
-if __name__ == '__main__':
-    flip.execute(sys.argv)
-
-
+[project]
+name = "flip_evaluator"
+dynamic = ['version', 'description', 'readme', 'requires-python', 'license', 'authors', 'scripts', 'dependencies']

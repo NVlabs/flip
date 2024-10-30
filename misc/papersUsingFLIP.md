@@ -313,6 +313,13 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1. Åsberg, David, ["Real-time Rendering of Dynamic Baked Clouds"](https://www.diva-portal.org/smash/record.jsf?pid=diva2%3A1895803&dswid=2062), Project work, Royal Institute of Technology, Sweden, 2024.
 
+1. Arturo Salmi, Szabolcs Cséfalvay, James Imber, ["Fast Local Neural Regression for Low-Cost, Path Traced Lambertian Global Illumination"](https://arxiv.org/abs/2410.11625), arXiv:2410.11625, 2024.
+
+1. Yu-Ting Wu, ["Efficient Environment Map Rendering Based on Decomposition"](https://onlinelibrary.wiley.com/doi/abs/10.1111/cgf.15264), Computer Graphics Forum, October 2024.
+
+
+
+
  
 **Citing ꟻLIP (but not using):**
 1. Jim Nilsson and Tomas Akenine-Möller, ["Understanding SSIM"](https://arxiv.org/pdf/2006.13846.pdf), *arXiv:2006.13846v2*, 2020.

@@ -24,7 +24,7 @@ jobs:
 
     - name: Configure CMake
       run: >
-        cmake -LA -B ${{github.workspace}}/flip_evaluator/build
+        cmake -LA -B ${{github.workspace}}/flip_evaluator/build -S ${{github.workspace}}/flip_evaluator/
         -DCMAKE_BUILD_TYPE=${{ matrix.config }}
         -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/flip_evaluator/build/install
         -DCMAKE_CUDA_ARCHITECTURES=all
@@ -32,4 +32,4 @@ jobs:
         -DFLIP_ENABLE_CUDA=${{ matrix.os == 'ubuntu-latest' }}
 
     - name: Build
-      run: cmake -B ${{github.workspace}}/flip_evaluator/build -S ${{github.workspace}}/flip_evaluator/ --build ${{github.workspace}}/flip_evaluator/build --config ${{ matrix.config }} --target install
+      run: cmake --build ${{github.workspace}}/flip_evaluator/build --config ${{ matrix.config }} --target install

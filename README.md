@@ -44,6 +44,16 @@ For individual contributions to the project, please confer the [Individual Contr
 
 For business inquiries, please visit our website and submit the form: [NVIDIA Research Licensing](https://www.nvidia.com/en-us/research/inquiries/).
 
+# Simplest Way To Get Started
+The simplest way to run FLIP to compare a test image `testImage.png` to a reference image `referenceImage.png` is as follows:
+```
+pip install flip-evaluator
+flip -r referenceImage.png -t testImage.png
+```
+For more information about the tool's capabilities, try running `flip -h`.
+
+If you wish to use FLIP in your Python or C++ evaluation scripts, please read the next sections.
+
 # Python (API and Tool)
 **Setup** (with pip):
 ```

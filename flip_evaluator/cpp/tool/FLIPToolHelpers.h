@@ -239,8 +239,8 @@ namespace FLIPTool
     {
         if (intermediateLDRImages.size() > 0)
         {
-            FLIP::filename rFileName("tmp.png");
-            FLIP::filename tFileName("tmp.png");
+            FLIP::filename rFileName(".png");
+            FLIP::filename tFileName(".png");
             if (intermediateLDRImages.size() != size_t(parameters.numExposures * 2))
             {
                 std::cout << "FLIP tool error: the number of LDR images from HDR-FLIP is not the expected number.\nExiting.\n";
@@ -510,10 +510,10 @@ namespace FLIPTool
         bool bUseHDR = (referenceFileName.getExtension() == "exr");
         std::string destinationDirectory = ".";
         std::string basename = (commandLine.optionSet("basename") ? commandLine.getOptionValue("basename") : "");
-        FLIP::filename flipFileName("tmp.png"); // Dummy file name, but it keeps the file extension (.png).
-        FLIP::filename histogramFileName("tmp.py");
-        FLIP::filename exposureFileName("tmp.png");
-        FLIP::filename txtFileName("tmp.txt");
+        FLIP::filename flipFileName(".png");
+        FLIP::filename histogramFileName(".py");
+        FLIP::filename exposureFileName(".png");
+        FLIP::filename txtFileName(".txt");
         FLIP::filename testFileName;
         bool returnLDRImages = false;                                   // Can only happen for HDR.
         bool returnLDRFLIPImages = false;                               // Can only happen for HDR.

@@ -86,7 +86,7 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
     Text file: `<name>.txt`<br>
 
 **Example usage:**
-To test the API, please inspect the `flip_evaluator/python/api_example.py` script. This shows how the available API commands may be used. Note that the script requires `matplotlib`.
+To test the API, please inspect the `flip_evaluator/python/api_example.py` script. This shows how the available API commands may be used.
 Please note that not all capabilities of the tool is available through the Python API. For example, the exposure map is not output when running HDR-FLIP. For that, use the tool or the C++ API in [FLIP.h](https://github.com/NVlabs/flip/blob/main/cpp/FLIP.h).
 
 To test the tool, start a shell, navigate to `flip_evaluator/python` and try:
@@ -110,6 +110,8 @@ FLIP between reference image <reference.exr> and test image <test.exr>:
         Min: 0.003123
         Max: 0.962022
         Evaluation time: <t> seconds
+        FLIP error map location: <path/to/workingDirectory/flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png>
+        FLIP exposure map location: <path/to/workingDirectory/exposure_map.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png>
   ```
 where `<t>` is the time it took to evaluate HDR-FLIP. In addition, you will now find the files `flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png` and `exposure_map.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png`
 in the working directory, and we urge you to inspect those, which will reveal where the errors in the test image are located.

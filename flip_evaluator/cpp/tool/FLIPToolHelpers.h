@@ -318,7 +318,8 @@ namespace FLIPTool
 
     static void gatherStatisticsAndSaveOutput(commandline& commandLine, FLIP::image<float>& errorMapFLIP, FLIPPooling::pooling<float>& pooledValues,
         const std::string& destinationDirectory, const FLIP::filename& referenceFileName, const FLIP::filename& testFileName, const FLIP::filename& histogramFileName,
-        const FLIP::filename& txtFileName, const std::string& FLIPString, const float time, const uint32_t testFileCount, const bool saveOverlappedHistogram, const size_t verbosity)
+        const FLIP::filename& txtFileName, const FLIP::filename& flipFileName, const FLIP::filename& exposureFileName, const std::string& FLIPString, const float time,
+        const uint32_t testFileCount, const bool saveOverlappedHistogram, const bool useHDR, const size_t verbosity)
     {
         for (int y = 0; y < errorMapFLIP.getHeight(); y++)
         {
@@ -413,6 +414,14 @@ namespace FLIPTool
                 std::cout << "     Min: " << FIXED_DECIMAL_DIGITS(minValue, 6) << "\n";
                 std::cout << "     Max: " << FIXED_DECIMAL_DIGITS(maxValue, 6) << "\n";
                 std::cout << "     Evaluation time: " << FIXED_DECIMAL_DIGITS(time, 4) << " seconds\n";
+                if (!commandLine.optionSet("no-error-map"))
+                {
+                    std::cout << "     FLIP error map location: " << destinationDirectory + "/" + flipFileName.toString() << "\n";
+                }
+                if (!commandLine.optionSet("no-exposure-map") && useHDR)
+                {
+                    std::cout << "     FLIP exposure map location: " << destinationDirectory + "/" + exposureFileName.toString() << "\n";
+                }
                 std::cout << ((testFileCount < commandLine.getOptionValues("test").size()) ? "\n" : "");
             }
         }
@@ -589,7 +598,7 @@ namespace FLIPTool
 
             saveErrorAndExposureMaps(bUseHDR, commandLine, parameters, basename, errorMapFLIP, maxErrorExposureMap, destinationDirectory, referenceFileName, testFileName, histogramFileName, txtFileName, flipFileName, exposureFileName, verbosity, testFileCount);
             saveIntermediateHDRFLIPOutput(commandLine, parameters, basename, flipFileName, referenceFileName, testFileName, destinationDirectory, intermediateLDRFLIPImages, intermediateLDRImages);
-            gatherStatisticsAndSaveOutput(commandLine, errorMapFLIP, pooledValues, destinationDirectory, referenceFileName, testFileName, histogramFileName, txtFileName, FLIPString, time, ++testFileCount, saveOverlappedHistogram, verbosity);
+            gatherStatisticsAndSaveOutput(commandLine, errorMapFLIP, pooledValues, destinationDirectory, referenceFileName, testFileName, histogramFileName, txtFileName, flipFileName, exposureFileName, FLIPString, time, ++testFileCount, saveOverlappedHistogram, bUseHDR, verbosity);
 
             // Save first set of results for overlapped histogram.
             if (saveOverlappedHistogram && testFileCount == 1)

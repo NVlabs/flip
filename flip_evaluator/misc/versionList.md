@@ -6,8 +6,8 @@ changed for the different versions of FLIP:
 # Version 1.5 (commit ?)
 - Flipped the ꟻ in ꟻLIP. The entire name (FLIP) should now be readable on all devices.
 - Published Python version of FLIP to PyPI (URL: ?).
-  - The distribution has been tested on Windows, Linux (Ubuntu), and macOS.
   - The Python version of FLIP (tool and API) is now installed by `pip install flip-evaluator`.
+  - The distribution has been tested on Windows, Linux (Ubuntu 24.04), and OS X ($\ge$ 10.15). Note that FLIP's output might differ slightly between the different operative systems. The references used for `flip_evaluator/tests/test.py` are made for Windows. While the mean tests (means compared up to six decimal points) pass on each mentioned operative system, not all error map pixels are identical.
   - After installation, the tool can be run directly in a shell by `flip --reference reference.{png|exr} --test test.{png|exr}`.
   - After installation, the FLIP API is available in Python by `import flip_evaluator as flip`.
 - Directory structure in the FLIP repository has been altered to accomodate the Python version being published to PyPI.

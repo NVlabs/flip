@@ -53,7 +53,7 @@ pip install flip-evaluator
 **Usage:**<br>
 
 API:<br>
-See the example script `flip_evaluator/python/api_example.py`..
+See the example script `flip_evaluator/python/api_example.py`.
 
 Tool:
 ```

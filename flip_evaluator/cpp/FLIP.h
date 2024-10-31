@@ -2447,7 +2447,7 @@ namespace FLIP
     {
         FLIP::image<FLIP::color3> referenceImage;
         FLIP::image<FLIP::color3> testImage;
-        FLIP::image<float> errorMapFLIPOutputImage(imageWidth, imageHeight);
+        FLIP::image<float> errorMapFLIPOutputImage(imageWidth, imageHeight, 0.0f);
         referenceImage.setPixels(referenceThreeChannelImage, imageWidth, imageHeight);
         testImage.setPixels(testThreeChannelImage, imageWidth, imageHeight);
 

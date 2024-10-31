@@ -61,7 +61,12 @@ namespace py = pybind11;
 py::array_t<float> load(std::string fileName)
 {
     FLIP::image<FLIP::color3> image;
-    ImageHelpers::load(image, fileName);
+    bool imageOk = ImageHelpers::load(image, fileName);
+    if (!imageOk)
+    {
+        std::cout << "Error: could not read image file <" << fileName << ">. Exiting\n";
+        exit(EXIT_FAILURE);
+    }
 
     const int imageWidth = image.getWidth();
     const int imageHeight = image.getHeight();

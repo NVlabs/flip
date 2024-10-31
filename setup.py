@@ -47,6 +47,10 @@ if sys.platform.startswith("win"):
 elif os.environ.get("USEOPENMP") or not sys.platform.startswith("darwin"):
     extra_compile_args = ["-fopenmp"]
     extra_link_args = ["-lgomp"]
+else: # on Mac
+    extra_compile_args = []
+    extra_link_args = []
+    os.environ["MACOSX_DEPLOYMENT_TARGET"] = "10.15" # FLIP requires OS X >= 10.15.
 
 ext_modules = [
     Pybind11Extension(
@@ -71,18 +75,18 @@ setup(
     description="A Difference Evaluator for Alternating Images",
     url="https://github.com/nvlabs/flip",
     license="Berkeley Software Distribution (BSD) 3-Clause",
-    packages=[__package_name__, __package_name__ + '.cpp', __package_name__ + '.cpp.tool'],
-    package_data = {__package_name__: ['cpp/FLIP.h', 'cpp/tool/*.h', 'cpp/tool/.*cpp']},
+    packages=[__package_name__, __package_name__ + ".cpp", __package_name__ + ".cpp.tool"],
+    package_data = {__package_name__: ["cpp/FLIP.h", "cpp/tool/*.h", "cpp/tool/.*cpp"]},
     include_package_data = True,
-    install_requires=['numpy', 'matplotlib'],
+    install_requires=["numpy", "matplotlib"],
     long_description=long_description,
-    long_description_content_type='text/markdown',
+    long_description_content_type="text/markdown",
     ext_modules=ext_modules,
     python_requires=">=3.7",
     
     entry_points={
-        'console_scripts': [
-            'flip=' + __package_name__ + '.flip_python_api:main'
+        "console_scripts": [
+            "flip=" + __package_name__ + ".flip_python_api:main"
         ]
     }
 )

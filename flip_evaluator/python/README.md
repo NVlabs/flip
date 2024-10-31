@@ -20,12 +20,12 @@ Similarly, it implements the FLIP tool, presented in [Ray Tracing Gems II](https
 
 Copyright © 2020-2024, NVIDIA Corporation & Affiliates. All rights reserved.
 
-This work is made available under a [BSD 3-Clause License](../../LICENSE).
+This work is made available under a [BSD 3-Clause License](https://github.com/NVlabs/flip/blob/main/LICENSE).
 
-The repository distributes code for `tinyexr`, which is subject to a [BSD 3-Clause License](../misc/LICENSE-third-party.md#bsd-3-clause-license),<br>
-and `stb_image`, which is subject to an [MIT License](../misc/LICENSE-third-party.md#mit-license).
+The repository distributes code for `tinyexr`, which is subject to a [BSD 3-Clause License](https://github.com/NVlabs/flip/blob/main/flip_evaluator/misc/LICENSE-third-party.md#bsd-3-clause-license),<br>
+and `stb_image`, which is subject to an [MIT License](https://github.com/NVlabs/flip/blob/main/flip_evaluator/misc/LICENSE-third-party.md#mit-license).
 
-For individual contributions to the project, please confer the [Individual Contributor License Agreement](../misc/CLA.md).
+For individual contributions to the project, please confer the [Individual Contributor License Agreement](https://github.com/NVlabs/flip/blob/main/flip_evaluator/misc/CLA.md).
 
 For business inquiries, please visit our website and submit the form: [NVIDIA Research Licensing](https://www.nvidia.com/en-us/research/inquiries/).
 
@@ -38,7 +38,7 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
 - Usage (tool): `flip --reference reference.{exr|png} --test test.{exr|png} [--options]`, where the list of options can be seen by `flip -h`.
 - Tested with pip 24.0, Python 3.11.8, pybind11 2.11.1, and C++20.
 - FLIP runs on Windows, Linux (tested on Ubuntu 24.04), and OS X ($\ge$ 10.15), though its output might differ slightly between the different operative systems. The references used for `flip_evaluator/tests/test.py` are made for Windows. While the mean tests (means compared up to six decimal points) pass for each mentioned operative system, not all error map pixels are identical.
-- The code that implements FLIP metrics and the FLIP tool is available in [flip_evaluator/cpp/FLIP.h](https://github.com/NVlabs/flip/blob/main/cpp/FLIP.h) and [flip_evaluator/cpp/tool](https://github.com/NVlabs/flip/blob/main/cpp/tool), respectively. The relevant functions are called by the Python API using [pybind11](https://github.com/pybind/pybind11) (see [flip_evaluator/main.cpp](https://github.com/NVlabs/flip/blob/main/flip_evaluator/main.cpp)). The Python API is provided in `flip_evaluator/main.py`.
+- The code that implements FLIP metrics and the FLIP tool is available in [flip_evaluator/cpp/FLIP.h](https://github.com/NVlabs/flip/blob/main/flip_evaluator/cpp/FLIP.h) and [flip_evaluator/cpp/tool](https://github.com/NVlabs/flip/blob/main/flip_evaluator/cpp/tool), respectively. The relevant functions are called by the Python API using [pybind11](https://github.com/pybind/pybind11) (see [flip_evaluator/main.cpp](https://github.com/NVlabs/flip/blob/main/flip_evaluator/main.cpp)). The Python API is provided in `flip_evaluator/main.py`.
   `flip_evaluator/tests/test.py` contains simple tests used to test whether code updates alter results.
 - Weighted histograms are output as Python scripts. Running the script will create a PDF version of the histogram. Notice that those scripts require `numpy` and `matplotlib`, both of which are automatically installed during setup.
 - The naming convention used for the FLIP tool's output is as follows (where `ppd` is the assumed number of pixels per degree,
@@ -87,7 +87,7 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
 
 **Example usage:**
 To test the API, please inspect the `flip_evaluator/python/api_example.py` script. This shows how the available API commands may be used.
-Please note that not all capabilities of the tool is available through the Python API. For example, the exposure map is not output when running HDR-FLIP. For that, use the tool or the C++ API in [FLIP.h](https://github.com/NVlabs/flip/blob/main/cpp/FLIP.h).
+Please note that not all capabilities of the tool is available through the Python API. For example, the exposure map is not output when running HDR-FLIP. For that, use the tool or the C++ API in [FLIP.h](https://github.com/NVlabs/flip/blob/main/flip_evaluator/cpp/FLIP.h).
 
 To test the tool, start a shell, navigate to `flip_evaluator/python` and try:
   ```

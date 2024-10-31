@@ -17,7 +17,7 @@ and [HDR-FLIP](https://research.nvidia.com/publication/2021-05_HDR-FLIP) image e
 It also holds code for the FLIP tool, presented in [Ray Tracing Gems II](https://www.realtimerendering.com/raytracinggems/rtg2/index.html).
 
 Note that since v1.2, we use separated convolutions for the C++ and CUDA versions of FLIP. A note explaining those
-can be found [here](misc/separatedConvolutions.pdf).
+can be found [here](https://github.com/NVlabs/flip/blob/main/misc/separatedConvolutions.pdf).
 
 With v1.3, we have switched to a single header [FLIP.h](FLIP.h) for easier integration into other projects.
 
@@ -28,12 +28,12 @@ Since v1.4, the majority of the code for the tool is contained in [FLIPToolHelpe
 
 Copyright © 2020-2024, NVIDIA Corporation & Affiliates. All rights reserved.
 
-This work is made available under a [BSD 3-Clause License](../../LICENSE).
+This work is made available under a [BSD 3-Clause License](https://github.com/NVlabs/flip/blob/main/LICENSE).
 
-The repository distributes code for `tinyexr`, which is subject to a [BSD 3-Clause License](../misc/LICENSE-third-party.md#bsd-3-clause-license),<br>
-and `stb_image`, which is subject to an [MIT License](../misc/LICENSE-third-party.md#mit-license).
+The repository distributes code for `tinyexr`, which is subject to a [BSD 3-Clause License](https://github.com/NVlabs/flip/blob/main/flip_evaluator/misc/LICENSE-third-party.md#bsd-3-clause-license),<br>
+and `stb_image`, which is subject to an [MIT License](https://github.com/NVlabs/flip/blob/main/flip_evaluator/misc/LICENSE-third-party.md#mit-license).
 
-For individual contributions to the project, please confer the [Individual Contributor License Agreement](../misc/CLA.md).
+For individual contributions to the project, please confer the [Individual Contributor License Agreement](https://github.com/NVlabs/flip/blob/main/flip_evaluator/misc/CLA.md).
 
 For business inquiries, please visit our website and submit the form: [NVIDIA Research Licensing](https://www.nvidia.com/en-us/research/inquiries/).
 
@@ -64,7 +64,7 @@ For business inquiries, please visit our website and submit the form: [NVIDIA Re
 - Usage: `flip[-cuda].exe --reference reference.{exr|png} --test test.{exr|png} [options]`, where the list of options can be seen by `flip[-cuda].exe -h`.
 - Tested on Windows 10 version 22H2 and Windows 11 version 23H2 with CUDA 12.3. Compiled with Visual Studio 2022. If you use another version of CUDA, you will need to change the `CUDA 12.3` strings in the `CUDA.vcxproj` file accordingly.
 - `flip_evaluator/tests/test.py` contains simple tests used to test whether code updates alter results.
-- Weighted histograms are output as Python scripts. Running the script will create a PDF version of the histogram. Notice that those scripts require `numpy` and `matplotlib`, both of which may be installed using pip. These are automantically installed when installing the Python version of FLIP (see [README.md](../python/README.md)).
+- Weighted histograms are output as Python scripts. Running the script will create a PDF version of the histogram. Notice that those scripts require `numpy` and `matplotlib`, both of which may be installed using pip. These are automantically installed when installing the Python version of FLIP (see [README.md](https://github.com/NVlabs/flip/blob/main/flip_evaluator/python/README.md)).
 - The naming convention used for the FLIP tool's output is as follows (where `ppd` is the assumed number of pixels per degree,
   `tm` is the tone mapper assumed by HDR-FLIP, `cstart` and `cstop` are the shortest and longest exposures, respectively, assumed by HDR-FLIP,
   with `p` indicating a positive value and `m` indicating a negative value,

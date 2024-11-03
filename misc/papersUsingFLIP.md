@@ -317,6 +317,8 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1. Yu-Ting Wu, ["Efficient Environment Map Rendering Based on Decomposition"](https://onlinelibrary.wiley.com/doi/abs/10.1111/cgf.15264), Computer Graphics Forum, October 2024.
 
+1. Victor Stenvers and Peter Vangorp, ["Image-Based Material Editing Using Perceptual Attributes or Ground-Truth Parameters"](https://dl.acm.org/doi/10.1145/3697294.3697301), Proceedings of 21st ACM SIGGRAPH Conference on Visual Media Production, November 2024.
+ 
 
 
 

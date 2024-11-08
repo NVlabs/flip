@@ -466,6 +466,8 @@ namespace FLIPTool
 
     int execute(commandline commandLine)
     {
+        auto timeStart = std::chrono::high_resolution_clock::now();
+
         std::string FLIPString = "FLIP";
         int MajorVersion = 1;
         int MinorVersion = 4;
@@ -606,6 +608,8 @@ namespace FLIPTool
             pooledValues.saveOverlappedHistogram(firstPooledValues, destinationDirectory + "/" + histogramFileName.toString(), referenceImage.getWidth(), referenceImage.getHeight(), optionLog, referenceFileName.getName(), firstTestFileName.getName(), testFileName.getName(), !optionExcludeValues, yMax);
         }
 
+        float timeTotal = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - timeStart).count() / 1000000.0f;
+        std::cout << "\nTotal time: " << FIXED_DECIMAL_DIGITS(timeTotal, 4) << " seconds\n";
         exit(EXIT_SUCCESS);                 // From stdlib.h: equal to 0.
     }
 }

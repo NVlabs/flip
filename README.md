@@ -1,4 +1,4 @@
-![Teaser image](flip_evaluator/images/teaser.png "Teaser image")
+![Teaser image](images/teaser.png "Teaser image")
 
 # FLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.5)
 

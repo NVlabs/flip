@@ -65,7 +65,7 @@ MACOSX_DEPLOYMENT_TARGET = "10.15"
 [tool.scikit-build]
 minimum-version = "0.4"
 sdist.include = ["src/flip_evaluator/__init__.py", "src/flip_evaluator/flip_python_api.py", "src/cpp/FLIP.h", "src/cpp/tool/*.h"]
-sdist.exclude = [".github", ".gitignore", "images", "misc", "dist", "*__pycache__*", "src/pytorch", "src/cmake", "src/tests", "src/CMakeLists.txt", "src/flip_evaluator/api_example.py", "src/flip_evaluator/README.md", "src/cpp/FLIP.sln", "src/cpp/CMakeLists.txt", "src/cpp/README.md", "src/cpp/tool/CMakeLists.txt", "src/cpp/tool/CPP.vcxproj*", "src/cpp/tool/CUDA.vcxproj*", "src/cpp/tool/*.cpp", "src/cpp/tool/*.cu"]
+sdist.exclude = [".github", ".gitignore", "images", "misc", "dist", "*__pycache__*", "src/pytorch", "src/cmake", "src/tests", "src/CMakeLists.txt", "src/python", "src/cpp/FLIP.sln", "src/cpp/CMakeLists.txt", "src/cpp/README.md", "src/cpp/tool/CMakeLists.txt", "src/cpp/tool/CPP.vcxproj*", "src/cpp/tool/CUDA.vcxproj*", "src/cpp/tool/*.cpp", "src/cpp/tool/*.cu"]
 
 [tool.hatch.metadata.hooks.fancy-pypi-readme]
 content-type = "text/markdown"

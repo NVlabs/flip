@@ -484,7 +484,7 @@ namespace FLIPTool
         {
             std::cout << "FLIP v" << MajorVersion << "." << MinorVersion << ".\n";
             commandLine.print();
-            exit(EXIT_FAILURE);
+            exit(EXIT_SUCCESS);
         }
         if (!commandLine.optionSet("reference"))
         {
@@ -501,7 +501,7 @@ namespace FLIPTool
             std::cout << "Error: you need to set a test image filename.\n  Typically done with '-t testimg.{png,exr}' or '--test testimg.{png,exr}'.\n  Use -h or --help for help message. Exiting\n";
             exit(EXIT_FAILURE);
         }
-        if (commandLine.optionSet("help") || (commandLine.optionSet("basename") && commandLine.getOptionValues("test").size() != 1) || commandLine.getError())
+        if ((commandLine.optionSet("basename") && commandLine.getOptionValues("test").size() != 1) || commandLine.getError())
         {
             if (commandLine.getError())
             {

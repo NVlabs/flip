@@ -30,7 +30,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #################################################################################
 
-import pbflip
+from flip_evaluator import pbflip
 import sys, os
 
 def evaluate(reference, test, dynamicRangeString, inputsRGB=True, applyMagma=True, computeMeanError=True, parameters={}):
@@ -96,8 +96,8 @@ def evaluate(reference, test, dynamicRangeString, inputsRGB=True, applyMagma=Tru
             sys.exit(1)
         test = pbflip.load(test)
 
-    # Evaluate FLIP. Return error map.
-    return pbflip.evaluate(reference, test, useHDR, inputsRGB, computeMeanError, applyMagma, parameters)
+    # Evaluate FLIP. Return error map, mean FLIP error, and dictionary containing the parameters used.
+    return pbflip.evaluate(reference, test, useHDR, inputsRGB, applyMagma, computeMeanError, parameters)
 
 def load(imgpath):
     """

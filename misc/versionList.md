@@ -7,12 +7,13 @@ changed for the different versions of FLIP:
 - Flipped the ꟻ in ꟻLIP. The entire name (FLIP) should now be readable on all devices.
 - Published Python version of FLIP to PyPI (URL: https://pypi.org/project/flip-evaluator/).
   - The Python version of FLIP (tool and API) is now installed by `pip install flip-evaluator`.
-  - The distribution has been tested on Windows, Linux (Ubuntu 24.04), and OS X ($\ge$ 10.15). Note that FLIP's output might differ slightly between the different operative systems. The references used for `flip_evaluator/tests/test.py` are made for Windows. While the mean tests (means compared up to six decimal points) pass on each mentioned operative system, not all error map pixels are identical.
+  - The distribution has been tested on Windows, Linux (Ubuntu 24.04), and OS X ($\ge$ 10.15). Wheels are built for each (and various CPython versions $\ge$ 3.8) using [cibuildwheel](https://github.com/pypa/cibuildwheel). Note that FLIP's output might differ slightly between the different operative systems. The references used for `flip_evaluator/tests/test.py` are made for Windows. While the mean tests (means compared up to six decimal points) pass on each mentioned operative system, not all error map pixels are identical.
   - After installation, the tool can be run directly in a shell by `flip --reference reference.{png|exr} --test test.{png|exr}`.
   - After installation, the FLIP API is available in Python by `import flip_evaluator as flip`.
-- Directory structure in the FLIP repository has been altered to accomodate the Python version being published to PyPI.
+- Python version is now built using `scikit` instead of `setuptools`, and uses [nanobind](https://github.com/wjakob/nanobind) instead of [pybind11](https://github.com/pybind/pybind11).
+- Directory structure in the FLIP repository has been slightly altered to accomodate the Python version being published to PyPI.
 - Updated Python/C++/CUDA test script.
-- Various bugfixes.
+- Various significant bugfixes.
 
 # Version 1.4 (commits 6265f80 to 0349494)
 - Changed the Python version of FLIP so that it leverages the C++ code through [pybind11](https://github.com/pybind/pybind11).

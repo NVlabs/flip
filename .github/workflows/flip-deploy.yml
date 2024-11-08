@@ -1,6 +1,6 @@
 # Source: https://github.com/pypa/cibuildwheel/blob/main/examples/github-deploy.yml.
 
-name: Build and upload to PyPI
+name: Build wheels
 
 on:
   workflow_dispatch:

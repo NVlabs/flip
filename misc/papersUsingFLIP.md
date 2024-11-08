@@ -316,6 +316,10 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 1. Arturo Salmi, Szabolcs Cséfalvay, James Imber, ["Fast Local Neural Regression for Low-Cost, Path Traced Lambertian Global Illumination"](https://arxiv.org/abs/2410.11625), arXiv:2410.11625, 2024.
 
 
+1. Victor Stenvers and Peter Vangorp, ["Image-Based Material Editing Using Perceptual Attributes or Ground-Truth Parameters"](https://dl.acm.org/doi/10.1145/3697294.3697301), Proceedings of 21st ACM SIGGRAPH Conference on Visual Media Production, November 2024.
+ 
+1. Chenliang Zhou, Alejandro Sztrajman, Gilles Rainer, Fangcheng Zhong, Fazilet Gokbudak, Zhilin Guo, Weihao Xia, Rafal Mantiuk, and Cengiz Oztireli, ["Physically Based Neural Bidirectional Reflectance Distribution Function"](https://arxiv.org/abs/2411.02347), arXiv:2411.02347, Nov 2024.
+
 
 
 

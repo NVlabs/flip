@@ -321,6 +321,8 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
  
 1. Chenliang Zhou, Alejandro Sztrajman, Gilles Rainer, Fangcheng Zhong, Fazilet Gokbudak, Zhilin Guo, Weihao Xia, Rafal Mantiuk, and Cengiz Oztireli, ["Physically Based Neural Bidirectional Reflectance Distribution Function"](https://arxiv.org/abs/2411.02347), arXiv:2411.02347, Nov 2024.
 
+1. Ahmet H. Güzel, Jeanne Beyazian, Praneeth Chakravarthula, and Kaan Akșit, ["ChromaCorrect: prescription correction in virtual reality headsets through perceptual guidance"](https://opg.optica.org/boe/fulltext.cfm?uri=boe-14-5-2166&id=529310), Biomedical Optics Express Vol. 14, Issue 5, pp. 2166-2180, 2023.
+
 
 
 

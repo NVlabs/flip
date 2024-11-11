@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         # macos-13 is an intel runner, macos-14 is apple silicon
-        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+        os: [ubuntu-latest, manylinux_x86_64-latest, windows-latest, macos-13, macos-14]
         python: [cp38, cp39, cp310, cp311, cp312, cp312_stable, cp313]
         exclude:
           # The first Python version to target Apple arm64 architectures is 3.9.

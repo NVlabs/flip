@@ -3,7 +3,7 @@
 In addition to various minor changes, the following was
 changed for the different versions of FLIP:
 
-# Version 1.6 (commit ?)
+# Version 1.6 (commit 7967578)
 - Flipped the ꟻ in ꟻLIP. The entire name (FLIP) should now be readable on all devices.
 - Published Python version of FLIP to PyPI (URL: https://pypi.org/project/flip-evaluator/).
   - The Python version of FLIP (tool and API) is now installed by `pip install flip-evaluator`.

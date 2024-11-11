@@ -24,12 +24,12 @@ jobs:
 
     - name: Configure CMake
       run: >
-        cmake -LA -B ${{github.workspace}}/build
+        cmake -LA -B ${{github.workspace}}/src/build -S ${{github.workspace}}/src/
         -DCMAKE_BUILD_TYPE=${{ matrix.config }}
-        -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build/install
+        -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/src/build/install
         -DCMAKE_CUDA_ARCHITECTURES=all
         -DCMAKE_CUDA_HOST_COMPILER=g++-10
         -DFLIP_ENABLE_CUDA=${{ matrix.os == 'ubuntu-latest' }}
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{ matrix.config }} --target install
+      run: cmake --build ${{github.workspace}}/src/build --config ${{ matrix.config }} --target install

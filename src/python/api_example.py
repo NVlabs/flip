@@ -30,7 +30,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #################################################################################
 
-import flip
+import flip_evaluator as flip
 import matplotlib.pyplot as plt
 
 if __name__ == '__main__':

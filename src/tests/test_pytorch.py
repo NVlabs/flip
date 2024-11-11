@@ -73,16 +73,16 @@ if __name__ == '__main__':
 
 	# HDR test
 	# Run the image pairs in the images directory
-	hdr_reference = read_exr('../images/reference.exr') # EXR
-	hdr_test = read_exr('../images/test.exr') # EXR
+	hdr_reference = read_exr('../../images/reference.exr') # EXR
+	hdr_test = read_exr('../../images/test.exr') # EXR
 	hdrflip_loss_fn = HDRFLIPLoss()
 	hdrflip_loss = hdrflip_loss_fn(hdr_test, hdr_reference)
 	test_results.append(round(hdrflip_loss.item(), 4) == 0.2835)
 
 	# LDR test
 	# Run the image pairs in the images directory
-	ldr_reference = load_image_tensor('../images/reference.png') # sRGB
-	ldr_test = load_image_tensor('../images/test.png') # sRGB
+	ldr_reference = load_image_tensor('../../images/reference.png') # sRGB
+	ldr_test = load_image_tensor('../../images/test.png') # sRGB
 	ldrflip_loss_fn = LDRFLIPLoss()
 	ldrflip_loss = ldrflip_loss_fn(ldr_test, ldr_reference)
 	test_results.append(round(ldrflip_loss.item(), 4) == 0.1597)

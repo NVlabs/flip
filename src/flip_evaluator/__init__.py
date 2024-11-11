@@ -30,11 +30,4 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #################################################################################
 
-[build-system]
-requires = [
-    "setuptools", "pybind11>=2.10.1"
-]
-
-[project]
-name = "flip"
-dynamic = ['version', 'description', 'readme', 'requires-python', 'license', 'authors']
+from .flip_python_api import evaluate, load

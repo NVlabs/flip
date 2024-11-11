@@ -48,97 +48,109 @@
 
  // Code by Pontus Ebelin (formerly Andersson) and Tomas Akenine-Moller.
 
-#pragma once
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11/numpy.h>
+#include <nanobind/nanobind.h>
+#include <nanobind/ndarray.h>
+#include <nanobind/stl/string.h>
 
-#include "../../cpp/FLIP.h"
-#include "../../cpp/tool/FLIPToolHelpers.h"
+#include "cpp/FLIP.h"
+#include "cpp/tool/FLIPToolHelpers.h"
 
-namespace py = pybind11;
+namespace nb = nanobind;
+
+using Array3D = nb::ndarray<float, nb::numpy, nb::c_contig, nb::shape<-1, -1, -1>, nb::device::cpu>;
+
+Array3D createThreeChannelImage(float*& data, const size_t imageHeight, const size_t imageWidth, const size_t numChannels)
+{
+    // Create an ndarray from the raw data and an owner to make sure the data is deallocated when no longer used.
+    nb::capsule owner(data, [](void* p) noexcept {
+        delete[](float*) p;
+    });
+
+    // Allocate 3D array
+    Array3D image(data, { imageHeight, imageWidth, numChannels }, owner);
+
+    return image;
+}
 
 // Load the .exr, .png, .bmp, or .tga file with path fileName.
-py::array_t<float> load(std::string fileName)
+Array3D load(std::string fileName)
 {
     FLIP::image<FLIP::color3> image;
-    ImageHelpers::load(image, fileName);
+    bool imageOk = ImageHelpers::load(image, fileName);
+    if (!imageOk)
+    {
+        std::cout << "Error: could not read image file <" << fileName << ">. Exiting\n";
+        exit(EXIT_FAILURE);
+    }
 
-    const int imageWidth = image.getWidth();
-    const int imageHeight = image.getHeight();
+    const size_t imageWidth = image.getWidth();
+    const size_t imageHeight = image.getHeight();
+    const size_t channels = 3;
 
-    py::array_t<float> numpyImage = py::array_t<float>({ imageHeight, imageWidth, 3 });;
+    // Allocate memory for the ndarray.
+    float* data = new float[imageWidth * imageHeight * channels * sizeof(float)];
 
-    py::buffer_info numpyImage_buf = numpyImage.request();
-    float* ptr_numpyImage = static_cast<float*>(numpyImage_buf.ptr);
+    // Copy the image data to the allocated memory.
+    memcpy(data, image.getHostData(), imageWidth * imageHeight * sizeof(float) * channels);
 
-    memcpy(ptr_numpyImage, image.getHostData(), size_t(image.getWidth()) * image.getHeight() * sizeof(float) * 3);
+    // Create an ndarray from the raw data and an owner to make sure the data is deallocated when no longer used.
+    Array3D numpyImage = createThreeChannelImage(data, imageHeight, imageWidth, channels);
 
     return numpyImage;
 }
 
-// Convert linear RGB channel value to sRGB.
-float sRGBToLinearRGB(float sC)
-{
-    if (sC <= 0.04045f)
-    {
-        return sC / 12.92f;
-    }
-    return powf((sC + 0.055f) / 1.055f, 2.4f);
-}
-
 // Convert linear RGB image to sRGB.
-void sRGBToLinearRGB(float* image, const int imageWidth, const int imageHeight)
+void sRGBToLinearRGB(float* image, const size_t imageWidth, const size_t imageHeight)
 {
 #pragma omp parallel for
     for (int y = 0; y < imageHeight; y++)
     {
         for (int x = 0; x < imageWidth; x++)
         {
-            int idx = (y * imageWidth + x) * 3;
-            image[idx] = sRGBToLinearRGB(image[idx]);
-            image[idx + 1] = sRGBToLinearRGB(image[idx + 1]);
-            image[idx + 2] = sRGBToLinearRGB(image[idx + 2]);
+            size_t idx = (y * imageWidth + x) * 3;
+            image[idx] = FLIP::color3::sRGBToLinearRGB(image[idx]);
+            image[idx + 1] = FLIP::color3::sRGBToLinearRGB(image[idx + 1]);
+            image[idx + 2] = FLIP::color3::sRGBToLinearRGB(image[idx + 2]);
         }
     }
 }
 
 // Set parameters for evaluate function based on input settings.
-FLIP::Parameters setParameters(py::dict inputParameters)
+FLIP::Parameters setParameters(nb::dict inputParameters)
 {
     FLIP::Parameters parameters;
 
     for (auto item : inputParameters)
     {
-        std::string key = py::cast<std::string>(item.first);
+        std::string key = nb::cast<std::string>(item.first);
         std::string errorMessage = "Unrecognized parameter dictionary key or invalid value type. Available ones are \"ppd\" (float), \"startExposure\" (float), \"stopExposure\" (float), \"numExposures\" (int), and \"tonemapper\" (string).";
         if (key == "ppd")
         {
-            parameters.PPD = py::cast<float>(item.second);
+            parameters.PPD = nb::cast<float>(item.second);
         }
         else if (key == "vc")
         {
-            auto vc = py::cast<py::list>(item.second);
-            float distanceToDisplay = py::cast<float>(vc[0]);
-            float displayWidthPixels = py::cast<float>(vc[1]);
-            float displayWidthMeters = py::cast<float>(vc[2]);
-            parameters.PPD = FLIP::calculatePPD(distanceToDisplay, displayWidthPixels, displayWidthPixels);
+            auto vc = nb::cast<nb::list>(item.second);
+            float distanceToDisplay = nb::cast<float>(vc[0]);
+            float displayWidthPixels = nb::cast<float>(vc[1]);
+            float displayWidthMeters = nb::cast<float>(vc[2]);
+            parameters.PPD = FLIP::calculatePPD(distanceToDisplay, displayWidthPixels, displayWidthMeters);
         }
         else if (key == "startExposure")
         {
-            parameters.startExposure = py::cast<float>(item.second);
+            parameters.startExposure = nb::cast<float>(item.second);
         }
         else if (key == "stopExposure")
         {
-            parameters.stopExposure = py::cast<float>(item.second);
+            parameters.stopExposure = nb::cast<float>(item.second);
         }
         else if (key == "numExposures")
         {
-            parameters.numExposures = py::cast<int>(item.second);
+            parameters.numExposures = nb::cast<int>(item.second);
         }
         else if (key == "tonemapper")
         {
-            parameters.tonemapper = py::cast<std::string>(item.second);
+            parameters.tonemapper = nb::cast<std::string>(item.second);
         }
         else
         {
@@ -150,7 +162,7 @@ FLIP::Parameters setParameters(py::dict inputParameters)
 }
 
 // Update parameter dictionary that is returned to the Python side.
-void updateInputParameters(const FLIP::Parameters& parameters, py::dict& inputParameters)
+void updateInputParameters(const FLIP::Parameters& parameters, nb::dict& inputParameters)
 {
     inputParameters["ppd"] = parameters.PPD;
     inputParameters["startExposure"] = parameters.startExposure;
@@ -162,7 +174,7 @@ void updateInputParameters(const FLIP::Parameters& parameters, py::dict& inputPa
 /** A simplified function for evaluating (the image metric called) FLIP between a reference image and a test image. Corresponds to the fourth evaluate() option in FLIP.h.
 *
 * @param[in] referenceInput Reference input image. For LDR, the content should be in [0,1]. The image is expected to have 3 floats per pixel.
-* @param[in] testInput Test input image. For LDR, the content should be in [0,1].
+* @param[in] testInput Test input image. For LDR, the content should be in [0,1]. The image is expected to have 3 floats per pixel.
 * @param[in] useHDR Set to true if the input images are to be considered containing HDR content, i.e., not necessarily in [0,1].
 * @param[in] inputsRGB Set to true if the input images are given in the sRGB color space.
 * @param[in] applyMagma A boolean indicating whether the output should have the Magma map applied to it before the image is returned.
@@ -170,86 +182,64 @@ void updateInputParameters(const FLIP::Parameters& parameters, py::dict& inputPa
 * @param[in,out] inputParameters Contains parameters (e.g., PPD, exposure settings, etc). If the exposures have not been set by the user, then those will be computed (and returned).
 * @return tuple containing FLIP error map (in Magma if applyMagma is true), the mean FLIP error (computed if computeMeanFLIPError is true, else -1), and dictionary of parameters.
 */
-std::tuple<py::array_t<float>, float, py::dict> evaluate(const py::array_t<float> referenceInput, const py::array_t<float> testInput, const bool useHDR, const bool inputsRGB = true, const bool applyMagma = true, const bool computeMeanFLIPError = true, py::dict inputParameters = {})
-{
-    py::buffer_info r_buf = referenceInput.request(), t_buf = testInput.request();
-    
+nb::tuple evaluate(const Array3D referenceInput, const Array3D testInput, const bool useHDR, const bool inputsRGB = true, const bool applyMagma = true, const bool computeMeanFLIPError = true, nb::dict inputParameters = {})
+{   
+    size_t r_ndim = referenceInput.ndim();
+    size_t t_ndim = testInput.ndim();
+
     // Check number of dimensions and resolution.
-    if (r_buf.ndim != 3 || t_buf.ndim != 3)
+    if (r_ndim != 3 || t_ndim != 3)
     {
         std::stringstream message;
-        message << "Number of dimensions must be three. The reference image has " << r_buf.ndim << " dimensions, while the test image has "<< t_buf.ndim << " dimensions.";
+        message << "Number of dimensions must be three. The reference image has " << r_ndim << " dimensions, while the test image has "<< t_ndim << " dimensions.";
         throw std::runtime_error(message.str());  
     }
-     
-    if (r_buf.shape[0] != t_buf.shape[0] || r_buf.shape[1] != t_buf.shape[1])
+    
+    if (referenceInput.shape(0) != testInput.shape(0) || referenceInput.shape(1) != testInput.shape(1))
     {
         std::stringstream message;
-        message << "Reference and test image resolutions differ.\nReference image resolution: " << r_buf.shape[0] << "x" << r_buf.shape[1] << "\nTest image resolution: "<< t_buf.shape[0] << "x" << t_buf.shape[1];
+        message << "Reference and test image resolutions differ.\nReference image resolution: " << referenceInput.shape(0) << "x" << referenceInput.shape(1) << "\nTest image resolution: "<< testInput.shape(0) << "x" << testInput.shape(0);
         throw std::runtime_error(message.str()); 
     }
-    
-    // Arrays for reference and test.
-    float* ptr_r = static_cast<float*>(r_buf.ptr);
-    float* ptr_t = static_cast<float*>(t_buf.ptr);
 
     // Image size.
-    const int nRows = int(r_buf.shape[0]), nCols = int(r_buf.shape[1]), nChannels = int(r_buf.shape[2]);
+    const size_t imageHeight = referenceInput.shape(0), imageWidth = referenceInput.shape(1);
+    const size_t nChannelsOut = applyMagma ? 3 : 1;
 
     // FLIP
-    float* flip;
+    float* flip = nullptr; // Allocated in FLIP::evaluate().
 
-    // Create NumPy output array.
-    py::array_t<float> flipNumpy;
-    int nChannelsOut;
-    if (applyMagma)
-    {
-        flipNumpy = py::array_t<float>({ r_buf.shape[0], r_buf.shape[1], r_buf.shape[2] });
-        nChannelsOut = 3;
-    }
-    else
-    {
-        flipNumpy = py::array_t<float>({ r_buf.shape[0], r_buf.shape[1] });
-        nChannelsOut = 1;
-    }
-    py::buffer_info flipNumpy_buf = flipNumpy.request();
-    float* ptr_flipNumpy = static_cast<float*>(flipNumpy_buf.ptr);
+    // Arrays for reference and test.
+    float* referenceImage = new float[imageHeight * imageWidth * 3 * sizeof(float)];
+    float* testImage = new float[imageHeight * imageWidth * 3 * sizeof(float)];
+    memcpy(referenceImage, referenceInput.data(), imageHeight * imageWidth * sizeof(float) * 3);
+    memcpy(testImage, testInput.data(), imageHeight * imageWidth * sizeof(float) * 3);
 
     // Transform to linear RGB if desired.
     if (inputsRGB)
     {
-        sRGBToLinearRGB(ptr_r, nCols, nRows);
-        sRGBToLinearRGB(ptr_t, nCols, nRows);
+        sRGBToLinearRGB(referenceImage, imageWidth, imageHeight);
+        sRGBToLinearRGB(testImage, imageWidth, imageHeight);
     }
 
     // Run FLIP.
     FLIP::Parameters parameters = setParameters(inputParameters);
     float meanError = -1;
-    FLIP::evaluate(ptr_r, ptr_t, nCols, nRows, useHDR, parameters, applyMagma, computeMeanFLIPError, meanError, &flip);
-
-    // Move output array info to correct buffer.
-#pragma omp parallel for
-    for (int i = 0; i < nRows; i++)
-    {
-        for (int j = 0; j < nCols; j++)
-        {
-            for (int c = 0; c < nChannelsOut; c++)
-            {
-                int idx = (i * nCols + j) * nChannelsOut + c;
-                ptr_flipNumpy[idx] = flip[idx];
-            }
-        }
-    }
-    delete flip;
+    FLIP::evaluate(referenceImage, testImage, int(imageWidth), int(imageHeight), useHDR, parameters, applyMagma, computeMeanFLIPError, meanError, &flip);
     
-    py::dict returnParams = {};
+    nb::dict returnParams = {};
     updateInputParameters(parameters, returnParams);
 
-    return std::make_tuple(flipNumpy, meanError, returnParams);
+    Array3D flipNumpy = createThreeChannelImage(flip, imageHeight, imageWidth, nChannelsOut);
+    
+    delete [] referenceImage;
+    delete [] testImage;
+    
+    return nb::make_tuple(flipNumpy, meanError, returnParams);
 }
 
 // Create command line, based on the Python command line string, for the FLIP tool to parse.
-commandline generateCommandLine(const py::list argvPy)
+commandline generateCommandLine(const nb::list argvPy)
 {
     size_t argc = argvPy.size();
     char** argv = new char* [argc];
@@ -257,9 +247,8 @@ commandline generateCommandLine(const py::list argvPy)
     int counter = 0;
     for (auto item : argvPy)
     {
-        const std::string it = py::reinterpret_steal<py::str>(item);
-        argv[counter] = new char[it.length()];
-        std::strcpy(argv[counter], it.c_str());
+        const std::string it = nb::steal<nb::str>(item).c_str();
+        argv[counter] = strdup(it.c_str());
         counter++;
     }
 
@@ -275,19 +264,19 @@ commandline generateCommandLine(const py::list argvPy)
 }
 
 // Run the FLIP tool based on Python command line string.
-int execute(const py::list argvPy)
+int execute(const nb::list argvPy)
 {
     commandline commandLine = generateCommandLine(argvPy);
     FLIPTool::execute(commandLine);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 // Setup the pybind11 module.
-PYBIND11_MODULE(pbflip, handle)
+NB_MODULE(pbflip, handle)
 {
-    handle.doc() = "Load images (load), evaluate FLIP (evaluate), or run the full FLIP tool (run_tool).";
-    handle.def("evaluate", &evaluate);
+    handle.doc() = "Load images (load), evaluate FLIP (evaluate), or run the full FLIP tool (execute).";
     handle.def("load", &load);
+    handle.def("evaluate", &evaluate);
     handle.def("execute", &execute);
 }

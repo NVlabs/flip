@@ -170,7 +170,7 @@ namespace FLIP
             int fileNameStringLength = int(fileNameString.length());
             int totalLength = directoryStringLength + fileNameStringLength;
 
-            if (totalLength > maxLen)
+            if (size_t(totalLength) > maxLen)
             {
                 //  First shorten the directory.
                 int overflow = totalLength - int(maxLen);
@@ -418,7 +418,6 @@ namespace FLIP
                 mExtension = path.substr(1);
                 return true;
             }
-
 
             // Must be at least one slash to contain a directory.
             size_t iLastSlash = path.find_last_of("\\/");

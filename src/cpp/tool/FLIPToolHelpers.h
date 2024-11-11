@@ -480,7 +480,7 @@ namespace FLIPTool
 
         std::string FLIPString = "FLIP";
         int MajorVersion = 1;
-        int MinorVersion = 5;
+        int MinorVersion = 6;
 
         if (commandLine.optionSet("help"))
         {

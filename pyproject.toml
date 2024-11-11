@@ -36,7 +36,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "flip_evaluator"
-version = "1.5"
+version = "1.6"
 description = "A Difference Evaluator for Alternating Images"
 readme = "README.md"
 requires-python = ">=3.8"

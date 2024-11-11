@@ -3,7 +3,7 @@
 In addition to various minor changes, the following was
 changed for the different versions of FLIP:
 
-# Version 1.5 (commit ?)
+# Version 1.6 (commit ?)
 - Flipped the ꟻ in ꟻLIP. The entire name (FLIP) should now be readable on all devices.
 - Published Python version of FLIP to PyPI (URL: https://pypi.org/project/flip-evaluator/).
   - The Python version of FLIP (tool and API) is now installed by `pip install flip-evaluator`.
@@ -14,6 +14,9 @@ changed for the different versions of FLIP:
 - Directory structure in the FLIP repository has been slightly altered to accomodate the Python version being published to PyPI.
 - Updated Python/C++/CUDA test script.
 - Various significant bugfixes.
+
+# Version 1.5 (commit -)
+- Skipped version 1.5 due to PyPI-related mistake. Version 1.6 is the same as version 1.5 was supposed to be.
 
 # Version 1.4 (commits 6265f80 to 0349494)
 - Changed the Python version of FLIP so that it leverages the C++ code through [pybind11](https://github.com/pybind/pybind11).

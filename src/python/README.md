@@ -1,4 +1,4 @@
-# FLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.5)
+# FLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.6)
 
 By
 [Pontus Ebelin](https://research.nvidia.com/person/pontus-ebelin)

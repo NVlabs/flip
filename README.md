@@ -1,6 +1,6 @@
 ![Teaser image](images/teaser.png "Teaser image")
 
-# FLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.5)
+# FLIP: A Tool for Visualizing and Communicating Errors in Rendered Images (v1.6)
 
 By
 [Pontus Ebelin](https://research.nvidia.com/person/pontus-ebelin)
@@ -27,7 +27,7 @@ The changes made for the different versions of FLIP are summarized in the [versi
 [An image gallery](https://research.nvidia.com/node/3525) displaying a large quantity of reference/test images and corresponding error maps from
 different metrics.
 
-**Note**: since v1.5, the Python version of FLIP can now be installed via `pip install flip-evaluator`.
+**Note**: since v1.6, the Python version of FLIP can now be installed via `pip install flip-evaluator`.
 
 **Note**: in v1.3, we switched to a *single header* ([FLIP.h](src/cpp/FLIP.h)) for C++/CUDA for easier integration.
 

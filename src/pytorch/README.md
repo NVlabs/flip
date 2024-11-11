@@ -21,10 +21,10 @@ Copyright © 2020-2024, NVIDIA Corporation & Affiliates. All rights reserved.
 
 This work is made available under a [BSD 3-Clause License](https://github.com/NVlabs/flip/blob/main/LICENSE).
 
-The repository distributes code for `tinyexr`, which is subject to a [BSD 3-Clause License](https://github.com/NVlabs/flip/blob/main/flip_evaluator/misc/LICENSE-third-party.md#bsd-3-clause-license),<br>
-and `stb_image`, which is subject to an [MIT License](https://github.com/NVlabs/flip/blob/main/flip_evaluator/misc/LICENSE-third-party.md#mit-license).
+The repository distributes code for `tinyexr`, which is subject to a [BSD 3-Clause License](https://github.com/NVlabs/flip/blob/main/misc/LICENSE-third-party.md#bsd-3-clause-license),<br>
+and `stb_image`, which is subject to an [MIT License](https://github.com/NVlabs/flip/blob/main/misc/LICENSE-third-party.md#mit-license).
 
-For individual contributions to the project, please confer the [Individual Contributor License Agreement](https://github.com/NVlabs/flip/blob/main/flip_evaluator/misc/CLA.md).
+For individual contributions to the project, please confer the [Individual Contributor License Agreement](https://github.com/NVlabs/flip/blob/main/misc/CLA.md).
 
 For business inquiries, please visit our website and submit the form: [NVIDIA Research Licensing](https://www.nvidia.com/en-us/research/inquiries/).
 

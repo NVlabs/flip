@@ -84,7 +84,6 @@
 #include <sstream>
 #include <fstream>
 #include <limits>
-#include "tool/pooling.h"
 
 #ifdef FLIP_ENABLE_CUDA
 #include "cuda_runtime.h"
@@ -2460,15 +2459,15 @@ namespace FLIP
     // Compute mean FLIP error, if desired.
     if (computeMeanFLIPError)
     {
-        FLIPPooling::pooling<float> pooledValues;
+        float sum = 0.0f;
         for (int y = 0; y < errorMapFLIPOutputImage.getHeight(); y++)
         {
             for (int x = 0; x < errorMapFLIPOutputImage.getWidth(); x++)
             {
-                pooledValues.update(x, y, errorMapFLIPOutputImage.get(x, y));
+                sum += errorMapFLIPOutputImage.get(x, y);
             }
         }
-        meanFLIPError = pooledValues.getMean();
+        meanFLIPError = sum / (errorMapFLIPOutputImage.getWidth() * errorMapFLIPOutputImage.getHeight());
     }
 
         if (applyMagmaMapToOutput)

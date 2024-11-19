@@ -322,6 +322,8 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1. Ahmet H. Güzel, Jeanne Beyazian, Praneeth Chakravarthula, and Kaan Akșit, ["ChromaCorrect: prescription correction in virtual reality headsets through perceptual guidance"](https://opg.optica.org/boe/fulltext.cfm?uri=boe-14-5-2166&id=529310), Biomedical Optics Express Vol. 14, Issue 5, pp. 2166-2180, 2023.
 
+1. Tove Börjeson and Filip Vannfält, ["Neural compression and decompression of textures in real-time rendering"](https://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=9177827&fileOId=9177828), MSc thesis, Department of Compute Science, Lund University, November 2024.
+
 
 
 

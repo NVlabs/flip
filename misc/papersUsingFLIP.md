@@ -324,6 +324,8 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1. Tove Börjeson and Filip Vannfält, ["Neural compression and decompression of textures in real-time rendering"](https://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=9177827&fileOId=9177828), MSc thesis, Department of Compute Science, Lund University, November 2024.
 
+1.  Julius Ikkala, Tuomas Lauttia, Pekka Jääskeläinen, Markku Mäkitalo, ["k-DOP Clipping: Robust Ghosting Mitigation in Temporal Antialiasing"](https://dl.acm.org/doi/full/10.1145/3681758.3697996), SIGGRAPH Asia Technical Communications, November 2024.
+
 
 
 

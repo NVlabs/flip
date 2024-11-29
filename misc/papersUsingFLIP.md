@@ -330,6 +330,8 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1. Nicolai Hermann, Jorge Condor, Piotr Didyk, ["Puzzle Similarity: A Perceptually-guided No-Reference Metric for Artifact Detection in 3D Scene Reconstructions"](https://arxiv.org/abs/2411.17489), arXiv:2411.17489, November 2024.
 
+1. Alina Pranovich Morten Rieger Hannemose,Janus Nørtoft Jensen, Duc Minh Tran,Henrik Aanæs,Sasan Gooran,Daniel Nyström and Jeppe Revall Frisvad, ["Digitizing the Appearance of 3D Printing Materials Using a Spectrophotometer"](https://www.mdpi.com/1424-8220/24/21/7025), Sensors 2024, 24(21), 2024.
+
 
 
 

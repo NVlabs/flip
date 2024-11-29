@@ -403,6 +403,8 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 
 1. Rafail Nikou, Aristeidis Tsaknis, Paschalis Margaritis, Stylianos Alvanos, Konstantinos-Filippos Kollias, George S. Maraslidis, Nikolaos Asimopoulos, Panagiotis Sarigiannidis, Vasileios Argyriou, George F. Fragulis, ["Machine learning data-based approaches for autism spectrum disorder classification utilising facial images"](https://pubs.aip.org/aip/acp/article-abstract/3220/1/050013/3315891/Machine-learning-data-based-approaches-for-autism), AIP Conference Proceedings, October 2024.
 
+1. Rafał Piórkowski1, Radosław Mantiuk, and Marek Wernikowski, ["Learning to predict perceptual visibility of rendering deterioration in computer games"](https://www.nature.com/articles/s41598-024-78254-0), Scientific Reports volume 14, 2024.
+
 
 **Code/frameworks/tools that use FLIP:**
 1. [Falcor](https://github.com/NVIDIAGameWorks/Falcor).

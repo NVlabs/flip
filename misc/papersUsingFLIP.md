@@ -407,6 +407,8 @@ ACM Transactions on Graphics (Proceedings of SIGGRAPH ASIA), 2021.
 
 1. Rafał Piórkowski1, Radosław Mantiuk, and Marek Wernikowski, ["Learning to predict perceptual visibility of rendering deterioration in computer games"](https://www.nature.com/articles/s41598-024-78254-0), Scientific Reports volume 14, 2024.
 
+1. Georg Kohl, ["Similarity Metrics for Numerical Simulations using Deep Learning"], PhD Thesis, TUM, 2024.
+
 
 **Code/frameworks/tools that use FLIP:**
 1. [Falcor](https://github.com/NVIDIAGameWorks/Falcor).

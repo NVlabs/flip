@@ -326,6 +326,11 @@ Distant Lighting of Heterogeneous Translucent Objects"](https://people.compute.d
 
 1.  Julius Ikkala, Tuomas Lauttia, Pekka Jääskeläinen, Markku Mäkitalo, ["k-DOP Clipping: Robust Ghosting Mitigation in Temporal Antialiasing"](https://dl.acm.org/doi/full/10.1145/3681758.3697996), SIGGRAPH Asia Technical Communications, November 2024.
 
+1. Huiwen Chen and Chunyi Chen, ["Light culling based on the limitations of human visual perception"](https://iopscience.iop.org/article/10.1088/1742-6596/2898/1/012022/pdf), Journal of Physics, 2024.
+
+1. Nicolai Hermann, Jorge Condor, Piotr Didyk, ["Puzzle Similarity: A Perceptually-guided No-Reference Metric for Artifact Detection in 3D Scene Reconstructions"](https://arxiv.org/abs/2411.17489), arXiv:2411.17489, November 2024.
+
+
 
 
 

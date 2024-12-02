@@ -1,6 +1,8 @@
 # List of papers/code that are using/citing FLIP
 
-Please let us know if you know of more papers that use/cite FLIP.
+**Note that we stopped updating this list after 160+ papers that used FLIP and 35 papers citing FLIP (but not using).**
+Now, we instead refer the the citation count on [Google Scholar](https://scholar.google.com/citations?view_op=view_citation&hl=en&user=Ch4LHOgAAAAJ&citation_for_view=Ch4LHOgAAAAJ:kz9GbA2Ns4gC).
+
 
 **Using FLIP:**
 1. Jae-Ho Nah, ["QuickETC2: Fast ETC2 texture compression using Luma differences"](https://dl.acm.org/doi/abs/10.1145/3414685.3417787), *ACM Transactions on Graphics (SIGGRAPH Asia)*, November 2020 Article No. 270

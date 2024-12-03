@@ -79,7 +79,7 @@ Array3D load(std::string fileName)
     bool imageOk = ImageHelpers::load(image, fileName);
     if (!imageOk)
     {
-        std::cout << "Error: could not read image file <" << fileName << ">. Exiting\n";
+        std::cout << "Error: could not read image file <" << fileName << ">. Note that FLIP only loads png, bmp, tga, and exr images. Exiting.\n";
         exit(EXIT_FAILURE);
     }
 
@@ -273,7 +273,7 @@ int execute(const nb::list argvPy)
 }
 
 // Setup the pybind11 module.
-NB_MODULE(pbflip, handle)
+NB_MODULE(nbflip, handle)
 {
     handle.doc() = "Load images (load), evaluate FLIP (evaluate), or run the full FLIP tool (execute).";
     handle.def("load", &load);

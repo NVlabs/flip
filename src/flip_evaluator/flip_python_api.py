@@ -30,7 +30,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #################################################################################
 
-from flip_evaluator import pbflip
+from flip_evaluator import nbflip
 import sys, os
 
 def evaluate(reference, test, dynamicRangeString, inputsRGB=True, applyMagma=True, computeMeanError=True, parameters={}):
@@ -89,15 +89,15 @@ def evaluate(reference, test, dynamicRangeString, inputsRGB=True, applyMagma=Tru
         if not os.path.exists(reference):
             print("Path to reference image is invalid, or the reference image does not exist.\nExiting.")
             sys.exit(1)
-        reference = pbflip.load(reference)
+        reference = nbflip.load(reference)
     if isinstance(test, str):
         if not os.path.exists(test):
             print("Path to test image is invalid, or the reference image does not exist.\nExiting.")
             sys.exit(1)
-        test = pbflip.load(test)
+        test = nbflip.load(test)
 
     # Evaluate FLIP. Return error map, mean FLIP error, and dictionary containing the parameters used.
-    return pbflip.evaluate(reference, test, useHDR, inputsRGB, applyMagma, computeMeanError, parameters)
+    return nbflip.evaluate(reference, test, useHDR, inputsRGB, applyMagma, computeMeanError, parameters)
 
 def load(imgpath):
     """
@@ -106,10 +106,10 @@ def load(imgpath):
     :param imgpath: string containing the relative or absolute path to an image, allowed file types are png, exr, bmp, and tga
     :return: numpy array containing the image (with HxWxC layout)
     """
-    return pbflip.load(imgpath)
+    return nbflip.load(imgpath)
 
 def main():
-    pbflip.execute(sys.argv)
+    nbflip.execute(sys.argv)
 
 if __name__ == '__main__':
     main()

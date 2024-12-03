@@ -84,6 +84,6 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE nanobind_ROOT)
 find_package(nanobind CONFIG REQUIRED)
 
-nanobind_add_module(pbflip STABLE_ABI src/nanobindFLIP.cpp)
+nanobind_add_module(nbflip STABLE_ABI src/nanobindFLIP.cpp)
 
-install(TARGETS pbflip LIBRARY DESTINATION flip_evaluator)
+install(TARGETS nbflip LIBRARY DESTINATION flip_evaluator)

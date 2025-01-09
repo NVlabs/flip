@@ -33,7 +33,7 @@ different metrics.
 
 # License
 
-Copyright © 2020-2024, NVIDIA Corporation & Affiliates. All rights reserved.
+Copyright © 2020-2025, NVIDIA Corporation & Affiliates. All rights reserved.
 
 This work is made available under a [BSD 3-Clause License](LICENSE).
 

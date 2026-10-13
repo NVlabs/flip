@@ -39,7 +39,7 @@ name = "flip_evaluator"
 version = "1.7"
 description = "A Difference Evaluator for Alternating Images"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 authors = [
     { name = "Pontus Ebelin" },
     { name = "Tomas Akenine-Möller" }
@@ -56,7 +56,7 @@ Homepage = "https://github.com/nvlabs/flip"
 
 [tool.cibuildwheel]
 build-verbosity = 1
-build = ["cp38-*", "cp39-*", "cp310-*", "cp311-*", "cp312-*", "cp313-*"]
+build = ["cp310-*", "cp311-*", "cp312-*"]
 test-command = ["flip -h"]
 
 [tool.cibuildwheel.macos.environment]
@@ -66,10 +66,8 @@ MACOSX_DEPLOYMENT_TARGET = "10.15"
 minimum-version = "0.4"
 sdist.include = ["src/flip_evaluator/__init__.py", "src/flip_evaluator/flip_python_api.py", "src/cpp/FLIP.h", "src/cpp/tool/*.h"]
 sdist.exclude = [".github", ".gitignore", "images", "misc", "dist", "*__pycache__*", "src/pytorch", "src/cmake", "src/tests", "src/CMakeLists.txt", "src/python", "src/cpp/FLIP.sln", "src/cpp/CMakeLists.txt", "src/cpp/README.md", "src/cpp/tool/CMakeLists.txt", "src/cpp/tool/CPP.vcxproj*", "src/cpp/tool/CUDA.vcxproj*", "src/cpp/tool/*.cpp", "src/cpp/tool/*.cu"]
+build-dir = "build/{wheel_tag}"
+wheel.py-api = "cp312"
 
 [tool.hatch.metadata.hooks.fancy-pypi-readme]
 content-type = "text/markdown"
-
-build-dir = "build/{wheel_tag}"
-
-wheel.py-api = "cp312"

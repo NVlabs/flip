@@ -99,8 +99,8 @@ if __name__ == '__main__':
     result_hdr_file = "flip.reference.test.67ppd.hdr.aces.m12.5423_to_p0.9427.14.png"
 
     # Expected means
-    expected_ldr_mean = 0.159691
-    expected_hdr_mean = 0.283478
+    expected_ldr_mean = 0.159693
+    expected_hdr_mean = 0.283547
 
     if test_str == "CUDA" or test_str == "CPP":
         # Run FLIP on the reference/test image pairs in the ../../images directory.
@@ -124,6 +124,22 @@ if __name__ == '__main__':
         hdr_mean = round(hdr_mean, 6)
         plt.imsave(result_ldr_file, np.uint8(255 * ldr_new_result + 0.5), vmin=0, vmax=255) # Same rounding as is used to save 
         plt.imsave(result_hdr_file, np.uint8(255 * hdr_new_result + 0.5), vmin=0, vmax=255) # images in the C++ code (cpp/FLIP.h#L1300).
+
+        # The mean returned by evaluate() should match the mean of the grayscale error map.
+        ldr_error_map, _, _ = flip.evaluate("../../images/reference.png", "../../images/test.png", "LDR", applyMagma=False)
+        hdr_error_map, _, _ = flip.evaluate("../../images/reference.exr", "../../images/test.exr", "HDR", applyMagma=False)
+        computed_ldr_mean = float(round(np.mean(ldr_error_map, dtype=np.float64), 6))
+        computed_hdr_mean = float(round(np.mean(hdr_error_map, dtype=np.float64), 6))
+
+        if(computed_ldr_mean != ldr_mean):
+            print("LDR: FAILED mean consistency test.")
+        else:
+            print("LDR: PASSED mean consistency test.")
+
+        if(computed_hdr_mean != hdr_mean):
+            print("HDR: FAILED mean consistency test.")
+        else:
+            print("HDR: PASSED mean consistency test.")
     
     # Load the images that were just created
     ldr_new_result = flip.load(result_ldr_file) # LDR, sRGB

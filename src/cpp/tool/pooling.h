@@ -272,7 +272,7 @@ namespace FLIPPooling
     {
     private:
         size_t mValueCount;
-        T mValueSum;
+        double mValueSum;
         T mSquareValueSum;
         T mMinValue;
         T mMaxValue;
@@ -358,7 +358,7 @@ namespace FLIPPooling
         void clear()
         {
             mValueCount = 0;
-            mValueSum = T(0);
+            mValueSum = 0.0;
             mSquareValueSum = T(0);
             mMinValue = std::numeric_limits<T>::max();
             mMaxValue = std::numeric_limits<T>::min();

@@ -2460,7 +2460,7 @@ namespace FLIP
     // Compute mean FLIP error, if desired.
     if (computeMeanFLIPError)
     {
-        float sum = 0.0f;
+        double sum = 0.0;
         for (int y = 0; y < errorMapFLIPOutputImage.getHeight(); y++)
         {
             for (int x = 0; x < errorMapFLIPOutputImage.getWidth(); x++)

@@ -17,15 +17,14 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python: [cp38, cp39, cp310, cp311, cp312, cp312_stable, cp313]
-        exclude:
-          # The first Python version to target Apple arm64 architectures is 3.9.
-          - os: [macos-latest]
-            python: cp38
+        # CPython 3.12 produces an abi3 wheel that also supports newer versions.
+        python: [cp310, cp311, cp312]
     name: >
       ${{ matrix.python }} wheel for ${{ matrix.os }}
-      ${{ (endsWith(matrix.python, '_stable') && '(stable ABI)') || '' }}
+      ${{ (matrix.python == 'cp312' && '(stable ABI)') || '' }}
     runs-on: ${{ matrix.os }}
+    env:
+      CIBW_BUILD: "${{ matrix.python }}-*"
 
     steps:
       - uses: actions/checkout@v4
@@ -33,7 +32,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.8'
+          python-version: '3.12'
 
       - name: Install cibuildwheel
         run: |

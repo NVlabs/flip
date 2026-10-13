@@ -57,6 +57,8 @@ For more information about the tool's capabilities, try running `flip -h`.
 If you wish to use FLIP in your Python or C++ evaluation scripts, please read the next sections.
 
 # Python (API and Tool)
+Requires Python 3.10 or newer.
+
 **Setup** (with pip):
 ```
 pip install flip-evaluator

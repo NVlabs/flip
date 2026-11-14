@@ -310,7 +310,6 @@ namespace FLIPTool
                 {
                     ImageHelpers::pngSave(destinationDirectory + "/" + basename + "." + expCount + ".png", pngResult);
                 }
-                ImageHelpers::pngSave(destinationDirectory + "/" + flipFileName.toString(), pngResult);
                 delete flipImage;
             }
         }

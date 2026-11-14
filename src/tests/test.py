@@ -51,6 +51,8 @@
 import subprocess
 import os
 import sys
+import glob
+import tempfile
 import matplotlib.pyplot as plt
 import numpy as np
 import flip_evaluator as flip
@@ -140,7 +142,23 @@ if __name__ == '__main__':
             print("HDR: FAILED mean consistency test.")
         else:
             print("HDR: PASSED mean consistency test.")
-    
+
+        # Saving the intermediate LDR-FLIP maps (--save-ldrflip) should not change the saved HDR-FLIP error map.
+        hdr_error_maps = []
+        for extra_options in [[], ["--save-ldrflip"]]:
+            with tempfile.TemporaryDirectory() as output_directory:
+                tool_cmd = [sys.executable, "-c", "from flip_evaluator.flip_python_api import main; main()",
+                            "--reference", "../../images/reference.exr", "--test", "../../images/test.exr",
+                            "--num-exposures", "2", "--no-exposure-map", "--verbosity", "0", "--directory", output_directory] + extra_options
+                subprocess.run(tool_cmd, stdout=subprocess.PIPE, text=True)
+                hdr_error_map_files = glob.glob(os.path.join(output_directory, "flip.*.hdr.*.png"))
+                hdr_error_maps.append(flip.load(hdr_error_map_files[0]) if len(hdr_error_map_files) == 1 else None)
+
+        if(hdr_error_maps[0] is None or hdr_error_maps[1] is None or (abs(hdr_error_maps[0] - hdr_error_maps[1]) > 0).any()):
+            print("HDR: FAILED --save-ldrflip test.")
+        else:
+            print("HDR: PASSED --save-ldrflip test.")
+
     # Load the images that were just created
     ldr_new_result = flip.load(result_ldr_file) # LDR, sRGB
     hdr_new_result = flip.load(result_hdr_file) # HDR

@@ -1,0 +1,92 @@
+name: CUDA on simulated H100
+
+# Optional, non-required check. The hosted runners have no GPU, so this builds
+# flip-cuda and runs the LDR and HDR reference comparisons from src/tests/test.py
+# on a simulated NVIDIA H100 (https://github.com/pantheongpu/pantheonsim). A
+# simulator cannot reproduce hardware-specific behavior or timing, so it
+# complements real-GPU testing and does not replace it.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "src/cpp/**"
+      - "src/CMakeLists.txt"
+      - "src/cmake/**"
+      - "images/**"
+      - ".github/workflows/gpu-sim.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Mean FLIP values expected by src/tests/test.py
+  EXPECTED_LDR_MEAN: "0.159693"
+  EXPECTED_HDR_MEAN: "0.283547"
+
+jobs:
+  cuda-h100:
+    name: flip-cuda, CUDA 13.0, simulated H100
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+    - name: Set up the simulated GPU and CUDA toolkit
+      uses: pantheongpu/setup-pantheonsim@656f502ef4782d94d34d8ddd368e333960609639 # v0.1.8
+      with:
+        gpu: nvidia/h100
+        cuda-toolkit: "13.0"
+
+    # The simulator JIT-compiles PTX and does not run SASS, and it needs a
+    # shared CUDA runtime. CUDA_ARCHITECTURES is OFF on the flip-cuda target,
+    # so the architecture is passed through CMAKE_CUDA_FLAGS.
+    - name: Build flip-cuda (PTX only)
+      run: |
+        cmake -S src -B build \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_CUDA_COMPILER=/usr/local/cuda-13.0/bin/nvcc \
+              -DCMAKE_CUDA_FLAGS="-arch=compute_90" \
+              -DCMAKE_CUDA_RUNTIME_LIBRARY=Shared \
+              -DFLIP_ENABLE_CUDA=ON
+        cmake --build build --target flip-cuda-cli -j3
+
+    # src/tests/test.py runs flip-cuda.exe from a Windows path, so the same
+    # two comparisons are scripted here: run flip-cuda on the image pairs and
+    # compare the printed mean with the expected value.
+    - name: Run LDR and HDR reference comparisons
+      run: |
+        set -o pipefail
+        mkdir -p "$RUNNER_TEMP/out"
+        cd "$RUNNER_TEMP/out"
+        flip="$GITHUB_WORKSPACE/build/flip-cuda"
+        images="$GITHUB_WORKSPACE/images"
+
+        # Fail if the run did not happen on the simulated H100
+        check_mean() {
+          local name=$1 expected=$2; shift 2
+          vgpu run "$flip" "$@" 2>&1 | tee "$name.log"
+          grep -q 'virtual GPU platform initialized: 1 x nvidia/h100' "$name.log" \
+            || { echo "::error::$name: the simulated H100 was not used"; return 1; }
+          local mean
+          mean=$(sed -n 's/^ *Mean: *//p' "$name.log" | head -n 1)
+          if [ "$mean" != "$expected" ]; then
+            echo "::error::$name: mean FLIP is '$mean', expected $expected"
+            return 1
+          fi
+          echo "$name: mean FLIP $mean matches"
+        }
+
+        status=0
+        check_mean LDR "$EXPECTED_LDR_MEAN" \
+          --reference "$images/reference.png" --test "$images/test.png" || status=1
+        check_mean HDR "$EXPECTED_HDR_MEAN" \
+          --reference "$images/reference.exr" --test "$images/test.exr" --no-exposure-map || status=1
+        exit $status
